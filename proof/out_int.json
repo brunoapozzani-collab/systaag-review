@@ -1,0 +1,243 @@
+{
+ "routes": [
+  {
+   "route": "#/home",
+   "diff_pixels": 0,
+   "diff_pct": 0.0,
+   "bbox": null,
+   "ok": true
+  },
+  {
+   "route": "#/hoje",
+   "diff_pixels": 0,
+   "diff_pct": 0.0,
+   "bbox": null,
+   "ok": true
+  },
+  {
+   "route": "#/propostas",
+   "diff_pixels": 0,
+   "diff_pct": 0.0,
+   "bbox": null,
+   "ok": true
+  },
+  {
+   "route": "#/editor/pr1",
+   "diff_pixels": 0,
+   "diff_pct": 0.0,
+   "bbox": null,
+   "ok": true
+  },
+  {
+   "route": "#/estoque",
+   "diff_pixels": 0,
+   "diff_pct": 0.0,
+   "bbox": null,
+   "ok": true
+  },
+  {
+   "route": "#/entradas",
+   "diff_pixels": 0,
+   "diff_pct": 0.0,
+   "bbox": null,
+   "ok": true
+  },
+  {
+   "route": "#/saidas",
+   "diff_pixels": 0,
+   "diff_pct": 0.0,
+   "bbox": null,
+   "ok": true
+  },
+  {
+   "route": "#/obras",
+   "diff_pixels": 0,
+   "diff_pct": 0.0,
+   "bbox": null,
+   "ok": true
+  },
+  {
+   "route": "#/pagar",
+   "diff_pixels": 0,
+   "diff_pct": 0.0,
+   "bbox": null,
+   "ok": true
+  },
+  {
+   "route": "#/receber",
+   "diff_pixels": 0,
+   "diff_pct": 0.0,
+   "bbox": null,
+   "ok": true
+  },
+  {
+   "route": "#/colaboradores",
+   "diff_pixels": 0,
+   "diff_pct": 0.0,
+   "bbox": null,
+   "ok": true
+  },
+  {
+   "route": "#/parametros",
+   "diff_pixels": 0,
+   "diff_pct": 0.0,
+   "bbox": null,
+   "ok": true
+  }
+ ],
+ "meta": [
+  {
+   "route": "#/home",
+   "side": "deployed",
+   "title": "SYSTAAG",
+   "hash": "#/home"
+  },
+  {
+   "route": "#/hoje",
+   "side": "deployed",
+   "title": "Tarefas de hoje",
+   "hash": "#/hoje"
+  },
+  {
+   "route": "#/propostas",
+   "side": "deployed",
+   "title": "Propostas 17",
+   "hash": "#/propostas"
+  },
+  {
+   "route": "#/editor/pr1",
+   "side": "deployed",
+   "title": "SYSTAAG · Editor de proposta",
+   "hash": "#/editor/pr1"
+  },
+  {
+   "route": "#/estoque",
+   "side": "deployed",
+   "title": "Estoque & Obras",
+   "hash": "#/estoque"
+  },
+  {
+   "route": "#/entradas",
+   "side": "deployed",
+   "title": "Estoque Geral 104 ▼ 88 no inventário",
+   "hash": "#/entradas"
+  },
+  {
+   "route": "#/saidas",
+   "side": "deployed",
+   "title": "Saídas de Estoque 1 registros 16 unidades",
+   "hash": "#/saidas"
+  },
+  {
+   "route": "#/obras",
+   "side": "deployed",
+   "title": "Obras e clientes",
+   "hash": "#/obras"
+  },
+  {
+   "route": "#/pagar",
+   "side": "deployed",
+   "title": "A pagar",
+   "hash": "#/pagar"
+  },
+  {
+   "route": "#/receber",
+   "side": "deployed",
+   "title": "A receber",
+   "hash": "#/receber"
+  },
+  {
+   "route": "#/colaboradores",
+   "side": "deployed",
+   "title": "Pessoas",
+   "hash": "#/dbpessoas"
+  },
+  {
+   "route": "#/parametros",
+   "side": "deployed",
+   "title": "Parâmetros",
+   "hash": "#/parametros"
+  },
+  {
+   "side": "deployed",
+   "pageerrors": []
+  },
+  {
+   "route": "#/home",
+   "side": "artifact",
+   "title": "SYSTAAG",
+   "hash": "#/home"
+  },
+  {
+   "route": "#/hoje",
+   "side": "artifact",
+   "title": "Tarefas de hoje",
+   "hash": "#/hoje"
+  },
+  {
+   "route": "#/propostas",
+   "side": "artifact",
+   "title": "Propostas 17",
+   "hash": "#/propostas"
+  },
+  {
+   "route": "#/editor/pr1",
+   "side": "artifact",
+   "title": "SYSTAAG · Editor de proposta",
+   "hash": "#/editor/pr1"
+  },
+  {
+   "route": "#/estoque",
+   "side": "artifact",
+   "title": "Estoque & Obras",
+   "hash": "#/estoque"
+  },
+  {
+   "route": "#/entradas",
+   "side": "artifact",
+   "title": "Estoque Geral 104 ▼ 88 no inventário",
+   "hash": "#/entradas"
+  },
+  {
+   "route": "#/saidas",
+   "side": "artifact",
+   "title": "Saídas de Estoque 1 registros 16 unidades",
+   "hash": "#/saidas"
+  },
+  {
+   "route": "#/obras",
+   "side": "artifact",
+   "title": "Obras e clientes",
+   "hash": "#/obras"
+  },
+  {
+   "route": "#/pagar",
+   "side": "artifact",
+   "title": "A pagar",
+   "hash": "#/pagar"
+  },
+  {
+   "route": "#/receber",
+   "side": "artifact",
+   "title": "A receber",
+   "hash": "#/receber"
+  },
+  {
+   "route": "#/colaboradores",
+   "side": "artifact",
+   "title": "Pessoas",
+   "hash": "#/dbpessoas"
+  },
+  {
+   "route": "#/parametros",
+   "side": "artifact",
+   "title": "Parâmetros",
+   "hash": "#/parametros"
+  },
+  {
+   "side": "artifact",
+   "pageerrors": []
+  }
+ ]
+}
+INTEGRITY PASS
