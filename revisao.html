@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SYSTAAG · Revisão</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--blue:#2563eb;--bg:#f6f7fb;--card:#fff;--fg:#111827;--mut:#6b7280;--line:#e5e7eb;--soft:#f3f4f6}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#111520;--card:#1b2030;--fg:#f3f4f6;--mut:#9ca3af;--line:#2b3244;--soft:#242a3a}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:"Plus Jakarta Sans",system-ui,sans-serif;font-size:14px;line-height:1.45}
+header{position:sticky;top:0;z-index:5;background:var(--card);border-bottom:1px solid var(--line);padding:12px 16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+header h1{font-size:18px;margin:0;font-weight:800;letter-spacing:-.01em}
+header h1 span{color:var(--blue)}
+.sp{flex:1}
+button,select,input{font:inherit;color:var(--fg)}
+.btn{border:1px solid var(--line);background:var(--card);border-radius:10px;padding:8px 12px;font-weight:600;cursor:pointer}
+.btn.pri{background:var(--blue);border-color:var(--blue);color:#fff}
+.btn:active{transform:scale(.98)}
+main{padding:16px;max-width:1400px;margin:0 auto}
+.kpis{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 14px;min-width:110px;cursor:pointer}
+.kpi b{display:block;font-size:22px}.kpi small{color:var(--mut)}
+.kpi.on{outline:2px solid var(--blue)}
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.filters select,.filters input{border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:var(--card)}
+.filters input{flex:1;min-width:180px}
+table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+th,td{padding:9px 10px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:12px;color:var(--mut);text-transform:uppercase;letter-spacing:.04em;background:var(--soft);position:sticky;top:58px}
+tr.row{cursor:pointer}tr.row:hover td{background:rgba(37,99,235,.05)}
+tr.det td{background:var(--soft)}
+.chip{display:inline-block;border-radius:999px;padding:2px 9px;font-size:12px;font-weight:700;background:#fef3c7;color:#92400e}
+.chip[data-s="Aceito"]{background:#dbeafe;color:#1e40af}.chip[data-s="Feito"]{background:#dcfce7;color:#166534}.chip[data-s="Recusado"]{background:#e5e7eb;color:#374151}
+code,pre{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:12px}
+pre{white-space:pre-wrap;word-break:break-word;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px;margin:6px 0}
+.det .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:760px){.det .grid{grid-template-columns:1fr}th:nth-child(4),td:nth-child(4),th:nth-child(6),td:nth-child(6){display:none}}
+.crop{max-width:100%;border:1px solid var(--line);border-radius:10px;background:#fff}
+.mut{color:var(--mut)}
+.reply{border-left:3px solid var(--line);padding:6px 10px;margin:6px 0}
+.empty{padding:40px;text-align:center;color:var(--mut);background:var(--card);border:1px dashed var(--line);border-radius:12px}
+#gate{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:10}
+#gate form{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:24px;width:min(420px,92vw);box-shadow:0 20px 60px rgba(0,0,0,.2)}
+#gate input{width:100%;border:1px solid var(--line);border-radius:10px;padding:12px;font-size:16px;margin:10px 0;background:var(--card)}
+#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#111827;color:#fff;padding:10px 16px;border-radius:999px;font-weight:600;display:none;z-index:20}
+textarea.mission{width:100%;min-height:260px;font-family:"JetBrains Mono",monospace;font-size:12px;border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--card);color:var(--fg)}
+.link{color:var(--blue);text-decoration:none;font-weight:600}
+</style>
+</head>
+<body>
+<div id="gate" hidden><form id="gateF"><h2 style="margin:0 0 4px">SYSTAAG · Revisão</h2><div class="mut">Cole o token de administrador uma vez. Fica salvo neste aparelho.</div><input id="tok" type="password" placeholder="token" autocomplete="off"><button class="btn pri" type="submit" style="width:100%">Entrar</button><div id="gateErr" style="color:#dc2626;margin-top:8px"></div></form></div>
+<header>
+ <h1><span>SYSTAAG</span> · Revisão</h1>
+ <span class="mut" id="sum"></span>
+ <span class="sp"></span>
+ <a class="btn" href="/" target="_blank">Abrir protótipo ↗</a>
+ <button class="btn" id="refresh">Atualizar</button>
+ <button class="btn" id="csv">Exportar CSV</button>
+ <button class="btn" id="json">Exportar JSON</button>
+ <button class="btn pri" id="mission">Copiar como missão</button>
+ <button class="btn" id="logout" title="Esquecer token">Sair</button>
+</header>
+<main>
+ <div class="kpis" id="kpis"></div>
+ <div class="filters">
+  <select id="fScreen"><option value="">Todas as telas</option></select>
+  <select id="fAuthor"><option value="">Todos os autores</option></select>
+  <select id="fType"><option value="">Todos os tipos</option><option>Mudar</option><option>Adicionar</option><option>Remover</option><option>Dúvida</option></select>
+  <select id="fStatus"><option value="">Todos os status</option><option>Aberto</option><option>Aceito</option><option>Feito</option><option>Recusado</option></select>
+  <input id="q" type="search" placeholder="Buscar no texto, rótulo, caminho…">
+ </div>
+ <div id="out"></div>
+ <div id="missionBox" hidden style="margin-top:16px"><div style="display:flex;justify-content:space-between;align-items:center"><b>Missão (texto)</b><button class="btn" id="closeM">Fechar</button></div><textarea class="mission" id="missionT" readonly></textarea></div>
+</main>
+<div id="toast"></div>
+<script>
+(function(){
+'use strict';
+var API='/api/comentarios',KEY='staag-rev-token',STATUSES=['Aberto','Aceito','Feito','Recusado'];
+var $=function(s){return document.querySelector(s)};
+var esc=function(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})};
+var all=[],open={},kpiFilter='';
+function token(){try{return localStorage.getItem(KEY)||''}catch(e){return ''}}
+function setToken(t){try{localStorage.setItem(KEY,t)}catch(e){}}
+var tT;function toast(m){var t=$('#toast');t.textContent=m;t.style.display='block';clearTimeout(tT);tT=setTimeout(function(){t.style.display='none'},2500)}
+function fmt(ts){try{var d=new Date(ts);return d.toLocaleDateString('pt-BR')+' '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}catch(e){return ts||''}}
+function chip(s){return '<span class="chip" data-s="'+esc(s)+'">'+esc(s)+'</span>'}
+function lab(c){return c.whole?'tela inteira':(c.tag||'')+' "'+(c.label||'')+'"'}
+function gate(show,err){$('#gate').hidden=!show;$('#gateErr').textContent=err||''}
+function load(){var t=token();if(!t){gate(true);return}
+ fetch(API+'?token='+encodeURIComponent(t)).then(function(r){if(r.status===401){gate(true,'Token inválido.');throw new Error('401')}return r.json()}).then(function(j){gate(false);all=j.comentarios||[];fillFilters();render()}).catch(function(e){if(e.message!=='401')toast('Não consegui carregar: '+e.message)})}
+$('#gateF').addEventListener('submit',function(ev){ev.preventDefault();var v=$('#tok').value.trim();if(!v)return;setToken(v);load()});
+var urlTok=new URLSearchParams(location.search).get('token');if(urlTok){setToken(urlTok);history.replaceState(null,'',location.pathname)}
+function roots(){return all.filter(function(c){return !c.parentId})}
+function replies(id){return all.filter(function(c){return c.parentId===id})}
+function fillFilters(){var scr={},aut={};roots().forEach(function(c){scr[c.screen]=(scr[c.screen]||0)+1});all.forEach(function(c){aut[c.author]=(aut[c.author]||0)+1});
+ var fs=$('#fScreen'),fa=$('#fAuthor'),vs=fs.value,va=fa.value;fs.innerHTML='<option value="">Todas as telas</option>'+Object.keys(scr).sort().map(function(s){return '<option value="'+esc(s)+'">'+esc(s)+' ('+scr[s]+')</option>'}).join('');fa.innerHTML='<option value="">Todos os autores</option>'+Object.keys(aut).sort().map(function(s){return '<option value="'+esc(s)+'">'+esc(s)+' ('+aut[s]+')</option>'}).join('');fs.value=vs;fa.value=va}
+function filtered(){var s=$('#fScreen').value,a=$('#fAuthor').value,t=$('#fType').value,st=$('#fStatus').value||kpiFilter,q=$('#q').value.trim().toLowerCase();
+ return roots().filter(function(c){if(s&&c.screen!==s)return false;if(a&&c.author!==a&&!replies(c.id).some(function(r){return r.author===a}))return false;if(t&&c.type!==t)return false;if(st&&c.status!==st)return false;if(q){var hay=(c.text+' '+c.label+' '+c.path+' '+c.screen+' '+c.screenTitle+' '+c.author+' '+replies(c.id).map(function(r){return r.author+' '+r.text}).join(' ')).toLowerCase();if(hay.indexOf(q)<0)return false}return true}).sort(function(a,b){return (b.ts||'').localeCompare(a.ts||'')})}
+function render(){var rs=roots();var cnt={};STATUSES.forEach(function(s){cnt[s]=rs.filter(function(c){return c.status===s}).length});
+ $('#kpis').innerHTML='<div class="kpi'+(kpiFilter===''?' on':'')+'" data-k=""><b>'+rs.length+'</b><small>comentários · '+(all.length-rs.length)+' respostas</small></div>'+STATUSES.map(function(s){return '<div class="kpi'+(kpiFilter===s?' on':'')+'" data-k="'+s+'"><b>'+cnt[s]+'</b><small>'+s+'</small></div>'}).join('');
+ var rows=filtered();$('#sum').textContent=rows.length+' de '+rs.length;
+ if(!rows.length){$('#out').innerHTML='<div class="empty">'+(rs.length?'Nada com esses filtros.':'Nenhum comentário ainda. Compartilhe o link do protótipo: quem abrir vê o botão 💬 Comentar.')+'</div>';return}
+ $('#out').innerHTML='<table><thead><tr><th>Tela</th><th>Autor</th><th>Tipo</th><th>Elemento</th><th>Status</th><th>Data</th></tr></thead><tbody>'+rows.map(function(c){var rp=replies(c.id);
+  return '<tr class="row" data-id="'+c.id+'"><td><code>'+esc(c.screen)+'</code><div class="mut">'+esc(c.screenTitle||'')+'</div></td><td><b>'+esc(c.author)+'</b>'+(rp.length?'<div class="mut">'+rp.length+' resposta'+(rp.length>1?'s':'')+'</div>':'')+'</td><td>'+esc(c.type)+'</td><td>'+esc(lab(c))+'<div class="mut">'+esc(c.text.slice(0,90))+(c.text.length>90?'…':'')+'</div></td><td><select data-st="'+c.id+'">'+STATUSES.map(function(s){return '<option'+(s===c.status?' selected':'')+'>'+s+'</option>'}).join('')+'</select></td><td class="mut">'+esc(fmt(c.ts))+'<div>'+esc(c.device||'')+' · '+esc(c.theme||'')+'</div></td></tr>'+(open[c.id]?'<tr class="det"><td colspan="6">'+detail(c,rp)+'</td></tr>':'')}).join('')+'</tbody></table>'}
+function detail(c,rp){return '<div class="grid"><div><div><b>'+esc(c.author)+'</b> · '+esc(c.type)+' · '+chip(c.status)+' <span class="mut">'+esc(fmt(c.ts))+'</span></div><pre>'+esc(c.text)+'</pre>'+rp.map(function(r){return '<div class="reply"><b>'+esc(r.author)+'</b> <span class="mut">'+esc(fmt(r.ts))+'</span><div>'+esc(r.text)+'</div></div>'}).join('')+
+ '<div class="mut" style="margin-top:8px">tela <code>'+esc(c.screen)+'</code> · '+esc(c.screenTitle||'')+'</div><div class="mut">elemento: '+esc(lab(c))+'</div><div class="mut">path: <code>'+esc(c.path||'—')+'</code></div><div class="mut">box: <code>'+esc(c.box?JSON.stringify(c.box):'—')+'</code></div>'+(c.outerHTML?'<pre>'+esc(c.outerHTML)+'</pre>':'')+
+ '<div style="margin-top:8px"><a class="link" target="_blank" href="/'+esc(c.screen)+'">Abrir a tela ↗</a> &nbsp; <button class="btn" data-del="'+c.id+'">Excluir</button> &nbsp; <a class="link" href="'+API+'/'+esc(c.id)+'?token='+encodeURIComponent(token())+'" target="_blank">JSON ↗</a></div></div><div>'+(c.crop?'<img class="crop" src="'+esc(c.crop)+'" alt="recorte">':'<div class="mut">sem recorte (captura falhou neste aparelho)</div>')+'</div></div>'}
+$('#out').addEventListener('click',function(ev){var del=ev.target.closest('[data-del]');if(del){ev.stopPropagation();patch(del.dataset.del,{delete:true});return}if(ev.target.closest('select,a,button'))return;var tr=ev.target.closest('tr.row');if(!tr)return;open[tr.dataset.id]=!open[tr.dataset.id];render()});
+$('#out').addEventListener('change',function(ev){var s=ev.target.closest('select[data-st]');if(s)patch(s.dataset.st,{status:s.value})});
+$('#kpis').addEventListener('click',function(ev){var k=ev.target.closest('.kpi');if(!k)return;kpiFilter=k.dataset.k;$('#fStatus').value='';render()});
+['#fScreen','#fAuthor','#fType','#fStatus'].forEach(function(s){$(s).addEventListener('change',render)});$('#q').addEventListener('input',render);
+function patch(id,body){fetch(API+'/'+id,{method:'PATCH',headers:{'content-type':'application/json','x-admin-token':token()},body:JSON.stringify(body)}).then(function(r){return r.json()}).then(function(j){if(j.error){toast(j.error);return}if(j.deleted){all=all.filter(function(c){return c.id!==id&&c.parentId!==id});toast('Excluído')}else{all=all.map(function(c){return c.id===id?j:c});toast('Status: '+j.status)}fillFilters();render()}).catch(function(e){toast('erro: '+e.message)})}
+$('#refresh').addEventListener('click',load);
+$('#logout').addEventListener('click',function(){try{localStorage.removeItem(KEY)}catch(e){}location.reload()});
+function dl(name,mime,data){var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([data],{type:mime}));a.download=name;document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove()},500)}
+$('#json').addEventListener('click',function(){dl('systaag-comentarios.json','application/json',JSON.stringify({exportado:new Date().toISOString(),comentarios:all},null,2))});
+$('#csv').addEventListener('click',function(){var cols=['id','parentId','screen','screenTitle','author','type','status','label','tag','path','text','device','theme','ts','crop'];var q=function(v){v=v==null?'':String(v);return '"'+v.replace(/"/g,'""')+'"'};var lines=[cols.join(';')].concat(all.map(function(c){return cols.map(function(k){return q(c[k])}).join(';')}));dl('systaag-comentarios.csv','text/csv;charset=utf-8','﻿'+lines.join('\r\n'))});
+function mission(){var rows=filtered();var by={};rows.forEach(function(c){(by[c.screen]=by[c.screen]||[]).push(c)});var out=[];Object.keys(by).sort().forEach(function(s){by[s].forEach(function(c){out.push('['+c.screen+'] '+lab(c)+' — '+c.author+', '+c.type+', '+c.status);out.push('"'+c.text.replace(/\s+/g,' ').trim()+'"');replies(c.id).forEach(function(r){out.push('  ↳ '+r.author+': "'+r.text.replace(/\s+/g,' ').trim()+'"')});out.push('path: '+(c.path||'(tela inteira)'));if(c.crop)out.push('crop: '+c.crop);out.push('')})});return out.join('\n').trim()+'\n'}
+$('#mission').addEventListener('click',function(){var t=mission();$('#missionT').value=t;$('#missionBox').hidden=false;var done=function(){toast('Missão copiada ('+filtered().length+' comentários)')};if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(done,function(){$('#missionT').select();toast('Selecione e copie o texto abaixo')})}else{$('#missionT').select();toast('Selecione e copie o texto abaixo')}});
+$('#closeM').addEventListener('click',function(){$('#missionBox').hidden=true});
+load();
+})();
+</script>
+</body>
+</html>
