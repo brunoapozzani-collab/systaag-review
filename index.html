@@ -7489,7 +7489,8 @@ if(!S.db.cat52_done){
  /* marcas, categorias e fornecedores que vieram com o catálogo entram nas listas */
  const norm=x=>String(x||'').trim();
  const mk=new Set(S.db.marcas.map(m=>norm(m.nome).toUpperCase()));CAT.forEach(c=>{const m=norm(c[0]);if(m&&!mk.has(m.toUpperCase())){S.db.marcas.push({id:uid('mk'),nome:m,fornecedor:norm(c[6])||null,garantia_meses:12,inativo:false});mk.add(m.toUpperCase())}});
- const ct=new Set(S.db.categorias.map(c=>norm(c.nome)));['Outros'].forEach(n=>{if(!ct.has(n))S.db.categorias.push({id:uid('cat'),nome:n,insumo:false,subetapa:'',inativo:false})});
+ const ct=new Set(S.db.categorias.map(c=>norm(c.nome)));['Outros'].forEach(n=>{if(!ct.has(n))S.db.categorias.push({id:uid('cat'),nome:n,insumo:false,subetapa:'Instalação de equipamentos',inativo:false})});
+ /* v95.2: an existing store whose 'Outros' has no subetapa gets the same default (it was the one orphan on Base de dados › Saúde) */ S.db.categorias.forEach(c=>{if(c.nome==='Outros'&&!c.subetapa)c.subetapa='Instalação de equipamentos'});
  const fo=new Set(S.db.fornecedores.map(f=>norm(f.nome).toUpperCase()));CAT.forEach(c=>{const f=norm(c[6]);if(f&&!fo.has(f.toUpperCase())){S.db.fornecedores.push({id:uid('f'),nome:f,descricao:'importado da Tabela Taag',cadastro:today(),por:'sistema',prazo:7,contato:'',pagamento:''});fo.add(f.toUpperCase())}});
  S.db.cat52_done=true;log('produtos','*','catálogo real importado: '+n+' produtos com preço (Tabela Taag, set/2026)');
 }
@@ -11540,13 +11541,18 @@ const FIN_GROUPS = [
   sec.items = FIN_GROUPS.flatMap(([, , items]) => items);
   sec.items.forEach(([k, l]) => { SEC_OF[k] = 'fin'; LABEL[k] = l; });
   SEC_OF.findetalhe = 'fin'; LABEL.findetalhe = 'Detalhe';
+  /* v95.2: every Financeiro screen — the report/detail routes too (Resultado por obra, DRE, Balanço, Caixa, Saúde, Extrato, Notas, RH, Vendas a confirmar…) —
+     shows this ONE menu. Later modules rebuild SEC_OF from the menu lists only, which dropped these routes and let the old standalone Financeiro menu show through (audit 15-Oct). */
+  const FIN_ROUTES = new Set([...sec.items.map(([k]) => k), 'findetalhe', 'robra', 'robras', 'dre', 'balanco', 'caixa', 'saude', 'extrato', 'comissoes', 'vendas', 'notas', 'rh', 'fontes', 'norte', 'creceber', 'cpagar', 'rfin', 'fiscal']);
   const idx = NAV.findIndex(s => s.id === 'ftg'); if (idx >= 0) NAV.splice(idx, 1);
   const _rn = window.renderNav; window.renderNav = function () {
     _rn.apply(this, arguments);
     try {
-      const { k } = route(); if ((SEC_OF[k] || 'home') !== 'fin') return;
+      const { k } = route(); if (!FIN_ROUTES.has(k) && (SEC_OF[k] || 'home') !== 'fin') return;
+      if (!SEC_OF[k]) SEC_OF[k] = 'fin';
+      try { const rail = document.getElementById('rail'); if (rail) [...rail.querySelectorAll('button')].forEach((b, i) => b.classList.toggle('on', NAV[i] && NAV[i].id === 'fin')); } catch (e) {}
       const sn = document.getElementById('subnav'); if (!sn) return; let c = {}; try { c = counts() || {}; } catch (e) {}
-      const hk = k === 'findetalhe' ? 'fin' : k;
+      const hk = k === 'findetalhe' ? 'fin' : ({ robra: 'resultado', robras: 'resultado', dre: 'resultado', balanco: 'resultado', caixa: 'fincontas', saude: 'resultado', extrato: 'finlanc', comissoes: 'remuneracao', vendas: 'receber', notas: 'pagar', rh: 'remuneracao', creceber: 'receber', cpagar: 'pagar', rfin: 'resultado', fiscal: 'produtos', fontes: 'fin', norte: 'fin' }[k] || k);
       sn.innerHTML = `<h6>Financeiro</h6>` + FIN_GROUPS.map(([g, ic, items]) => `<div class="sub" style="font-size:10px;letter-spacing:.06em;padding:8px 10px 2px;font-weight:700"><i class="bi ${ic} me-1"></i>${g.toUpperCase()}</div>` + items.map(([key, lb]) => `<a href="#/${key}" class="${key === hk ? 'on' : ''}">${lb}${c[key] ? `<span class="cnt">${c[key]}</span>` : ''}</a>`).join('')).join('');
     } catch (e) {}
   };
