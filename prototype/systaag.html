@@ -11533,7 +11533,7 @@ const FIN_GROUPS = [
   ['Histórico',  'bi-clock-history', [['finlanc', 'Lançamentos'], ['finrevisao', 'Para Revisão']]],
   ['Contas',     'bi-bank',          [['fincontas', 'Contas bancárias']]],
   ['Resultado',  'bi-graph-up',      [['fin', 'Visão geral'], ['fineixos', 'Por eixo'], ['resultado', 'Resultado'], ['remuneracao', 'Remuneração']]],
-  ['Base',       'bi-gear',          [['finplano', 'Plano de Contas'], ['finregras', 'Regras'], ['produtos', 'Notas fiscais (NF)'], ['finaudit', 'Auditoria']]],
+  ['Base',       'bi-gear',          [['finplano', 'Plano de Contas'], ['rhop', 'RH'], ['finregras', 'Regras'], ['produtos', 'Notas fiscais (NF)'], ['finaudit', 'Auditoria']]],
 ];
 (function () {
   const sec = NAV.find(s => s.id === 'fin'); if (!sec) return;
@@ -11546,7 +11546,7 @@ const FIN_GROUPS = [
   // + PERFIL chips). That is the "second finance page" seen on Caixa, DRE, Balanço, a ficha de colaborador, etc. One sidebar now: the grouped one.
   const finNav = function () {
     const { k } = route(); const sn = document.getElementById('subnav'); if (!sn) return; let c = {}; try { c = counts() || {}; } catch (e) {}
-    const hk = ({ findetalhe: 'fin', cpagar: 'pagar', creceber: 'receber', caixa: 'fincontas', dre: 'resultado', balanco: 'resultado', robra: 'resultado', robras: 'resultado', saude: 'resultado', rfin: 'resultado', extrato: 'finlanc', comissoes: 'remuneracao', rh: 'remuneracao', vendas: 'receber', notas: 'pagar', fiscal: 'produtos', fontes: 'fin', norte: 'fin', colaboradores: 'fhoje', rhop: 'fhoje' })[k] || k;
+    const hk = ({ findetalhe: 'fin', cpagar: 'pagar', creceber: 'receber', caixa: 'fincontas', dre: 'resultado', balanco: 'resultado', robra: 'resultado', robras: 'resultado', saude: 'resultado', rfin: 'resultado', extrato: 'finlanc', comissoes: 'remuneracao', rh: 'rhop', vendas: 'receber', notas: 'pagar', fiscal: 'produtos', fontes: 'fin', norte: 'fin', colaboradores: 'rhop' })[k] || k;
     sn.innerHTML = `<h6>Financeiro</h6>` + FIN_GROUPS.map(([g, ic, items]) => `<div class="sub" style="font-size:10px;letter-spacing:.06em;padding:8px 10px 2px;font-weight:700"><i class="bi ${ic} me-1"></i>${g.toUpperCase()}</div>` + items.map(([key, lb]) => `<a href="#/${key}" class="${key === hk ? 'on' : ''}">${lb}${c[key] ? `<span class="cnt">${c[key]}</span>` : ''}</a>`).join('')).join('');
   };
   if (typeof __RN === 'object') __RN.fin = finNav;
