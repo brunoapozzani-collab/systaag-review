@@ -12031,7 +12031,7 @@ A.novaPropostaTipo = function (f) {
     h = h.replace(/A\.novaProposta\(\{cliente_id:n_cli\.value,obra_id:n_obra\.value,nome:n_nome\.value,linha:n_linha\.value,produto:n_prod\.value,consultores:([^}]*)\}\)/, "A.novaPropostaTipo({cliente_id:n_cli.value,obra_id:n_obra.value,nome:n_nome.value,linha:n_linha.value,tipo:n_tipo.value,consultores:$1})");
     return h;
   };
-  const _pr = SCREENS.propostas; if (_pr) SCREENS.propostas = function () { let h = _pr.apply(this, arguments); if (typeof h !== 'string') return h; return h.replace(/<button class="btn-apple" style="background:#6f42c1" onclick="const c=S\.db\.clientes\.map\(\(x,i\)=>i\+' '\+x\.sigla[\s\S]*?Proposta de Projeto<\/button>/, '<a class="btn-apple" style="background:#6f42c1" href="#/nova/projeto"><i class="bi bi-pencil-ruler me-1"></i>Proposta de Projeto</a>'); };
+  const _pr = SCREENS.propostas; if (_pr) SCREENS.propostas = function () { let h = _pr.apply(this, arguments); if (typeof h !== 'string') return h; return h.replace(/<button class="btn-apple" style="background:#6f42c1" onclick="const c=S\.db\.clientes\.map\(\(x,i\)=>i\+' '\+x\.sigla[\s\S]*?Proposta de Projeto<\/button>/, ''); };
 })();
 /* the tipo shows on the proposta (editor head) */
 (function () { const _ed = SCREENS.editor; if (!_ed) return; SCREENS.editor = function (id) { let h = _ed.apply(this, arguments); if (typeof h !== 'string') return h; const p = get('propostas', id); if (!p || !p.tipo) return h; return h.replace(/(<h1[^>]*>[^<]*<\/h1>|<h4[^>]*>[^<]*<\/h4>)/, `$1<span class="chip pur" style="font-size:11px;vertical-align:middle">${TIPO_PROPOSTA[p.tipo]}</span>`); }; })();
