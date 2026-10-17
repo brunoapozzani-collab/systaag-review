@@ -11953,6 +11953,159 @@ const _desp = SCREENS.despesas; if (_desp) SCREENS.despesas = function () { let 
 for (const k of ['pagar', 'receber']) { const _s = SCREENS[k]; if (!_s) continue; SCREENS[k] = function () { let h = _s.apply(this, arguments); if (typeof h !== 'string') return h; const pay = k === 'cpagar' || k === 'pagar'; const n = FST.lancamentos.filter(l => l.fonte === 'erp' && l.tipo === (pay ? 'saida' : 'entrada')).length; const note = `<div class="sub mb-2"><i class="bi bi-cash-coin me-1"></i>${pay ? 'Cada conta paga' : 'Cada parcela recebida'} vira um lançamento no <a href="#/finlanc/erp">Histórico › Lançamentos</a> (${n} até agora) — código e endereço podem ser ajustados lá ou em <a href="#/finrevisao">Para Revisão</a>.</div>`; const i = h.indexOf('<div class="row'); return i > 0 ? h.slice(0, i) + note + h.slice(i) : h + note; }; }
 /* non-gestor: the structural screens are read-only (the actions are gated too) */
 const _rm = window.renderMain; if (_rm) window.renderMain = function () { const r = _rm.apply(this, arguments); try { const { k } = route(); if (['finplano', 'finregras', 'fincontas'].includes(k) && !isGestor()) document.querySelectorAll('#main .ftg input, #main .ftg select, #main .ftg button.fbtn').forEach(el => { el.disabled = true; }); } catch (e) {} return r; };
+/* ======== SESSION 96: changes asked in the review comments (systaag-review, 15-Oct-2026) ======== */
+(function () {
+'use strict';
+const ES = S;
+/* ---------- helpers ---------- */
+const PARC_TIPOS = [['arquiteto', 'Arquiteto'], ['escritorio', 'Escritório'], ['gerenciadora', 'Gerenciadora'], ['luminotecnico', 'Luminotécnico'], ['engenheiro', 'Engenheiro / projetista'], ['indicador', 'Indicador']];
+const tipoLabel = t => (PARC_TIPOS.find(x => x[0] === t) || [t, t])[1];
+const escA = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+
+/* ---------- 1. Cliente ↔ Parceiros (bruno, #/dbclientes): "Deveria ser parceiros e poder adicionar outros como gerenciadora, luminotécnico, etc"
+   A client has a list of partners (any type), not one 'arquiteto' text. c.arquiteto stays in sync (= the first arquiteto/escritório) for every
+   screen that still reads it. ---------- */
+function clientParceiros(c) { if (!Array.isArray(c.parceiros)) c.parceiros = []; return c.parceiros; }
+function syncArquiteto(c) { const a = clientParceiros(c).map(x => get('parceiros', x.id)).filter(p => p && (p.tipo === 'arquiteto' || p.tipo === 'escritorio'))[0]; c.arquiteto = a ? a.nome : (c.arquiteto || ''); }
+(function migrate() {
+  let n = 0;
+  for (const c of ES.db.clientes) {
+    if (Array.isArray(c.parceiros)) continue;
+    c.parceiros = [];
+    if (c.arquiteto) { let p = ES.db.parceiros.find(p => p.nome === c.arquiteto); if (!p) { p = { id: uid('pc'), tipo: 'arquiteto', nome: c.arquiteto, escritorio: '', pr: 'André', whatsapp: '', criado: today(), rt_pct: 10 }; ES.db.parceiros.push(p); } c.parceiros.push({ id: p.id }); n++; }
+  }
+  if (n) { log('clientes', 'v96', n + ' clientes: arquiteto virou parceiro (lista de parceiros por cliente)'); save(); }
+})();
+Object.assign(A, {
+  addParceiroCliente(cid, pid) { const c = get('clientes', cid); if (!c) throw new RuleError('Cliente inválido.'); const p = get('parceiros', pid); if (!p) throw new RuleError('Escolha o parceiro.'); if (clientParceiros(c).some(x => x.id === pid)) throw new RuleError('Esse parceiro já está no cliente.'); c.parceiros.push({ id: pid }); syncArquiteto(c); put('clientes', c, 'parceiro ' + p.nome + ' (' + tipoLabel(p.tipo) + ')'); },
+  delParceiroCliente(cid, pid) { const c = get('clientes', cid); if (!c) throw new RuleError('Cliente inválido.'); c.parceiros = clientParceiros(c).filter(x => x.id !== pid); syncArquiteto(c); put('clientes', c, 'parceiro removido'); },
+  novoParceiroCliente(cid, tipo, nome) { if (!nome || !nome.trim()) throw new RuleError('Nome do parceiro.'); if (!tipo) throw new RuleError('Tipo do parceiro.'); let p = ES.db.parceiros.find(p => p.nome.toLowerCase() === nome.trim().toLowerCase()); if (!p) { A.novoParceiro({ tipo, nome: nome.trim() }); p = ES.db.parceiros.find(p => p.nome === nome.trim()); } A.addParceiroCliente(cid, p.id); return p.id; },
+});
+window.__parcCell = function (c) {
+  const list = clientParceiros(c).map(x => get('parceiros', x.id)).filter(Boolean);
+  const chips = list.map(p => `<span class="chip" style="font-size:10.5px" title="${escA(tipoLabel(p.tipo))}">${escA(p.nome)} <span class="sub">· ${escA(tipoLabel(p.tipo)).split(' ')[0]}</span> <a href="javascript:void(0)" title="remover" onclick="run(()=>A.delParceiroCliente('${c.id}','${p.id}'),'Parceiro removido')">✕</a></span>`).join(' ');
+  const opts = PARC_TIPOS.map(([k, l]) => `<optgroup label="${escA(l)}">${ES.db.parceiros.filter(p => !p.inativo && p.tipo === k && !list.some(x => x.id === p.id)).map(p => `<option value="${p.id}">${escA(p.nome)}</option>`).join('')}<option value="novo:${k}">+ novo ${escA(l.toLowerCase())}…</option></optgroup>`).join('');
+  return `<div class="d-flex flex-wrap gap-1 align-items-center">${chips || '<span class="sub">— sem parceiros —</span>'}<select class="form-select form-select-sm" style="width:150px;font-size:11px" onchange="const v=this.value;if(!v)return;if(v.startsWith('novo:')){const n=ask('Nome do novo parceiro');if(n)run(()=>A.novoParceiroCliente('${c.id}',v.slice(5),n),'Parceiro criado e ligado')}else run(()=>A.addParceiroCliente('${c.id}',v),'Parceiro ligado');this.value=''"><option value="">+ parceiro…</option>${opts}</select></div>`;
+};
+(function () {
+  const _db = SCREENS.dbclientes; if (!_db) return;
+  SCREENS.dbclientes = function () {
+    let h = _db.apply(this, arguments); if (typeof h !== 'string') return h;
+    return h.replace(/<td>(?:<select class="form-select form-select-sm"[^>]*onchange="bdSet\('clientes','([^']+)','arquiteto'[\s\S]*?<\/select>|<input[^>]*onchange="bdSet\('clientes','([^']+)','arquiteto'[^>]*>)<\/td>/g, (m, id1, id2) => { const c = get('clientes', id1 || id2); return c ? `<td>${__parcCell(c)}</td>` : m; })
+      .replace('<th>Obra (mover) · programador</th>', '<th>Parceiros · obra (mover) · programador</th>');
+  };
+})();
+
+/* ---------- 2. RT default (tito, editor › RT / COMISSÃO = 0): "o default seja 10% e seja editável" ---------- */
+(function () {
+  const def = () => { try { return +PF().rt || 10; } catch (e) { return 10; } };
+  let n = 0; for (const p of ES.db.propostas) if (!(+p.rt) && p.estado !== 'perdida' && p.linha !== 'focal') { p.rt = def(); n++; }
+  if (n) { log('propostas', 'v96', n + ' proposta(s) sem RT receberam o padrão ' + def() + '% (editável na proposta)'); save(); }
+  const _put = window.put; window.put = function (t, r) { try { if (t === 'propostas' && r && r.rt == null) r.rt = def(); } catch (e) {} return _put.apply(this, arguments); };
+  const _ed = SCREENS.editor; if (_ed) SCREENS.editor = function () { let h = _ed.apply(this, arguments); if (typeof h !== 'string') return h; return h.replace(/('RT \/ COMISSÃO salvo'\)"><span class="sub">)%<\/span>/, `$1% <span title="padrão ${def()}% (Parâmetros); mude aqui quando a negociação for outra">· padrão ${def()}%</span></span>`); };
+})();
+
+/* ---------- 3. Nova proposta: a "Tipo" list (guilherme): sistema completo · proposta de projeto · consultoria · cabeamento · upgrade · proposta adicional · acústica.
+   The numbered "Proposta de PROJETO para qual cliente?" prompt on Propostas goes away (guilherme: "remover") — Nova proposta › Tipo does it. ---------- */
+const TIPOS = [['sistema', 'Sistema completo'], ['projeto', 'Proposta de projeto'], ['consultoria', 'Consultoria'], ['cabeamento', 'Cabeamento'], ['upgrade', 'Upgrade'], ['adicional', 'Proposta adicional'], ['acustica', 'Acústica']];
+window.TIPO_PROPOSTA = Object.fromEntries(TIPOS);
+A.novaPropostaTipo = function (f) {
+  const tipo = f.tipo || 'sistema'; if (!TIPO_PROPOSTA[tipo]) throw new RuleError('Escolha o tipo da proposta.');
+  if (tipo === 'adicional' && !f.obra_id) throw new RuleError('Proposta adicional precisa da obra (é uma ampliação de escopo da mesma obra).');
+  const linha = tipo === 'acustica' ? 'acustica' : (f.linha || 'taag');
+  const c = get('clientes', f.cliente_id); if (!c) throw new RuleError('Escolha o cliente.');
+  const nome = f.nome || (c.sigla + ' — ' + TIPO_PROPOSTA[tipo]);
+  let id;
+  if (tipo === 'projeto') id = A.novaPropostaProjeto(f.cliente_id, f.obra_id || null, nome);
+  else id = A.novaProposta({ cliente_id: f.cliente_id, obra_id: f.obra_id || null, nome, linha, produto: 'sistema', consultores: f.consultores && f.consultores.length ? f.consultores : ['André'] });
+  const p = get('propostas', id); p.tipo = tipo; if (tipo === 'adicional') p.categoria = 'Adicional'; put('propostas', p, 'tipo: ' + TIPO_PROPOSTA[tipo]);
+  return id;
+};
+(function () {
+  const _nova = SCREENS.nova; if (!_nova) return;
+  SCREENS.nova = function (arg) {
+    let h = _nova.apply(this, arguments); if (typeof h !== 'string') return h;
+    const pre = TIPO_PROPOSTA[arg] ? arg : 'sistema';
+    const sel = `<div class="col-md-6"><label class="form-label sub">Tipo de proposta</label><select id="n_tipo" class="form-select" onchange="const l=document.getElementById('n_linha');if(l)l.value=this.value==='acustica'?'acustica':(l.value==='acustica'?'taag':l.value)">${TIPOS.map(([k, l]) => `<option value="${k}" ${k === pre ? 'selected' : ''}>${l}</option>`).join('')}</select><div class="sub" style="font-size:11px">Proposta adicional = ampliação de escopo da mesma obra (escolha a obra).</div></div>`;
+    h = h.replace(/<div class="col-md-3"><label class="form-label sub">Produto<\/label><select id="n_prod"[\s\S]*?<\/select><\/div>/, sel);
+    h = h.replace(/A\.novaProposta\(\{cliente_id:n_cli\.value,obra_id:n_obra\.value,nome:n_nome\.value,linha:n_linha\.value,produto:n_prod\.value,consultores:([^}]*)\}\)/, "A.novaPropostaTipo({cliente_id:n_cli.value,obra_id:n_obra.value,nome:n_nome.value,linha:n_linha.value,tipo:n_tipo.value,consultores:$1})");
+    return h;
+  };
+  const _pr = SCREENS.propostas; if (_pr) SCREENS.propostas = function () { let h = _pr.apply(this, arguments); if (typeof h !== 'string') return h; return h.replace(/<button class="btn-apple" style="background:#6f42c1" onclick="const c=S\.db\.clientes\.map\(\(x,i\)=>i\+' '\+x\.sigla[\s\S]*?Proposta de Projeto<\/button>/, '<a class="btn-apple" style="background:#6f42c1" href="#/nova/projeto"><i class="bi bi-pencil-ruler me-1"></i>Proposta de Projeto</a>'); };
+})();
+/* the tipo shows on the proposta (editor head) */
+(function () { const _ed = SCREENS.editor; if (!_ed) return; SCREENS.editor = function (id) { let h = _ed.apply(this, arguments); if (typeof h !== 'string') return h; const p = get('propostas', id); if (!p || !p.tipo) return h; return h.replace(/(<h1[^>]*>[^<]*<\/h1>|<h4[^>]*>[^<]*<\/h4>)/, `$1<span class="chip pur" style="font-size:11px;vertical-align:middle">${TIPO_PROPOSTA[p.tipo]}</span>`); }; })();
+
+/* ---------- 4. Pré-vendas: e-mail alert to Guilherme (guilherme): "mandar um alerta por email do guilherme para validar pré-venda"
+   The prototype has no mail server: the alert is registered (quem, quando, assunto), shown on the proposta and in Rastro, and marked "simulado". ---------- */
+if (!ES.db.alertas) ES.db.alertas = [];
+const VALIDADOR = () => { const e = (ES.db.equipe || []).find(e => /guilherme/i.test(e.nome)); return { nome: 'Guilherme', email: (e && e.email) || 'guilherme@taagbrasil.com.br' }; };
+A.alertaPrevendas = function (pr, reenvio) {
+  const p = get('propostas', pr); if (!p) throw new RuleError('Proposta inválida.'); if (p.estado !== 'em_prevendas') throw new RuleError('Só uma proposta aguardando pré-vendas gera o alerta.');
+  const v = VALIDADOR(); const a = { id: uid('al'), proposta_id: pr, para: v.nome, email: v.email, canal: 'e-mail', assunto: `Validar pré-venda · proposta ${p.numero} · ${p.nome}`, quando: new Date().toISOString().slice(0, 16).replace('T', ' '), reenvio: !!reenvio, simulado: true };
+  ES.db.alertas.push(a); log('propostas', pr, (reenvio ? 'alerta reenviado' : 'alerta enviado') + ' por e-mail a ' + v.nome + ' (validar pré-venda) — simulado no protótipo'); save(); return a;
+};
+const _nv = A.novaVersao; A.novaVersao = function (pr) { const before = get('propostas', pr).estado; const r = _nv.apply(this, arguments); try { if (before === 'rascunho' && get('propostas', pr).estado === 'em_prevendas') A.alertaPrevendas(pr); } catch (e) {} return r; };
+const _ep = A.enviarPrevendas; if (_ep) A.enviarPrevendas = function (pr) { const r = _ep.apply(this, arguments); try { A.alertaPrevendas(pr); } catch (e) {} return r; };
+window.__alertaChip = function (id) { const as = ES.db.alertas.filter(a => a.proposta_id === id); const last = as[as.length - 1]; const v = VALIDADOR(); return `<span class="chip pur">aguardando ${v.nome}</span>${last ? `<span class="chip" title="${escA(last.assunto)} → ${escA(last.email)}"><i class="bi bi-envelope-check me-1"></i>e-mail ${last.reenvio ? 'reenviado' : 'enviado'} ${last.quando.slice(5, 16).replace(/-/g, '/').replace(' ', ' ')} <span class="sub">(simulado no protótipo)</span></span>` : ''}<button class="btn-soft" style="font-size:11px" onclick="run(()=>A.alertaPrevendas('${id}',true),'Alerta reenviado a ${v.nome}')"><i class="bi bi-envelope me-1"></i>${last ? 'Reenviar alerta' : 'Enviar alerta'}</button>`; };
+
+/* ---------- 5. "O cliente aceitou? Sim / Não" (guilherme) — Não closes the proposta as perdida, with the reason. ---------- */
+A.clienteRecusou = function (pr, motivo) { const p = get('propostas', pr); if (!['enviada', 'revisao', 'em_prevendas', 'aprovada_cliente'].includes(p.estado)) throw new RuleError('Só uma proposta enviada ao cliente pode ser recusada.'); if (!motivo || !motivo.trim()) throw new RuleError('Diga o motivo (fica no histórico).'); put('propostas', { ...p, estado: 'perdida', perdida_em: today(), motivo_perda: motivo.trim() }, 'cliente recusou: ' + motivo.trim()); };
+(function () {
+  const _ed = SCREENS.editor; if (!_ed) return;
+  SCREENS.editor = function (id) {
+    let h = _ed.apply(this, arguments); if (typeof h !== 'string') return h;
+    h = h.replace(/<span class="chip pur">aguardando Guilherme<\/span>/, () => __alertaChip(id));
+    h = h.replace(/<button class="btn-apple" onclick="run\(\(\)=>A\.clienteAprovou\('([^']+)'\),'Cliente disse sim'\)">O cliente disse sim \(sinal \+ assinatura\)<\/button>/, (m, pid) => `<span class="d-inline-flex align-items-center gap-2 flex-wrap"><b>O cliente aceitou?</b><button class="btn-apple" onclick="run(()=>A.clienteAprovou('${pid}'),'Cliente disse sim')">Sim (sinal + assinatura)</button><button class="btn-soft" onclick="const m=ask('O cliente disse não — qual o motivo?');if(m)run(()=>A.clienteRecusou('${pid}',m),'Proposta marcada como perdida')">Não</button></span>`);
+    const p = get('propostas', id); if (p && p.estado === 'perdida' && p.motivo_perda) h = h.replace(/(<b class="me-2">Fluxo<\/b>)/, `$1<span class="chip bad">perdida · ${escA(p.perdida_em || '')}</span><span class="sub">motivo: ${escA(p.motivo_perda)}</span>`);
+    return h;
+  };
+})();
+
+/* ---------- 6. Apresentação (.pptx) da proposta (guilherme): "adicionar a apresentação em ppt" + "juntar ppt com a lista de produtos no final".
+   One button on the proposta builds the deck: capa · escopo (briefing) · um slide por ambiente · investimento · lista de produtos no final
+   (uma linha por produto com quantidade). PptxGenJS is loaded only when the button is clicked. ---------- */
+window.__gerarPPT = async function (id) {
+  const p = get('propostas', id); if (!p) return toast('Proposta inválida', true);
+  if (!window.PptxGenJS) { toast('Carregando o gerador de apresentações…'); await new Promise((res, rej) => { const s = document.createElement('script'); s.src = 'https://cdnjs.cloudflare.com/ajax/libs/PptxGenJS/3.12.0/pptxgen.bundle.js'; s.onload = res; s.onerror = () => rej(new Error('PptxGenJS não carregou')); document.head.appendChild(s); }).catch(e => { toast(e.message, true); }); if (!window.PptxGenJS) return; }
+  const cli = (typeof cliente === 'function' ? cliente(id) : p.sigla) || p.sigla; const obra = p.obra_id ? get('obras', p.obra_id) : null;
+  const its = ES.db.itens.filter(i => i.proposta_id === id); const ambs = [...new Set(its.map(i => i.ambiente || 'Ambiente'))];
+  const tot = (typeof D !== 'undefined' && D.propTotal) ? D.propTotal(id) : its.reduce((a, i) => a + (i.qtd || 0) * (get('produtos', i.produto_id) || {}).preco || 0, 0);
+  const NAVY = '0B1F3A', ACC = '0071E3', GREY = '6B7280';
+  const pptx = new PptxGenJS(); pptx.layout = 'LAYOUT_16x9'; pptx.title = `Proposta ${p.numero} · ${cli}`;
+  const base = (s, title) => { s.background = { color: 'FFFFFF' }; s.addShape(pptx.ShapeType.rect, { x: 0, y: 0, w: 10, h: 0.08, fill: { color: ACC } }); if (title) s.addText(title, { x: 0.5, y: 0.3, w: 9, h: 0.6, fontSize: 24, bold: true, color: NAVY, fontFace: 'Helvetica' }); s.addText(`TAAG · Proposta ${p.numero} · ${cli}`, { x: 0.5, y: 5.15, w: 9, h: 0.3, fontSize: 9, color: GREY, fontFace: 'Helvetica' }); };
+  let s = pptx.addSlide(); s.background = { color: NAVY }; s.addText('TAAG', { x: 0.5, y: 0.5, w: 3, h: 0.6, fontSize: 28, bold: true, color: 'FFFFFF', fontFace: 'Helvetica', charSpacing: 6 });
+  s.addText(p.nome || TIPO_PROPOSTA[p.tipo] || 'Proposta', { x: 0.5, y: 2.0, w: 9, h: 1, fontSize: 34, bold: true, color: 'FFFFFF', fontFace: 'Helvetica' });
+  s.addText(`${cli}${obra ? ' · ' + obra.nome : ''}`, { x: 0.5, y: 3.0, w: 9, h: 0.5, fontSize: 18, color: 'CBD5E1', fontFace: 'Helvetica' });
+  s.addText(`Proposta ${p.numero} · ${new Date().toLocaleDateString('pt-BR')}${p.consultores && p.consultores.length ? ' · ' + p.consultores.join(' + ') : ''}`, { x: 0.5, y: 4.6, w: 9, h: 0.4, fontSize: 12, color: 'CBD5E1', fontFace: 'Helvetica' });
+  s.addText('Layout provisório — aguardando o template TAAG de apresentação', { x: 0.5, y: 5.05, w: 9, h: 0.3, fontSize: 9, italic: true, color: '94A3B8', fontFace: 'Helvetica' });
+  s = pptx.addSlide(); base(s, 'Escopo');
+  const escopo = (p.briefing && (p.briefing.texto || p.briefing)) || p.escopo || `${TIPO_PROPOSTA[p.tipo] || 'Sistema'} para ${cli}${obra ? ' — ' + obra.nome : ''}: ${ambs.length} ambiente(s), ${its.reduce((a, i) => a + (i.qtd || 0), 0)} itens.`;
+  s.addText(String(typeof escopo === 'string' ? escopo : JSON.stringify(escopo)).slice(0, 1200), { x: 0.5, y: 1.1, w: 9, h: 3.8, fontSize: 14, color: '1F2937', fontFace: 'Helvetica', valign: 'top' });
+  for (const amb of ambs) { s = pptx.addSlide(); base(s, amb); const rows = [[{ text: 'Produto', options: { bold: true, color: 'FFFFFF', fill: { color: NAVY } } }, { text: 'Qtd', options: { bold: true, color: 'FFFFFF', fill: { color: NAVY }, align: 'right' } }]]; const byP = {}; its.filter(i => (i.ambiente || 'Ambiente') === amb).forEach(i => { byP[i.produto_id] = (byP[i.produto_id] || 0) + (i.qtd || 0); }); Object.entries(byP).forEach(([pid, q]) => rows.push([(get('produtos', pid) || { nome: pid }).nome, { text: String(q), options: { align: 'right' } }])); s.addTable(rows.slice(0, 18), { x: 0.5, y: 1.1, w: 9, colW: [7.8, 1.2], fontSize: 11, fontFace: 'Helvetica', border: { type: 'solid', color: 'E5E7EB', pt: 0.5 }, autoPage: true }); }
+  s = pptx.addSlide(); base(s, 'Investimento'); s.addText(BRL(tot), { x: 0.5, y: 1.4, w: 9, h: 1.2, fontSize: 44, bold: true, color: NAVY, fontFace: 'Helvetica' });
+  const cond = (p.fin && p.fin.plano_pag && p.fin.plano_pag.length) ? p.fin.plano_pag.map(x => `${x.pct}% ${x.quando || x.marco || ''}`.trim()).join(' · ') : 'Condições de pagamento conforme contrato.';
+  s.addText(cond, { x: 0.5, y: 2.7, w: 9, h: 0.8, fontSize: 14, color: '1F2937', fontFace: 'Helvetica' });
+  // lista de produtos no final (uma linha por produto, com quantidade)
+  const byAll = {}; its.forEach(i => { byAll[i.produto_id] = (byAll[i.produto_id] || 0) + (i.qtd || 0); });
+  const lista = Object.entries(byAll).map(([pid, q]) => { const pr = get('produtos', pid) || { nome: pid, marca: '' }; return [pr.marca || '', pr.nome, q]; }).sort((a, b) => (a[0] + a[1]).localeCompare(b[0] + b[1], 'pt'));
+  const head = [[{ text: 'Marca', options: { bold: true, color: 'FFFFFF', fill: { color: NAVY } } }, { text: 'Produto', options: { bold: true, color: 'FFFFFF', fill: { color: NAVY } } }, { text: 'Qtd', options: { bold: true, color: 'FFFFFF', fill: { color: NAVY }, align: 'right' } }]];
+  for (let i = 0; i < Math.max(1, lista.length); i += 16) { s = pptx.addSlide(); base(s, 'Lista de produtos' + (lista.length > 16 ? ` (${Math.floor(i / 16) + 1}/${Math.ceil(lista.length / 16)})` : '')); s.addTable(head.concat(lista.slice(i, i + 16).map(r => [r[0], r[1], { text: String(r[2]), options: { align: 'right' } }])), { x: 0.5, y: 1.1, w: 9, colW: [1.8, 6.2, 1.0], fontSize: 10.5, fontFace: 'Helvetica', border: { type: 'solid', color: 'E5E7EB', pt: 0.5 } }); }
+  p.apresentacoes = p.apresentacoes || []; p.apresentacoes.push({ data: today(), slides: 3 + ambs.length + Math.max(1, Math.ceil(lista.length / 16)), produtos: lista.length }); put('propostas', p, 'apresentação gerada (.pptx)');
+  await pptx.writeFile({ fileName: `Proposta_${p.numero}_${String(cli).replace(/[^\w]+/g, '_')}.pptx` });
+  toast('Apresentação gerada: capa, escopo, ambientes, investimento e lista de produtos no final');
+};
+(function () {
+  const _ed = SCREENS.editor; if (!_ed) return;
+  SCREENS.editor = function (id) {
+    let h = _ed.apply(this, arguments); if (typeof h !== 'string') return h;
+    const p = get('propostas', id); if (!p) return h; const n = ES.db.itens.filter(i => i.proposta_id === id).length; const last = (p.apresentacoes || []).slice(-1)[0];
+    const card = `<div class="card p-3 mb-3"><h6><i class="bi bi-file-earmark-slides me-1"></i>Apresentação (PPT)</h6><div class="sub">Capa · escopo · um slide por ambiente · investimento · <b>lista de produtos no final</b> (uma linha por produto, com quantidade). ${n} itens nesta proposta.</div><div class="chip warn mt-1" style="font-size:11px"><i class="bi bi-hourglass-split me-1"></i>Layout provisório — aguardando o template TAAG de apresentação</div>${last ? `<div class="sub mt-1">última: ${last.data} · ${last.slides} slides · ${last.produtos} produtos</div>` : ''}<button class="btn-apple mt-2" onclick="__gerarPPT('${id}')"><i class="bi bi-download me-1"></i>Gerar apresentação (.pptx)</button></div>`;
+    const anchor = '<div class="card p-3 mb-3"><div class="d-flex gap-2 flex-wrap align-items-center"><b class="me-2">Fluxo</b>'; const i = h.indexOf(anchor); if (i >= 0) return h.slice(0, i) + card + h.slice(i); const j = h.indexOf('<div class="card p-3 mb-3"><h6>Link seguro para o cliente</h6>'); return j >= 0 ? h.slice(0, j) + card + h.slice(j) : h + card;
+  };
+})();
+})();
+
 try { render(); } catch (e) { console.error(e); }
 })();
 </script>
