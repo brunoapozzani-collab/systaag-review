@@ -19457,7 +19457,7 @@ function telaResumo(){
   h += '<div class="d-flex align-items-center gap-2 mb-3 flex-wrap"><span class="sub">Competência</span>'+selMes()+
        '<button class="btn-soft" onclick="FTX.go(()=>FTX.provisionarTudo(),\'NFs provisionadas\')">Provisionar NFs emitidas</button>'+
        '<button class="btn-apple" onclick="FTX.go(()=>FTX.fecharMesBotao(\''+ym+'\'),\'Mês fiscal fechado\')">Fechar mês fiscal '+ym+'</button>'+
-       (FTX.temFC()?'<span class="chip ok">ligado ao fechamento de competência (FC)</span>':'<span class="chip warn">FC ausente — fechamento manual</span>')+'</div>';
+       (FTX.temFC()?'<span class="chip ok">ligado ao fechamento de competência</span>':'<span class="chip warn">FC ausente — fechamento manual</span>')+'</div>';
   h += avisoRecusa(ym);
   h += avisoFalhas(ym);
   h += avisoEmissores();
