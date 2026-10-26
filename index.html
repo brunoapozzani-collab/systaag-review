@@ -957,7 +957,7 @@ html{scroll-padding-top:env(safe-area-inset-top,0px)}
 @media (max-width:600px){#main .hoje-list table.tbl,#main .hoje-list tbody{display:block;width:100%}#main .hoje-list tr{display:grid;grid-template-columns:auto 1fr;column-gap:10px;row-gap:4px;padding:10px 0;border-bottom:1px solid var(--bd)}#main .hoje-list tr:last-child{border-bottom:0}#main .hoje-list td{display:block;padding:0;border:0;white-space:normal;min-width:0;overflow-wrap:anywhere}#main .hoje-list td:nth-child(1){grid-row:1/span 2}#main .hoje-list td.text-end{text-align:left;font-weight:600;font-variant-numeric:tabular-nums}#main .hoje-list td:last-child{grid-column:2;display:flex;gap:8px;flex-wrap:wrap;margin-top:2px}#main .hoje-list td.text-nowrap{white-space:normal}}
 </style>
 </head>
-<body>
+<body><script>window.__UQ_BOOT_HASH=location.hash;</script>
 <header class="topbar">
   <a class="brand" href="#/home">SYSTAAG</a>
   <button class="iconbtn" id="toggleSub" title="Menu"><i class="bi bi-list"></i></button>
@@ -27153,6 +27153,326 @@ if(typeof SCREENS!=='undefined'){
 /* ── go ── */
 if(isHome()){try{if(typeof render==='function')render()}catch(e){}}
 mount();
+})();
+</script>
+
+
+<!-- ===================================================================================================
+  USUÁRIOS + MENSAGENS layer (prototype v104) — additive, appended before </body>.
+  1. Mensagens: a second floating bubble (left of T.A.L.I.A.) → 340×480 panel: conversas → thread → compor,
+     "nova mensagem", busca, não lidas. Seeded with the real conversations of the live SYSTAAG (26/10/2026).
+     Messages are stored in S.db.mensagens; switching user (pill) shows the other side of the same thread.
+  2. Usuários: #/equipe = faithful clone of the live "Equipe" list (membro · setor/cargo · grupos · ações)
+     PLUS a real permission model: PERFIS (role templates) × TELAS (every screen of the live NAV, by department)
+     × ação (ver / editar / aprovar), with per-user overrides. Gates bite: a screen the user cannot see leaves
+     the rail/subnav and redirects to Início. Audit trail of every change (log 'usuarios').
+  3. User pill → the real dropdown (nome, e-mail, Usuários, Sair) + "Entrar como" (prototype-only user switch).
+  All ids/classes prefixed um- / uq- . No existing line of the prototype is changed.
+=================================================================================================== -->
+<style>
+/* ── Mensagens ── */
+#um-bubble{position:fixed;right:86px;bottom:76px;width:52px;height:52px;border-radius:50%;border:none;background:#1a1d21;color:#fff;display:grid;place-items:center;font-size:21px;cursor:pointer;z-index:9998;box-shadow:0 6px 20px rgba(0,0,0,.28);transition:transform .15s}
+#um-bubble:hover{transform:scale(1.06)}
+#um-bubble .um-badge{position:absolute;top:-2px;right:-2px;min-width:18px;height:18px;border-radius:9px;background:#dc3545;color:#fff;font-size:10.5px;font-weight:700;display:none;place-items:center;padding:0 5px;border:2px solid #fff}
+#um-win{position:fixed;right:24px;bottom:140px;width:340px;height:480px;max-height:calc(100vh - 160px);border-radius:16px;background:var(--card,#fff);color:var(--tx,#212529);box-shadow:0 20px 60px rgba(0,0,0,.35);display:none;flex-direction:column;overflow:hidden;z-index:10002;border:1px solid var(--bd,#dee2e6)}
+#um-win.open{display:flex}
+#um-win.max{width:min(720px,calc(100vw - 48px));height:min(640px,calc(100vh - 160px))}
+#um-win.min{height:48px}
+#um-win.min .um-body,#um-win.min .um-foot,#um-win.min .um-thread-hd{display:none}
+.um-hd{height:48px;background:#1a1d21;color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 10px 0 12px;flex:0 0 auto;cursor:pointer}
+.um-hd .um-title{display:flex;align-items:center;gap:8px;font-weight:700;font-size:14px;background:rgba(255,255,255,.08);padding:5px 10px;border-radius:8px}
+.um-hd .um-acts{display:flex;gap:4px}
+.um-hd .um-acts button{width:28px;height:28px;border-radius:50%;border:none;background:rgba(255,255,255,.1);color:#fff;font-size:12px;cursor:pointer;display:grid;place-items:center}
+.um-hd .um-acts button:hover{background:rgba(255,255,255,.22)}
+.um-body{flex:1 1 auto;overflow:auto;background:var(--card,#fff)}
+.um-conv{display:flex;gap:10px;align-items:center;padding:10px 12px;border-bottom:1px solid var(--bd,#eee);cursor:pointer}
+.um-conv:hover{background:var(--card-hover,rgba(127,127,127,.06))}
+.um-av{width:40px;height:40px;border-radius:50%;flex:0 0 40px;display:grid;place-items:center;font-weight:700;font-size:13px;color:#fff;background:#0dcaf0;overflow:hidden}
+.um-av.g1{background:#0dcaf0}.um-av.g2{background:#6f42c1}.um-av.g3{background:#198754}.um-av.g4{background:#fd7e14}.um-av.g5{background:#0d6efd}.um-av.g6{background:#d63384}
+.um-conv .um-c{flex:1 1 auto;min-width:0}
+.um-conv .um-n{font-weight:700;font-size:13.5px;display:flex;justify-content:space-between;gap:6px}
+.um-conv .um-n small{font-weight:500;color:var(--mut,#6c757d);font-size:11.5px}
+.um-conv .um-p{font-size:12.5px;color:var(--mut,#6c757d);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.um-conv .um-p.new{color:var(--tx,#212529);font-weight:600}
+.um-conv .um-p i{font-style:italic}
+.um-unread{width:9px;height:9px;border-radius:50%;background:#0d6efd;flex:0 0 9px}
+.um-thread-hd{display:flex;align-items:center;gap:10px;padding:8px 12px;border-bottom:1px solid var(--bd,#eee);flex:0 0 auto}
+.um-thread-hd button{border:none;background:none;font-size:16px;cursor:pointer;color:inherit}
+.um-thread-hd .um-n{font-weight:700;font-size:13.5px;line-height:1.1}.um-thread-hd .um-n small{display:block;font-weight:400;color:var(--mut,#6c757d);font-size:11.5px}
+.um-msgs{display:flex;flex-direction:column;gap:4px;padding:10px 12px}
+.um-day{font-size:10.5px;color:var(--mut,#6c757d);margin:6px 0 2px}
+.um-m{max-width:78%;padding:8px 11px;border-radius:14px;font-size:13px;line-height:1.35;box-shadow:0 1px 2px rgba(0,0,0,.08);word-wrap:break-word}
+.um-m.them{align-self:flex-start;background:var(--card,#fff);border:1px solid var(--bd,#e6e6e6);border-bottom-left-radius:4px}
+.um-m.me{align-self:flex-end;background:#0d6efd;color:#fff;border-bottom-right-radius:4px}
+.um-m .um-t{display:block;font-size:10px;opacity:.65;margin-top:3px;text-align:right}
+.um-foot{flex:0 0 auto;padding:8px 10px;border-top:1px solid var(--bd,#eee);display:flex;gap:6px;align-items:flex-end;background:var(--card,#fff)}
+.um-foot textarea{flex:1 1 auto;resize:none;border:1px solid var(--bd,#ddd);border-radius:20px;padding:8px 12px;font-size:13px;max-height:90px;background:var(--bg,#fff);color:inherit;font-family:inherit}
+.um-foot button{width:36px;height:36px;border-radius:50%;border:none;background:#0d6efd;color:#fff;cursor:pointer;flex:0 0 36px}
+.um-search{padding:8px 12px;border-bottom:1px solid var(--bd,#eee)}
+.um-search input{width:100%;border:1px solid var(--bd,#ddd);border-radius:20px;padding:6px 12px;font-size:13px;background:var(--bg,#fff);color:inherit}
+.um-empty{padding:40px 16px;text-align:center;color:var(--mut,#6c757d);font-size:13px}
+:root[data-theme="dark"] #um-win{background:#1e1e24}
+:root[data-theme="dark"] .um-m.them{background:#2a2a32;border-color:#383844}
+@media (max-width:700px){#um-win{right:8px;left:8px;width:auto;bottom:130px;height:min(520px,calc(100vh - 150px))}#um-bubble{right:74px;bottom:72px;width:46px;height:46px}}
+
+/* ── Usuários / permissões ── */
+.uq-list .uq-row{display:grid;grid-template-columns:minmax(220px,1.3fr) minmax(170px,1fr) minmax(220px,1.6fr) 90px;gap:12px;align-items:center;padding:14px 10px;border-bottom:1px solid var(--bd,#eee)}
+.uq-list .uq-row.hd{font-size:10.5px;letter-spacing:.08em;font-weight:700;color:var(--mut,#6c757d);text-transform:uppercase;padding:10px}
+.uq-mem{display:flex;gap:10px;align-items:center}
+.uq-mem .uq-av{width:40px;height:40px;border-radius:50%;background:#0071e3;color:#fff;display:grid;place-items:center;font-weight:700;font-size:13px;flex:0 0 40px}
+.uq-mem .uq-av.off{background:#adb5bd}
+.uq-mem b{display:block;font-size:14px}.uq-mem .sub{font-size:12px}
+.uq-cargo b{display:block;font-size:13.5px}.uq-cargo span{color:#0d6efd;font-size:13px}
+.uq-chips{display:flex;flex-wrap:wrap;gap:4px}
+.uq-chips .chip{font-size:11px}
+.uq-chips .chip.perfil{background:rgba(13,110,253,.12);color:#0d6efd;font-weight:700}
+.uq-acts{display:flex;gap:4px;justify-content:flex-end}
+.uq-acts button{width:30px;height:30px;border-radius:8px;border:none;background:transparent;color:var(--mut,#6c757d);cursor:pointer}
+.uq-acts button:hover{background:var(--card-hover,rgba(127,127,127,.1));color:var(--tx,#212529)}
+.uq-acts button.danger:hover{color:#dc3545}
+.uq-matrix{border-collapse:separate;border-spacing:0;width:100%;font-size:12.5px}
+.uq-matrix th,.uq-matrix td{padding:6px 8px;border-bottom:1px solid var(--bd,#eee);vertical-align:middle}
+.uq-matrix th{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--mut,#6c757d);text-align:left;position:sticky;top:0;background:var(--card,#fff);z-index:1}
+.uq-matrix .uq-dept td{background:rgba(127,127,127,.07);font-weight:700;font-size:12px;padding:8px}
+.uq-matrix .uq-sel{min-width:112px}
+.uq-matrix select{font-size:12px;padding:3px 6px;border-radius:7px;border:1px solid var(--bd,#ddd);background:var(--bg,#fff);color:inherit}
+.uq-matrix select.v0{color:#adb5bd}.uq-matrix select.v1{color:#6c757d}.uq-matrix select.v2{color:#0d6efd;font-weight:600}.uq-matrix select.v3{color:#198754;font-weight:700}
+.uq-matrix .ovr{outline:2px solid rgba(253,126,20,.6);outline-offset:-1px}
+.uq-legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--mut,#6c757d)}
+.uq-legend b{font-weight:700}
+.uq-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.uq-tabs button{border:1px solid var(--bd,#ddd);background:var(--card,#fff);color:inherit;border-radius:20px;padding:6px 14px;font-size:13px;cursor:pointer}
+.uq-tabs button.on{background:#0d6efd;color:#fff;border-color:#0d6efd}
+.uq-card{background:var(--card,#fff);border:1px solid var(--bd,#eee);border-radius:16px;padding:16px}
+.uq-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.uq-perfil{border:1px solid var(--bd,#eee);border-radius:14px;padding:14px;cursor:pointer}
+.uq-perfil:hover{background:var(--card-hover,rgba(127,127,127,.05))}
+.uq-perfil b{font-size:14px}.uq-perfil .sub{font-size:12px}
+.uq-perfil .uq-bar{height:6px;border-radius:3px;background:rgba(127,127,127,.15);margin-top:8px;overflow:hidden}
+.uq-perfil .uq-bar i{display:block;height:100%;background:#0d6efd}
+.uq-form label{font-size:11.5px;letter-spacing:.04em;font-weight:700;color:var(--mut,#6c757d);display:block;margin:10px 0 4px}
+.uq-form input,.uq-form select{width:100%;border:1px solid var(--bd,#ddd);border-radius:10px;padding:8px 10px;font-size:13.5px;background:var(--bg,#fff);color:inherit}
+.uq-sec{font-size:15px;color:var(--mut,#6c757d);border-bottom:1px solid var(--bd,#eee);padding-bottom:6px;margin:16px 0 4px}
+/* user pill dropdown (real SYSTAAG) */
+#uq-menu{position:fixed;top:66px;right:14px;z-index:10003;width:300px;background:#1a1d21;color:#fff;border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.4);padding:14px 0 6px;display:none;border:1px solid rgba(255,255,255,.08)}
+#uq-menu.open{display:block}
+#uq-menu .uq-who{padding:0 18px 12px;border-bottom:1px solid rgba(255,255,255,.1)}
+#uq-menu .uq-who b{display:block;font-size:15px}#uq-menu .uq-who span{font-size:12.5px;color:rgba(255,255,255,.6)}
+#uq-menu a,#uq-menu button.uq-item{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:none;border:none;color:#fff;padding:11px 18px;font-size:14px;cursor:pointer;text-decoration:none}
+#uq-menu a:hover,#uq-menu button.uq-item:hover{background:rgba(255,255,255,.08)}
+#uq-menu .sep{border-top:1px solid rgba(255,255,255,.1);margin:4px 0}
+#uq-menu .uq-sair{color:#ff6b6b}
+@media (max-width:900px){.uq-list .uq-row{grid-template-columns:1fr 1fr;row-gap:6px}.uq-list .uq-row.hd{display:none}.uq-acts{justify-content:flex-start}}
+</style>
+
+<button id="um-bubble" title="Mensagens"><i class="bi bi-chat-dots-fill"></i><span class="um-badge" id="um-badge"></span></button>
+<div id="um-win">
+  <div class="um-hd" id="um-hd"><div class="um-title"><i class="bi bi-chat-dots-fill"></i> Mensagens <i class="bi bi-box-arrow-up-right" style="font-size:11px;opacity:.7"></i></div>
+    <div class="um-acts"><button id="um-new" title="Nova mensagem"><i class="bi bi-pencil-square"></i></button><button id="um-max" title="Expandir"><i class="bi bi-arrows-angle-expand"></i></button><button id="um-min" title="Minimizar"><i class="bi bi-dash-lg"></i></button><button id="um-close" title="Fechar"><i class="bi bi-x-lg"></i></button></div></div>
+  <div class="um-thread-hd" id="um-thread-hd" style="display:none"></div>
+  <div class="um-body" id="um-body"></div>
+  <div class="um-foot" id="um-foot" style="display:none"><textarea id="um-input" rows="1" placeholder="Mensagem..."></textarea><button id="um-send" title="Enviar"><i class="bi bi-send-fill"></i></button></div>
+</div>
+<div id="uq-menu"><div class="uq-who" id="uq-who"></div><a href="#/equipe"><i class="bi bi-people-fill"></i> Usuários</a><button class="uq-item" id="uq-switch"><i class="bi bi-person-badge"></i> Entrar como…</button><div class="sep"></div><button class="uq-item uq-sair" id="uq-sair"><i class="bi bi-box-arrow-right"></i> Sair</button></div>
+
+<script>
+(function(){
+'use strict';
+var E=function(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})};
+var ini=function(n){return String(n||'?').split(' ').filter(Boolean).map(function(x){return x[0]}).join('').slice(0,2).toUpperCase()};
+var color=function(login){var h=0;for(var i=0;i<login.length;i++)h=(h*31+login.charCodeAt(i))&0xffff;return 'g'+(1+h%6)};
+var usr=function(login){return (S.db.usuarios||[]).find(function(u){return u.login===login})};
+var meLogin=function(){try{return me().login}catch(e){return 'bruno.pozzani'}};
+var nowIso=function(){return new Date().toISOString()};
+var fmtDay=function(iso){var d=new Date(iso);return ('0'+d.getDate()).slice(-2)+'/'+('0'+(d.getMonth()+1)).slice(-2)};
+var fmtTime=function(iso){var d=new Date(iso);return ('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2)};
+var save_=function(){try{save()}catch(e){}};
+
+/* ───────────────────────── 1. MENSAGENS ───────────────────────── */
+(function(){
+  if(!S.db.mensagens||!S.db.mensagens.length){
+    var y=2026; var T=function(m,d,h,mi){return new Date(y,m-1,d,h||10,mi||0).toISOString()};
+    S.db.mensagens=[
+      {id:'m1',de:'izaque.ventura',para:'bruno.pozzani',t:'Bruno, o repositório ficou completo? O Robson disse que o commit travou.',ts:T(7,22,9,12),lida:true},
+      {id:'m2',de:'bruno.pozzani',para:'izaque.ventura',t:'Travou no push, já resolvi.',ts:T(7,22,9,30),lida:true},
+      {id:'m3',de:'izaque.ventura',para:'bruno.pozzani',t:'repositório completo comprometido',ts:T(7,22,9,41),lida:true},
+      {id:'m4',de:'catarina.macedo',para:'bruno.pozzani',t:'Vi o protótipo do Financeiro. Quando a tela de Projetos entra?',ts:T(7,22,14,2),lida:true},
+      {id:'m5',de:'bruno.pozzani',para:'catarina.macedo',t:'Essa semana. Vai ficar na mesma estrutura do Comercial.',ts:T(7,22,14,10),lida:true},
+      {id:'m6',de:'catarina.macedo',para:'bruno.pozzani',t:'vai ser lindo',ts:T(7,22,14,11),lida:true},
+      {id:'m7',de:'robson.souza',para:'bruno.pozzani',t:'Quando você conseguir, aprova o equipamento que eu mandei para você, por favor',ts:T(5,19,8,40),lida:true},
+      {id:'m8',de:'robson.souza',para:'bruno.pozzani',t:'Um está errado, sem preço, descrição, etc. Esse você excluir é claro',ts:T(5,19,8,41),lida:true},
+      {id:'m9',de:'bruno.pozzani',para:'robson.souza',t:'vou aprovar ja',ts:T(5,19,9,2),lida:true},
+      {id:'m10',de:'robson.souza',para:'bruno.pozzani',t:'Vlw',ts:T(5,19,9,3),lida:true},
+      {id:'m11',de:'bruno.pozzani',para:'yara.moreno',t:'No sininho de notificações, você vê tudo que está pendente para você.',ts:T(5,12,11,20),lida:true},
+      {id:'m12',de:'rane.gileade',para:'bruno.pozzani',t:'TA TOP',ts:T(5,11,16,45),lida:true},
+      {id:'m13',de:'fabio.brides',para:'bruno.pozzani',t:'Consegue liberar a tela de Programação pro Davi?',ts:T(5,10,10,5),lida:true},
+      {id:'m14',de:'thais.andreazzi',para:'bruno.pozzani',t:'Bruno, no Financeiro é "conciliação bancária", não reconciliação. E "a pagar", nunca "a pagares".',ts:T(10,26,15,46),lida:false},
+      {id:'m15',de:'guilherme.germanetti',para:'bruno.pozzani',t:'Colocar todas as partes que fala corporativo = administrativo',ts:T(10,26,15,30),lida:false}
+    ];
+    save_();
+  }
+  if(typeof TABLES!=='undefined'&&Array.isArray(TABLES)&&TABLES.indexOf('mensagens')<0)TABLES.push('mensagens');
+  var win=document.getElementById('um-win'),body=document.getElementById('um-body'),thd=document.getElementById('um-thread-hd'),foot=document.getElementById('um-foot'),inp=document.getElementById('um-input'),badge=document.getElementById('um-badge');
+  var view={mode:'list',com:null,q:''};
+  var other=function(m){return m.de===meLogin()?m.para:m.de};
+  var mine=function(){var L=meLogin();return (S.db.mensagens||[]).filter(function(m){return m.de===L||m.para===L})};
+  var convs=function(){var byU={};mine().forEach(function(m){var o=other(m);if(!byU[o]||byU[o].ts<m.ts)byU[o]=m});
+    var out=Object.keys(byU).map(function(login){var u=usr(login)||{login:login,nome:login};var unread=mine().filter(function(m){return m.de===login&&!m.lida}).length;return {login:login,nome:u.nome,last:byU[login],unread:unread}});
+    (S.db.usuarios||[]).filter(function(u){return u.ativo&&u.login!==meLogin()&&!byU[u.login]}).forEach(function(u){out.push({login:u.login,nome:u.nome,last:null,unread:0})});
+    out.sort(function(a,b){return (b.last?b.last.ts:'')>(a.last?a.last.ts:'')?1:-1});return out};
+  var unreadTotal=function(){return mine().filter(function(m){return m.para===meLogin()&&!m.lida}).length};
+  function paintBadge(){var n=unreadTotal();badge.textContent=n;badge.style.display=n?'grid':'none'}
+  function avatar(login,nome){return '<div class="um-av '+color(login)+'">'+E(ini(nome))+'</div>'}
+  function renderList(){thd.style.display='none';foot.style.display='none';
+    var cs=convs().filter(function(c){return !view.q||(c.nome+' '+c.login).toLowerCase().indexOf(view.q.toLowerCase())>=0});
+    body.innerHTML='<div class="um-search"><input id="um-q" placeholder="Buscar pessoa…" value="'+E(view.q)+'"></div>'+(cs.length?cs.map(function(c){var p=c.last?((c.last.de===meLogin()?'Você: ':'')+c.last.t):'<i>Iniciar conversa</i>';
+      return '<div class="um-conv" data-login="'+E(c.login)+'">'+avatar(c.login,c.nome)+'<div class="um-c"><div class="um-n"><span>'+E(c.login)+'</span>'+(c.last?'<small>'+fmtDay(c.last.ts)+'</small>':'')+'</div><div class="um-p'+(c.unread?' new':'')+'">'+p+'</div></div>'+(c.unread?'<span class="um-unread"></span>':'')+'</div>'}).join(''):'<div class="um-empty">Nenhuma conversa.</div>');
+    var q=document.getElementById('um-q');q.oninput=function(){view.q=q.value;renderList();document.getElementById('um-q').focus();var v=document.getElementById('um-q');v.setSelectionRange(v.value.length,v.value.length)};
+    body.querySelectorAll('.um-conv').forEach(function(el){el.onclick=function(){openThread(el.getAttribute('data-login'))}})}
+  function openThread(login){view.mode='thread';view.com=login;var u=usr(login)||{login:login,nome:login};
+    mine().forEach(function(m){if(m.de===login&&!m.lida)m.lida=true});save_();paintBadge();
+    thd.style.display='flex';thd.innerHTML='<button id="um-back" title="Voltar"><i class="bi bi-arrow-left"></i></button>'+avatar(login,u.nome)+'<div class="um-n">'+E(u.nome)+'<small>@'+E(login)+(u.cargo?' · '+E(u.cargo):'')+'</small></div>';
+    document.getElementById('um-back').onclick=function(){view.mode='list';renderList()};
+    foot.style.display='flex';renderMsgs();setTimeout(function(){inp.focus()},80)}
+  function renderMsgs(){var L=meLogin(),ms=mine().filter(function(m){return other(m)===view.com}).sort(function(a,b){return a.ts<b.ts?-1:1});var day='';
+    body.innerHTML='<div class="um-msgs">'+(ms.length?ms.map(function(m){var d=fmtDay(m.ts),h='';if(d!==day){day=d;h='<div class="um-day">'+d+'</div>'}return h+'<div class="um-m '+(m.de===L?'me':'them')+'">'+E(m.t)+'<span class="um-t">'+fmtTime(m.ts)+'</span></div>'}).join(''):'<div class="um-empty">Nenhuma mensagem ainda. Diga oi 👋</div>')+'</div>';body.scrollTop=body.scrollHeight}
+  function send(){var t=inp.value.trim();if(!t||!view.com)return;S.db.mensagens.push({id:'m'+Date.now().toString(36),de:meLogin(),para:view.com,t:t,ts:nowIso(),lida:false});save_();inp.value='';inp.style.height='';renderMsgs();
+    try{log('mensagens',view.com,'mensagem enviada',null,t.slice(0,60))}catch(e){}}
+  function open(){win.classList.add('open');win.classList.remove('min');if(view.mode==='thread'&&view.com)openThread(view.com);else renderList()}
+  document.getElementById('um-bubble').onclick=function(){if(win.classList.contains('open')&&!win.classList.contains('min'))win.classList.remove('open');else open()};
+  document.getElementById('um-close').onclick=function(e){e.stopPropagation();win.classList.remove('open')};
+  document.getElementById('um-min').onclick=function(e){e.stopPropagation();win.classList.toggle('min')};
+  document.getElementById('um-max').onclick=function(e){e.stopPropagation();win.classList.toggle('max');win.classList.remove('min')};
+  document.getElementById('um-hd').onclick=function(){win.classList.toggle('min')};
+  document.getElementById('um-new').onclick=function(e){e.stopPropagation();view.mode='list';view.q='';win.classList.remove('min');renderList();var q=document.getElementById('um-q');if(q){q.placeholder='Para quem? Digite o nome…';q.focus()}};
+  document.getElementById('um-send').onclick=send;
+  inp.addEventListener('keydown',function(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send()}});
+  inp.addEventListener('input',function(){inp.style.height='auto';inp.style.height=Math.min(90,inp.scrollHeight)+'px'});
+  window.UM={open:open,openThread:openThread,unread:unreadTotal,repaint:function(){paintBadge();if(win.classList.contains('open')){if(view.mode==='thread')openThread(view.com);else renderList()}}};
+  paintBadge();
+})();
+
+/* ───────────────────────── 2. USUÁRIOS & PERMISSÕES ───────────────────────── */
+var NIVEIS=[['0','—','sem acesso'],['1','Ver','só consulta'],['2','Editar','cria e altera'],['3','Aprovar','edita e aprova / fecha']];
+var NIV_LB={0:'—',1:'Ver',2:'Editar',3:'Aprovar'};
+/* every screen of the live NAV, by department — read at render time so later NAV patches (CRM, Projetos, Pós-venda) are included */
+function telasPorDepto(){var out=[];try{NAV.forEach(function(s){if(s.id==='home')return;var items=(s.items||[]).map(function(it){return {k:it[0],l:it[1]}});
+    if(s.id==='fin'&&window.FS&&Array.isArray(FS.MENU))items=FS.MENU.map(function(it){return {k:it[0],l:it[1]}}).concat([{k:'finconfig',l:'Configurações'},{k:'rh',l:'RH'},{k:'impostos',l:'Impostos'},{k:'nf',l:'Notas fiscais'}]);
+    out.push({id:s.id,label:(window.DEPTNOME&&DEPTNOME[s.id])||s.label,items:items})})}catch(e){}
+  if(!out.some(function(d){return d.id==='pes'}))out.push({id:'pes',label:'Pessoas e Cultura',items:[{k:'equipe',l:'Usuários e permissões'}]});
+  return out}
+/* profiles (role templates). nivel per dept default + exceptions per screen */
+function seedPerfis(){
+  if(S.db.perfisAcesso&&S.db.perfisAcesso.length)return;
+  var all=function(n){return {dep:{'*':n},tela:{}}};
+  S.db.perfisAcesso=[
+    {id:'diretoria',nome:'Diretoria',desc:'Vê e aprova tudo. Fecha mês, folha e obra.',regra:all(3)},
+    {id:'gestao',nome:'Gestão / Gerência',desc:'Aprova no seu departamento, vê os outros.',regra:{dep:{'*':1,com:3,ope:3,prj:3,est:3,pos:3},tela:{equipe:1,parametros:1}}},
+    {id:'financeiro',nome:'Financeiro',desc:'Dono do dinheiro: Adm. e Financeiro completo, RH, Base de dados. Vê o resto.',regra:{dep:{'*':1,fin:3,bd:2,pes:2},tela:{}}},
+    {id:'comercial',nome:'Consultor comercial',desc:'Comercial e CRM para editar; Projetos, Obras e Pós-venda só consulta; sem Financeiro.',regra:{dep:{'*':0,com:2,crm:2,prj:1,ope:1,pos:1,est:1},tela:{focal:1,gestao:0,rettroc:1}}},
+    {id:'prevendas',nome:'Pré-vendas',desc:'Valida propostas; vê Comercial, Projetos e Estoque.',regra:{dep:{'*':0,com:3,crm:1,prj:1,est:1,ope:1},tela:{gestao:0,focal:0}}},
+    {id:'projetos',nome:'Projetos',desc:'Projetos completo; Obras e Comercial só consulta.',regra:{dep:{'*':0,prj:3,ope:1,com:1,est:1},tela:{}}},
+    {id:'obras',nome:'Operação / Obras',desc:'Operação completa, Estoque para separar e sair, Projetos consulta.',regra:{dep:{'*':0,ope:3,est:2,prj:1,pos:1},tela:{obras:2}}},
+    {id:'estoque',nome:'Estoque e compras',desc:'Estoque & Obras completo (entradas, saídas, cotações); consulta Operação e Projetos.',regra:{dep:{'*':0,est:3,ope:1,prj:1,bd:2},tela:{baixas:2,dbclientes:1,parametros:0}}},
+    {id:'tecnico',nome:'Técnico / Programador',desc:'Só o que é seu: Meu dia, agenda, execução, programação. Pós-venda em campo.',regra:{dep:{'*':0,ope:1,pos:1},tela:{meudia:2,execucao:2,agendaobras:1,programacao:1,posfield:2,posvenda:2,ajuda:1}}},
+    {id:'posvenda',nome:'Pós-venda',desc:'Pós-venda completo; vê clientes, obras e estoque.',regra:{dep:{'*':0,pos:3,com:1,ope:1,est:1,bd:1},tela:{posusuarios:0}}},
+    {id:'marketing',nome:'Marketing e RP',desc:'CRM e Relacionamento para editar; Comercial consulta.',regra:{dep:{'*':0,crm:2,com:1},tela:{focal:2}}},
+    {id:'admin',nome:'Administração',desc:'Apoio administrativo: Estoque, Pós-venda, Operação para editar; Financeiro só A pagar.',regra:{dep:{'*':0,est:2,pos:2,ope:2,bd:1},tela:{pagar:1,receber:1}}},
+    {id:'ti',nome:'Desenvolvimento e tecnologia',desc:'Administrador do sistema: tudo, inclusive usuários e permissões.',regra:all(3)}
+  ];
+  save_();
+}
+/* which profile each real member gets (from the live Equipe list, 26/10/2026) */
+var PERFIL_DE={'cesar.valverde':'diretoria','rodolfo.liviero':'diretoria','thais.andreazzi':'financeiro','bruno.pozzani':'ti','davi.dev':'ti','guilherme.germanetti':'prevendas','rane.gileade':'prevendas','isabela.sousa':'comercial','renata.campos':'comercial','edson.freitas':'comercial','andre.peluso':'comercial','camilla.andrade':'comercial','catarina.macedo':'projetos','mitsuo.karashima':'projetos','bianca.barros':'admin','alan.tito':'marketing','sonia.meneghetti':'marketing','fabio.brides':'gestao','renan.eugenino':'obras','bruno.gomes':'tecnico','yara.moreno':'admin','izaque.ventura':'estoque','robson.souza':'estoque','ripetrenko':'projetos'};
+var EMAIL_DE={'bruno.gomes':'bruno@taagbrasil.com.br','izaque.ventura':'izaque@taagbrasil.com.br','isabela.sousa':'isabela@taagbrasil.com.br','guilherme.germanetti':'guilherme@taagbrasil.com.br','catarina.macedo':'catarina@taagbrasil.com.br','mitsuo.karashima':'projeto04@taagbrasil.com.br','renata.campos':'renata@taagbrasil.com.br','bianca.barros':'projetos01@taagbrasil.com.br','bruno.pozzani':'programacao04@taagbrasil.com.br','alan.tito':'tito@taagbrasil.com.br','edson.freitas':'edson@taagbrasil.com.br','davi.dev':'programacao04@taagbrasil.com.br','fabio.brides':'fabio@taagbrasil.com.br','camilla.andrade':'camilla@taagbrasil.com.br','renan.eugenino':'renan@taagbrasil.com.br','yara.moreno':'yara@taagbrasil.com.br','cesar.valverde':'cesar@taagbrasil.com.br','andre.peluso':'andre@taagbrasil.com.br','thais.andreazzi':'thais@taagbrasil.com.br','ripetrenko':'ricardo@taagbrasil.com.br','robson.souza':'compras02@taagbrasil.com.br','sonia.meneghetti':'soninha.meneghetti@taagbrasil.com.br','rane.gileade':'prevendas01@taagbrasil.com.br','rodolfo.liviero':'rodolfo@taagbrasil.com.br'};
+function seedUsuarios(){var ch=false;(S.db.usuarios||[]).forEach(function(u){if(!u.perfil){u.perfil=PERFIL_DE[u.login]||'tecnico';ch=true}if(!u.email){u.email=EMAIL_DE[u.login]||(u.login+'@taagbrasil.com.br');ch=true}if(!u.excecoes){u.excecoes={};ch=true}});if(ch)save_()}
+seedPerfis();seedUsuarios();
+var perfil=function(id){return (S.db.perfisAcesso||[]).find(function(p){return p.id===id})};
+/* effective level of a user on a screen */
+function nivel(u,k){if(!u)return 0;if(u.excecoes&&u.excecoes[k]!=null)return +u.excecoes[k];var p=perfil(u.perfil);if(!p)return 1;if(p.regra.tela[k]!=null)return +p.regra.tela[k];
+  var d=null;try{d=SEC_OF[k]}catch(e){}if(!d)try{d=(typeof deptOf==='function'?deptOf(k):null)}catch(e){}if(k==='equipe')d='pes';
+  if(d&&p.regra.dep[d]!=null)return +p.regra.dep[d];return +(p.regra.dep['*']||0)}
+window.UQ={nivel:function(k,login){return nivel(usr(login||meLogin()),k)},podeVer:function(k){return k==='home'||k==='equipe'&&false||nivel(usr(meLogin()),k)>=1},perfil:perfil,telas:telasPorDepto};
+var isAdmin=function(u){return u&&(u.perfil==='ti'||u.perfil==='diretoria')};
+
+/* ── Equipe screen: list · perfis · matriz ── */
+var EQ={tab:'membros',q:'',perfilSel:null,userSel:null};
+function chipsGrupos(u){var p=perfil(u.perfil);var g=(u.grupos||[]).slice(0,6);return '<div class="uq-chips"><span class="chip perfil">'+E(p?p.nome:u.perfil)+'</span>'+g.map(function(x){return '<span class="chip">'+E(x)+'</span>'}).join('')+((u.grupos||[]).length>6?'<span class="chip">+'+((u.grupos||[]).length-6)+'</span>':'')+(Object.keys(u.excecoes||{}).length?'<span class="chip" style="background:rgba(253,126,20,.15);color:#fd7e14">'+Object.keys(u.excecoes).length+' exceção(ões)</span>':'')+'</div>'}
+function listaMembros(){var L=(S.db.usuarios||[]).filter(function(u){var s=(u.login+' '+u.nome+' '+(u.email||'')+' '+u.setor+' '+u.cargo+' '+(u.grupos||[]).join(' ')+' '+(perfil(u.perfil)||{}).nome).toLowerCase();return !EQ.q||s.indexOf(EQ.q.toLowerCase())>=0});
+  var admin=isAdmin(usr(meLogin()));
+  return '<div class="uq-card"><input class="form-control" id="uq-q" placeholder="Buscar por nome, e-mail, setor, cargo, grupo ou perfil..." value="'+E(EQ.q)+'" style="border-radius:12px;margin-bottom:8px"><div class="uq-list"><div class="uq-row hd"><div>Membro</div><div>Setor / Cargo</div><div>Perfil e grupos</div><div style="text-align:right">Ações</div></div>'+
+    L.map(function(u){return '<div class="uq-row"><div class="uq-mem"><div class="uq-av'+(u.ativo?'':' off')+'">'+E(ini(u.nome))+'</div><div><b>'+E(u.login)+'</b><div class="sub">'+E(u.email||'')+'</div></div></div><div class="uq-cargo"><b>'+E(u.setor||'—')+'</b><span>'+E(u.cargo||'Membro')+'</span></div>'+chipsGrupos(u)+'<div class="uq-acts">'+(admin?'<button title="Editar" onclick="UQ.editar(\''+E(u.login)+'\')"><i class="bi bi-pencil"></i></button><button title="Permissões" onclick="UQ.permissoes(\''+E(u.login)+'\')"><i class="bi bi-shield-check"></i></button><button class="danger" title="'+(u.ativo?'Desativar':'Reativar')+'" onclick="UQ.toggle(\''+E(u.login)+'\')"><i class="bi bi-'+(u.ativo?'trash':'arrow-counterclockwise')+'"></i></button>':'<button title="Ver permissões" onclick="UQ.permissoes(\''+E(u.login)+'\')"><i class="bi bi-shield"></i></button>')+'</div></div>'}).join('')+'</div></div>'}
+function listaPerfis(){var telas=telasPorDepto();var total=telas.reduce(function(a,d){return a+d.items.length},0);
+  return '<div class="uq-card"><div class="sub mb-2">Um perfil é um modelo de permissões. Cada pessoa herda o perfil e pode ter exceções por tela. Clique para ver a matriz.</div><div class="uq-grid">'+(S.db.perfisAcesso||[]).map(function(p){var fake={perfil:p.id,excecoes:{}};var n=0,ed=0;telas.forEach(function(d){d.items.forEach(function(t){var v=nivel(fake,t.k);if(v>=1)n++;if(v>=2)ed++})});var users=(S.db.usuarios||[]).filter(function(u){return u.perfil===p.id&&u.ativo}).length;
+    return '<div class="uq-perfil" onclick="UQ.verPerfil(\''+E(p.id)+'\')"><div class="d-flex justify-content-between"><b>'+E(p.nome)+'</b><span class="chip">'+users+' pessoa(s)</span></div><div class="sub">'+E(p.desc)+'</div><div class="uq-bar"><i style="width:'+Math.round(100*n/total)+'%"></i></div><div class="sub" style="font-size:11px;margin-top:4px">vê '+n+' de '+total+' telas · edita '+ed+'</div></div>'}).join('')+'</div>'+(isAdmin(usr(meLogin()))?'<div class="mt-3"><button class="btn-soft" onclick="UQ.novoPerfil()"><i class="bi bi-plus-lg me-1"></i>Novo perfil</button></div>':'')+'</div>'}
+function matriz(opts){/* opts: {perfilId} or {login} */
+  var u=opts.login?usr(opts.login):null;var pid=u?u.perfil:opts.perfilId;var p=perfil(pid);var telas=telasPorDepto();var admin=isAdmin(usr(meLogin()));var fake={perfil:pid,excecoes:{}};
+  var sel=function(k,v,isOvr,onch){return '<select class="uq-sel v'+v+(isOvr?' ovr':'')+'" '+(admin?'onchange="'+onch+'"':'disabled')+'>'+NIVEIS.map(function(n){return '<option value="'+n[0]+'"'+(+n[0]===v?' selected':'')+'>'+n[1]+(n[0]==='0'?'':' · '+n[2])+'</option>'}).join('')+'</select>'};
+  var rows=telas.map(function(d){var base=p?(p.regra.dep[d.id]!=null?p.regra.dep[d.id]:(p.regra.dep['*']||0)):1;
+    return '<tr class="uq-dept"><td colspan="2">'+E(d.label)+'</td><td>'+(u?'':sel('__dep:'+d.id,+base,false,'UQ.setDep(\''+E(pid)+'\',\''+E(d.id)+'\',this.value)'))+'</td><td class="sub" style="font-weight:400">'+(u?'':'padrão do departamento')+'</td></tr>'+
+      d.items.map(function(t){var vp=nivel(fake,t.k);var v=u?nivel(u,t.k):vp;var ovr=u?(u.excecoes&&u.excecoes[t.k]!=null):(p&&p.regra.tela[t.k]!=null);
+        return '<tr><td style="padding-left:22px">'+E(t.l)+'</td><td class="sub mono" style="font-size:11px">#/'+E(t.k)+'</td><td>'+sel(t.k,v,ovr,u?'UQ.setExc(\''+E(u.login)+'\',\''+E(t.k)+'\',this.value)':'UQ.setTela(\''+E(pid)+'\',\''+E(t.k)+'\',this.value)')+'</td><td class="sub" style="font-size:11px">'+(u&&ovr?'exceção (perfil: '+NIV_LB[vp]+') <a href="javascript:void(0)" onclick="UQ.setExc(\''+E(u.login)+'\',\''+E(t.k)+'\',null)">remover</a>':(!u&&ovr?'exceção do perfil':''))+'</td></tr>'}).join('')}).join('');
+  return '<div class="uq-legend mb-2"><span><b>—</b> sem acesso: a tela some do menu</span><span><b>Ver</b> consulta</span><span><b>Editar</b> cria e altera</span><span><b>Aprovar</b> edita e aprova / fecha mês, folha, proposta</span><span style="color:#fd7e14"><b>borda laranja</b> = exceção</span></div><div class="tblwrap" style="max-height:60vh;overflow:auto"><table class="uq-matrix"><thead><tr><th>Tela</th><th>Rota</th><th>Nível</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div>'}
+function telaEquipe(){var meU=usr(meLogin());var hdr=head('Equipe <span class="chip info">'+(S.db.usuarios||[]).filter(function(u){return u.ativo}).length+' membros</span>','Gerencie os membros, os perfis e o que cada pessoa vê e faz em cada tela do SYSTAAG.',isAdmin(meU)?'<button class="btn-apple" onclick="UQ.novo()"><i class="bi bi-plus-lg me-1"></i>Novo membro</button>':'');
+  var tabs='<div class="uq-tabs">'+[['membros','Membros'],['perfis','Perfis de acesso'],['matriz','Matriz por tela'],['auditoria','Auditoria']].map(function(t){return '<button class="'+(EQ.tab===t[0]?'on':'')+'" onclick="UQ.tab(\''+t[0]+'\')">'+t[1]+'</button>'}).join('')+'</div>';
+  var body='';
+  if(EQ.tab==='membros')body=listaMembros();
+  else if(EQ.tab==='perfis')body=EQ.perfilSel?('<div class="uq-card"><div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2"><div><a href="javascript:void(0)" onclick="UQ.verPerfil(null)">← Perfis</a> · <b>'+E((perfil(EQ.perfilSel)||{}).nome)+'</b><div class="sub">'+E((perfil(EQ.perfilSel)||{}).desc)+'</div></div><span class="chip">'+(S.db.usuarios||[]).filter(function(u){return u.perfil===EQ.perfilSel}).map(function(u){return u.login}).join(' · ')+'</span></div>'+matriz({perfilId:EQ.perfilSel})+'</div>'):listaPerfis();
+  else if(EQ.tab==='matriz'){var users=(S.db.usuarios||[]).filter(function(u){return u.ativo});var login=EQ.userSel||meLogin();var u=usr(login);
+    body='<div class="uq-card"><div class="d-flex align-items-center gap-2 flex-wrap mb-2"><label class="sub mb-0">Pessoa</label><select class="form-select form-select-sm" style="width:auto" onchange="UQ.user(this.value)">'+users.map(function(x){return '<option value="'+E(x.login)+'"'+(x.login===login?' selected':'')+'>'+E(x.login)+' · '+E(x.nome)+'</option>'}).join('')+'</select><span class="chip perfil" style="background:rgba(13,110,253,.12);color:#0d6efd;font-weight:700">perfil: '+E((perfil(u.perfil)||{}).nome)+'</span>'+(isAdmin(meU)?'<select class="form-select form-select-sm" style="width:auto" onchange="UQ.setPerfil(\''+E(login)+'\',this.value)">'+(S.db.perfisAcesso||[]).map(function(p){return '<option value="'+E(p.id)+'"'+(p.id===u.perfil?' selected':'')+'>mudar perfil → '+E(p.nome)+'</option>'}).join('')+'</select>':'')+'</div><div class="sub mb-2">O que <b>'+E(u.nome)+'</b> vê e faz, tela por tela. Mudar um nível aqui cria uma exceção só para esta pessoa; o perfil continua igual para os outros.</div>'+matriz({login:login})+'</div>'}
+  else if(EQ.tab==='auditoria'){var ev=(S.eventos||[]).filter(function(e){return e.tabela==='usuarios'||e.tabela==='perfis'}).slice(0,80);
+    body='<div class="uq-card"><div class="sub mb-2">Toda mudança de usuário, perfil ou permissão fica registrada — quem, quando, o quê.</div>'+(ev.length?'<table class="uq-matrix"><thead><tr><th>Hora</th><th>Quem</th><th>O quê</th><th>Detalhe</th></tr></thead><tbody>'+ev.map(function(e){return '<tr><td>'+E(e.ts)+'</td><td>'+E(e.ator)+'</td><td>'+E(e.acao)+'</td><td class="sub">'+E(e.id)+(e.depois?' · '+E(typeof e.depois==='string'?e.depois:JSON.stringify(e.depois)):'')+'</td></tr>'}).join('')+'</tbody></table>':'<div class="um-empty">Nenhuma alteração nesta sessão.</div>')+'</div>'}
+  return hdr+tabs+body}
+Object.assign(window.UQ,{
+  tab:function(t){EQ.tab=t;renderMain();try{renderNav()}catch(e){}},user:function(l){EQ.userSel=l;renderMain()},verPerfil:function(id){EQ.perfilSel=id;EQ.tab='perfis';renderMain()},
+  setDep:function(pid,dep,v){var p=perfil(pid);if(!p)return;p.regra.dep[dep]=+v;save_();log('perfis',pid,'nível do departamento '+dep+' → '+NIV_LB[v]);renderMain()},
+  setTela:function(pid,k,v){var p=perfil(pid);if(!p)return;p.regra.tela[k]=+v;save_();log('perfis',pid,'tela '+k+' → '+NIV_LB[v]);renderMain()},
+  setExc:function(login,k,v){var u=usr(login);if(!u)return;u.excecoes=u.excecoes||{};if(v==null)delete u.excecoes[k];else u.excecoes[k]=+v;save_();log('usuarios',login,v==null?'exceção removida em '+k:'exceção em '+k+' → '+NIV_LB[v]);renderMain();try{renderNav()}catch(e){}},
+  setPerfil:function(login,pid){var u=usr(login);if(!u)return;var antes=u.perfil;u.perfil=pid;save_();log('usuarios',login,'perfil '+antes+' → '+pid);renderMain();try{renderNav()}catch(e){}},
+  toggle:function(login){var u=usr(login);if(!u)return;if(login===meLogin()){toast('Não pode desativar a si mesmo.',true);return}u.ativo=!u.ativo;save_();log('usuarios',login,u.ativo?'reativado':'desativado');renderMain()},
+  permissoes:function(login){EQ.tab='matriz';EQ.userSel=login;location.hash='#/equipe';renderMain();window.scrollTo(0,0)},
+  editar:function(login){var u=usr(login);if(!u)return;UQ.form(u)},
+  novo:function(){UQ.form(null)},
+  form:function(u){var isNew=!u;u=u||{login:'',nome:'',email:'',setor:'',cargo:'',perfil:'tecnico',grupos:[],ativo:true};
+    var m=modal('<h6><i class="bi bi-person-badge me-1"></i>'+(isNew?'Novo membro':'Editar usuário — '+E(u.nome))+'</h6><div class="uq-form"><div class="uq-sec">Informações de acesso</div><div class="row g-2"><div class="col-6"><label>Usuário</label><input id="uqf-login" value="'+E(u.login)+'" '+(isNew?'':'readonly')+'></div><div class="col-6"><label>E-mail</label><input id="uqf-email" value="'+E(u.email||'')+'"></div></div><div class="sub mt-2" style="font-size:11.5px"><i class="bi bi-key me-1"></i>Senha: definida pela própria pessoa no primeiro acesso (link por e-mail). Nunca digitada aqui.</div><div class="uq-sec">Informações de perfil</div><label>Nome completo</label><input id="uqf-nome" value="'+E(u.nome)+'"><div class="row g-2"><div class="col-6"><label>Setor</label><input id="uqf-setor" value="'+E(u.setor||'')+'"></div><div class="col-6"><label>Cargo</label><input id="uqf-cargo" value="'+E(u.cargo||'')+'"></div></div><div class="uq-sec">Acesso</div><label>Perfil de acesso (o que vê e faz em cada tela)</label><select id="uqf-perfil">'+(S.db.perfisAcesso||[]).map(function(p){return '<option value="'+E(p.id)+'"'+(p.id===u.perfil?' selected':'')+'>'+E(p.nome)+' — '+E(p.desc)+'</option>'}).join('')+'</select><label>Grupos (chat e notificações)</label><input id="uqf-grupos" value="'+E((u.grupos||[]).join(', '))+'" placeholder="Comercial, Estoque, …"><div class="sub mt-1" style="font-size:11.5px">Grupos não dão acesso a telas — isso é o perfil + exceções (aba Matriz por tela).</div></div><div class="d-flex justify-content-end gap-2 mt-3"><button class="btn-soft" onclick="this.closest(\'.card\').remove()">Cancelar</button><button class="btn-apple" id="uqf-save">Salvar</button></div>');
+    m.style.width='min(640px,94vw)';m.style.maxHeight='90vh';m.style.overflow='auto';
+    m.querySelector('#uqf-save').onclick=function(){var g=function(id){return m.querySelector('#'+id).value.trim()};var login=g('uqf-login').toLowerCase().replace(/\s+/g,'.');if(!login||!g('uqf-nome')){toast('Usuário e nome são obrigatórios.',true);return}
+      if(isNew){if(usr(login)){toast('Já existe um usuário com este login.',true);return}u={id:'usr_'+Date.now().toString(36),login:login,ativo:true,excecoes:{},fonte:'cadastrado no protótipo'};S.db.usuarios.push(u)}
+      u.nome=g('uqf-nome');u.email=g('uqf-email');u.setor=g('uqf-setor');u.cargo=g('uqf-cargo');u.perfil=g('uqf-perfil');u.grupos=g('uqf-grupos').split(',').map(function(x){return x.trim()}).filter(Boolean);
+      try{u.papel=(u.perfil==='ti'||u.perfil==='diretoria'||u.perfil==='financeiro')?'gestor':(u.perfil==='gestao'||u.perfil==='prevendas')?'aprovador':'operador'}catch(e){}
+      save_();log('usuarios',login,isNew?'criado':'editado',null,u.perfil);m.remove();toast(isNew?'Membro criado':'Usuário salvo');renderMain();try{renderNav()}catch(e){};try{UM.repaint()}catch(e){}}},
+  novoPerfil:function(){var nome=prompt('Nome do novo perfil:');if(!nome)return;var id=nome.toLowerCase().replace(/[^a-z0-9]+/g,'_');if(perfil(id)){toast('Já existe.',true);return}S.db.perfisAcesso.push({id:id,nome:nome,desc:'Novo perfil — defina os níveis na matriz.',regra:{dep:{'*':0},tela:{}}});save_();log('perfis',id,'perfil criado');EQ.perfilSel=id;renderMain()}
+});
+SCREENS.equipe=telaEquipe;
+try{LABEL.equipe='Usuários e permissões';SEC_OF.equipe='pes';if(window.OWNER)OWNER.equipe='pes'}catch(e){}
+/* Base de dados › Pessoas and the old "Usuários & papéis" tab point here */
+try{if(window.DEPTNOME&&!DEPTNOME.pes)DEPTNOME.pes='Pessoas e Cultura'}catch(e){}
+
+/* ── gates that bite: hide what the user cannot see; redirect if typed by hand ── */
+function filtraNav(){try{var u=usr(meLogin());if(!u)return;var rail=document.getElementById('rail'),sn=document.getElementById('subnav');
+  if(rail)rail.querySelectorAll('button').forEach(function(b){var m=/#\/([a-z0-9]+)/.exec(b.getAttribute('onclick')||'');if(!m)return;var sec=null;try{sec=SEC_OF[m[1]]}catch(e){}var any=false;try{var S_=NAV.find(function(s){return s.id===sec});if(S_)any=S_.items.some(function(it){return nivel(u,it[0])>=1});else any=nivel(u,m[1])>=1}catch(e){any=true}if(m[1]==='home')any=true;b.style.display=any?'':'none'});
+  if(sn)sn.querySelectorAll('a[href^="#/"]').forEach(function(a){var k=a.getAttribute('href').slice(2).split('/')[0];if(k==='finconfig'||k==='home')return;if(nivel(u,k)<1)a.style.display='none';else a.style.display=''})}catch(e){}}
+var _rn=window.renderNav;window.renderNav=function(){var r=_rn.apply(this,arguments);filtraNav();try{if(route().k==='equipe'){var sn=document.getElementById('subnav');if(sn)sn.innerHTML='<h6>Pessoas e Cultura</h6>'+[['membros','Membros','bi-people'],['perfis','Perfis de acesso','bi-shield-check'],['matriz','Matriz por tela','bi-grid-3x3'],['auditoria','Auditoria','bi-clock-history']].map(function(t){return '<a href="javascript:void(0)" class="'+(EQ.tab===t[0]?'on':'')+'" onclick="UQ.tab(\''+t[0]+'\')"><i class="bi '+t[2]+' me-1" style="opacity:.7"></i>'+t[1]+'</a>'}).join('');var rail=document.getElementById('rail');if(rail)rail.querySelectorAll('button').forEach(function(b){b.classList.remove('on')})}}catch(e){}return r};
+var _rm=window.renderMain;window.renderMain=function(){try{var k=route().k;var u=usr(meLogin());if(u&&k!=='home'&&k!=='equipe'&&typeof SCREENS[k]==='function'&&nivel(u,k)<1){var m=document.getElementById('main');m.innerHTML=head('Sem acesso','Seu perfil <b>'+E((perfil(u.perfil)||{}).nome||u.perfil)+'</b> não tem acesso a <b>'+E(LABEL[k]||k)+'</b>. Peça ao administrador em <a href="#/equipe">Usuários e permissões</a>.')+'<a class="btn-apple" href="#/home">Voltar ao Início</a>';document.title='SYSTAAG · Sem acesso';return}
+    if(k==='equipe'){var m2=document.getElementById('main');m2.innerHTML=telaEquipe();document.title='SYSTAAG · Usuários e permissões';return}}catch(e){console.error(e)}
+  return _rm.apply(this,arguments)};
+/* edit/approve gates for other modules can ask: UQ.nivel('pagar') >= 2 */
+
+/* ── user pill: the real dropdown ── */
+(function(){var pill=document.querySelector('.userpill');if(!pill)return;var menu=document.getElementById('uq-menu'),who=document.getElementById('uq-who');var oldSwitch=pill.onclick;
+  function paint(){var u=usr(meLogin())||{nome:'Bruno Pozzani',email:'programacao04@taagbrasil.com.br'};who.innerHTML='<b>'+E(u.nome)+'</b><span>'+E(u.email||'')+'</span><div class="sub" style="font-size:11px;color:rgba(255,255,255,.5);margin-top:4px">'+E(u.cargo||'')+' · perfil '+E((perfil(u.perfil)||{}).nome||'')+'</div>'}
+  pill.onclick=function(e){e.stopPropagation();paint();menu.classList.toggle('open')};
+  document.addEventListener('click',function(e){if(!menu.contains(e.target))menu.classList.remove('open')});
+  document.getElementById('uq-switch').onclick=function(){menu.classList.remove('open');if(typeof oldSwitch==='function')oldSwitch.call(pill);setTimeout(function(){try{UM.repaint()}catch(e){}},300)};
+  document.getElementById('uq-sair').onclick=function(){menu.classList.remove('open');toast('No sistema real, "Sair" encerra a sessão e volta ao login. No protótipo você continua como '+meLogin()+'.')};
+  menu.querySelector('a[href="#/equipe"]').onclick=function(){menu.classList.remove('open')};
+  window.addEventListener('hashchange',function(){menu.classList.remove('open');setTimeout(function(){try{UM.repaint()}catch(e){}},50)});
+})();
+/* repaint messages badge when the user switches (pill → Entrar como) */
+(function(){var last=meLogin();setInterval(function(){var l=meLogin();if(l!==last){last=l;try{UM.repaint()}catch(e){};try{renderNav()}catch(e){}}},800)})();
+/* cold load on #/equipe: an older alias bounces it to #/dbpessoas during boot — put the person back where they asked */
+(function(){var want=(window.__UQ_BOOT_HASH||'');if(/^#\/equipe/.test(want)&&location.hash!==want){location.hash=want;setTimeout(function(){try{render()}catch(e){}},0)}})();
+try{renderNav()}catch(e){}
 })();
 </script>
 
