@@ -26835,6 +26835,8 @@ const _pp97=SCREENS.prjpainel;SCREENS.prjpainel=function(){let h=_pp97.apply(thi
 <style id="inicio-style">
 /* ── the work area becomes a stage on #/home ── */
 html[data-inicio] body,html[data-inicio] #main,html[data-inicio] .layout{background:transparent}
+/* INÍCIO-02 (26/10): no subnav on the home — it held a single 'Início' item and pushed the hero off-centre */
+html[data-inicio] .subnav{display:none!important}
 #inicio-stage{position:fixed;z-index:-1;pointer-events:none;overflow:hidden;display:none}
 html[data-inicio] #inicio-stage{display:block}
 #bgCanvas{position:absolute;inset:0;width:100%;height:100%;display:none}
