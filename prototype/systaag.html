@@ -26837,6 +26837,11 @@ const _pp97=SCREENS.prjpainel;SCREENS.prjpainel=function(){let h=_pp97.apply(thi
 html[data-inicio] body,html[data-inicio] #main,html[data-inicio] .layout{background:transparent}
 /* INÍCIO-02 (26/10): no subnav on the home — it held a single 'Início' item and pushed the hero off-centre */
 html[data-inicio] .subnav{display:none!important}
+/* INÍCIO-03 (26/10): the hero is the same box as the stage (height set by fitStage) — logo dead-centre of the globe; greeting + button at its bottom-left */
+html[data-inicio] main{padding-top:0}
+.inicio-hero{display:flex;align-items:center;justify-content:center;position:relative;padding:0;min-height:420px}
+.inicio-hero .inicio-greet{position:absolute;left:1.4rem;bottom:4.9rem;padding:0;text-align:left}
+.inicio-hero .inicio-more{position:absolute;left:1.4rem;bottom:1.4rem;padding:0}
 #inicio-stage{position:fixed;z-index:-1;pointer-events:none;overflow:hidden;display:none}
 html[data-inicio] #inicio-stage{display:block}
 #bgCanvas{position:absolute;inset:0;width:100%;height:100%;display:none}
@@ -26856,7 +26861,7 @@ html[data-inicio][data-bg="s"] #hbs-wrap{display:block}
 .inicio-old{padding:0 .2rem}
 .inicio-old[hidden]{display:none}
 .inicio-old>*{position:relative}
-@media (max-width:600px){.inicio-greet-name{font-size:1.35rem}.inicio-hero{padding-top:1.4rem}}
+@media (max-width:600px){.inicio-greet-name{font-size:1.35rem}}
 
 /* ── Escamas (hbs) — the live palette, keyed on the prototype's html[data-theme] ── */
 :root{--hbs-dur:3.2s;--hbs-bg:#efefef;--hbs-stop-a:#d4d4d4;--hbs-stop-b:#e6e6e6;--hbs-stop-fa:rgba(80,80,80,.12);--hbs-stroke:rgba(40,40,40,.22);--hbs-edge:rgba(10,10,10,.52);--hbs-glow-s:rgba(0,0,0,.82);--hbs-pink-s:rgba(60,60,60,.50);--hbs-oc:rgba(0,0,0,.06);--hbs-op:rgba(40,40,40,.05);--hbs-sw-a:rgba(0,0,0,.05);--hbs-sw-b:rgba(30,30,30,.04);--hbs-vign:rgba(180,180,180,.60)}
@@ -26971,7 +26976,7 @@ var stage=document.getElementById('inicio-stage');
 
 /* ── keep the stage glued to the work area (#main rect) ── */
 function mainRect(){var m=document.getElementById('main');if(!m)return {x:0,y:60,w:innerWidth,h:innerHeight-60};var r=m.getBoundingClientRect();return {x:Math.max(0,r.left),y:Math.max(0,r.top),w:Math.min(innerWidth-Math.max(0,r.left),r.width),h:innerHeight-Math.max(0,r.top)}}
-function fitStage(){var r=mainRect();stage.style.left=r.x+'px';stage.style.top=r.y+'px';stage.style.width=r.w+'px';stage.style.height=r.h+'px';return r}
+function fitStage(){var r=mainRect();stage.style.left=r.x+'px';stage.style.top=r.y+'px';stage.style.width=r.w+'px';stage.style.height=r.h+'px';var hero=document.querySelector('.inicio-hero');if(hero)hero.style.height=r.h+'px';return r}
 
 /* ════════════════════════════════════════════════════════════════════════════
    Full-Page Morphing Particles v2 — Globo · Hélice · Icosaedro (the live engine, verbatim, stage-relative)
@@ -27088,9 +27093,10 @@ var prevHome=(typeof SCREENS!=='undefined'&&SCREENS.home)||null;
 if(typeof SCREENS!=='undefined'){
   SCREENS.home=function(arg){var old='';try{old=prevHome?prevHome(arg):''}catch(e){old=''}
     return '<div class="inicio-wrap">'+
-      '<div class="inicio-hero"><img src="'+LOGO_SRC+'" class="inicio-logo" alt="TAAG Life Experience"></div>'+
+      '<div class="inicio-hero"><img src="'+LOGO_SRC+'" class="inicio-logo" alt="TAAG Life Experience">'+
       '<div class="inicio-greet"><div class="inicio-greet-label">'+saud()+'</div><div class="inicio-greet-name">Olá, '+userName()+' 👋</div></div>'+
-      (old?'<div class="inicio-more"><button class="inicio-more-btn" type="button" onclick="window.__inicioMore(this)"><i class="bi bi-grid-1x2"></i> Resumo dos departamentos <i class="bi bi-chevron-down"></i></button></div><div class="inicio-old" hidden>'+old+'</div>':'')+'</div>'};
+      (old?'<div class="inicio-more"><button class="inicio-more-btn" type="button" onclick="window.__inicioMore(this)"><i class="bi bi-grid-1x2"></i> Resumo dos departamentos <i class="bi bi-chevron-down"></i></button></div>':'')+'</div>'+
+      (old?'<div class="inicio-old" hidden>'+old+'</div>':'')+'</div>'};
   window.__inicioMore=function(btn){var w=btn.closest('.inicio-wrap').querySelector('.inicio-old');var open=w.hasAttribute('hidden');if(open)w.removeAttribute('hidden');else w.setAttribute('hidden','');btn.querySelector('.bi-chevron-down,.bi-chevron-up').className='bi '+(open?'bi-chevron-up':'bi-chevron-down');if(open)setTimeout(function(){w.scrollIntoView({behavior:'smooth',block:'start'})},30)};
   if(window.OWNER)delete window.OWNER.home;
 }
