@@ -2,6 +2,7 @@
 // GET  /api/comentarios?token=…[&screen=&author=&status=&type=]  → full feed (admin)
 // GET  /api/comentarios?screen=#/rota  → that screen's threads (public, for pins)
 import { STATUSES, TYPES, newId, saveComment, saveCrop, listAll, getComment, isAdmin, rateLimited, json, readBody, publicView } from '../../lib/store.js';
+import { applyResolvidos } from '../../lib/resolver.js';
 
 export const config = { api: { bodyParser: { sizeLimit: '6mb' } } };
 
@@ -18,7 +19,7 @@ export default async function handler(req, res) {
     const screen = url.searchParams.get('screen');
     const admin = isAdmin(req);
     if (!admin && !screen) return json(res, 401, { error: 'token inválido' });
-    let rows = await listAll();
+    let rows = await applyResolvidos(await listAll()); // review/resolvidos.json → statuses (see lib/resolver.js)
     if (screen) rows = rows.filter(c => c.screen === screen);
     const f = k => url.searchParams.get(k);
     if (f('author')) rows = rows.filter(c => (c.author || '').toLowerCase().includes(f('author').toLowerCase()));

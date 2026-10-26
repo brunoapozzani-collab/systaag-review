@@ -1,0 +1,11 @@
+{
+  "_": "Resolução dos comentários da revisão. Um item por comentário, adicionado NO MESMO COMMIT da correção. Ao publicar, /api/comentarios aplica: status + resposta 'SYSTAAG · verificação' + o pin some. Ver lib/resolver.js e README.",
+  "itens": [
+    {
+      "id": "mv9rvrlo-n5duhalr",
+      "status": "Recusado",
+      "versao": "v100",
+      "nota": "Comentário de teste do próprio autor (\"don't count it as a real comment\")."
+    }
+  ]
+}
