@@ -6,6 +6,12 @@
       "status": "Recusado",
       "versao": "v100",
       "nota": "Comentário de teste do próprio autor (\"don't count it as a real comment\")."
+    },
+    {
+      "id": "mvple1pg-6fll0ksn",
+      "status": "Feito",
+      "versao": "v103",
+      "nota": "Unidade de negócio Corporativo → Administrativo em todas as telas (Obras, Lançamentos, A pagar, Parâmetros, Impostos, chips de unidade)."
     }
   ]
 }
