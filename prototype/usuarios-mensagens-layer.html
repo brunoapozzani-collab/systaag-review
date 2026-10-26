@@ -1,7 +1,7 @@
 <!-- ===================================================================================================
   USUÁRIOS + MENSAGENS layer (prototype v104) — additive, appended before </body>.
   1. Mensagens: a second floating bubble (left of T.A.L.I.A.) → 340×480 panel: conversas → thread → compor,
-     "nova mensagem", busca, não lidas. Seeded with the real conversations of the live SYSTAAG (26/10/2026).
+     "nova mensagem", busca, não lidas. Starts empty (no real conversations) — only what is typed in the prototype.
      Messages are stored in S.db.mensagens; switching user (pill) shows the other side of the same thread.
   2. Usuários: #/equipe = faithful clone of the live "Equipe" list (membro · setor/cargo · grupos · ações)
      PLUS a real permission model: PERFIS (role templates) × TELAS (every screen of the live NAV, by department)
@@ -131,27 +131,8 @@ var save_=function(){try{save()}catch(e){}};
 
 /* ───────────────────────── 1. MENSAGENS ───────────────────────── */
 (function(){
-  if(!S.db.mensagens||!S.db.mensagens.length){
-    var y=2026; var T=function(m,d,h,mi){return new Date(y,m-1,d,h||10,mi||0).toISOString()};
-    S.db.mensagens=[
-      {id:'m1',de:'izaque.ventura',para:'bruno.pozzani',t:'Bruno, o repositório ficou completo? O Robson disse que o commit travou.',ts:T(7,22,9,12),lida:true},
-      {id:'m2',de:'bruno.pozzani',para:'izaque.ventura',t:'Travou no push, já resolvi.',ts:T(7,22,9,30),lida:true},
-      {id:'m3',de:'izaque.ventura',para:'bruno.pozzani',t:'repositório completo comprometido',ts:T(7,22,9,41),lida:true},
-      {id:'m4',de:'catarina.macedo',para:'bruno.pozzani',t:'Vi o protótipo do Financeiro. Quando a tela de Projetos entra?',ts:T(7,22,14,2),lida:true},
-      {id:'m5',de:'bruno.pozzani',para:'catarina.macedo',t:'Essa semana. Vai ficar na mesma estrutura do Comercial.',ts:T(7,22,14,10),lida:true},
-      {id:'m6',de:'catarina.macedo',para:'bruno.pozzani',t:'vai ser lindo',ts:T(7,22,14,11),lida:true},
-      {id:'m7',de:'robson.souza',para:'bruno.pozzani',t:'Quando você conseguir, aprova o equipamento que eu mandei para você, por favor',ts:T(5,19,8,40),lida:true},
-      {id:'m8',de:'robson.souza',para:'bruno.pozzani',t:'Um está errado, sem preço, descrição, etc. Esse você excluir é claro',ts:T(5,19,8,41),lida:true},
-      {id:'m9',de:'bruno.pozzani',para:'robson.souza',t:'vou aprovar ja',ts:T(5,19,9,2),lida:true},
-      {id:'m10',de:'robson.souza',para:'bruno.pozzani',t:'Vlw',ts:T(5,19,9,3),lida:true},
-      {id:'m11',de:'bruno.pozzani',para:'yara.moreno',t:'No sininho de notificações, você vê tudo que está pendente para você.',ts:T(5,12,11,20),lida:true},
-      {id:'m12',de:'rane.gileade',para:'bruno.pozzani',t:'TA TOP',ts:T(5,11,16,45),lida:true},
-      {id:'m13',de:'fabio.brides',para:'bruno.pozzani',t:'Consegue liberar a tela de Programação pro Davi?',ts:T(5,10,10,5),lida:true},
-      {id:'m14',de:'thais.andreazzi',para:'bruno.pozzani',t:'Bruno, no Financeiro é "conciliação bancária", não reconciliação. E "a pagar", nunca "a pagares".',ts:T(10,26,15,46),lida:false},
-      {id:'m15',de:'guilherme.germanetti',para:'bruno.pozzani',t:'Colocar todas as partes que fala corporativo = administrativo',ts:T(10,26,15,30),lida:false}
-    ];
-    save_();
-  }
+  if(!Array.isArray(S.db.mensagens))S.db.mensagens=[]; /* starts EMPTY — no real conversations are seeded; only what is typed in the prototype */
+  if(S.db.mensagens.some(function(m){return /^m\d+$/.test(m.id)})){S.db.mensagens=S.db.mensagens.filter(function(m){return !/^m\d+$/.test(m.id)});save_()}
   if(typeof TABLES!=='undefined'&&Array.isArray(TABLES)&&TABLES.indexOf('mensagens')<0)TABLES.push('mensagens');
   var win=document.getElementById('um-win'),body=document.getElementById('um-body'),thd=document.getElementById('um-thread-hd'),foot=document.getElementById('um-foot'),inp=document.getElementById('um-input'),badge=document.getElementById('um-badge');
   var view={mode:'list',com:null,q:''};
@@ -176,7 +157,7 @@ var save_=function(){try{save()}catch(e){}};
     document.getElementById('um-back').onclick=function(){view.mode='list';renderList()};
     foot.style.display='flex';renderMsgs();setTimeout(function(){inp.focus()},80)}
   function renderMsgs(){var L=meLogin(),ms=mine().filter(function(m){return other(m)===view.com}).sort(function(a,b){return a.ts<b.ts?-1:1});var day='';
-    body.innerHTML='<div class="um-msgs">'+(ms.length?ms.map(function(m){var d=fmtDay(m.ts),h='';if(d!==day){day=d;h='<div class="um-day">'+d+'</div>'}return h+'<div class="um-m '+(m.de===L?'me':'them')+'">'+E(m.t)+'<span class="um-t">'+fmtTime(m.ts)+'</span></div>'}).join(''):'<div class="um-empty">Nenhuma mensagem ainda. Diga oi 👋</div>')+'</div>';body.scrollTop=body.scrollHeight}
+    body.innerHTML='<div class="um-msgs">'+(ms.length?ms.map(function(m){var d=fmtDay(m.ts),h='';if(d!==day){day=d;h='<div class="um-day">'+d+'</div>'}return h+'<div class="um-m '+(m.de===L?'me':'them')+'">'+E(m.t)+'<span class="um-t">'+fmtTime(m.ts)+'</span></div>'}).join(''):'<div class="um-empty">Nenhuma mensagem ainda. Escreva a primeira 👋</div>')+'</div>';body.scrollTop=body.scrollHeight}
   function send(){var t=inp.value.trim();if(!t||!view.com)return;S.db.mensagens.push({id:'m'+Date.now().toString(36),de:meLogin(),para:view.com,t:t,ts:nowIso(),lida:false});save_();inp.value='';inp.style.height='';renderMsgs();
     try{log('mensagens',view.com,'mensagem enviada',null,t.slice(0,60))}catch(e){}}
   function open(){win.classList.add('open');win.classList.remove('min');if(view.mode==='thread'&&view.com)openThread(view.com);else renderList()}
