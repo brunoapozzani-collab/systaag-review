@@ -5488,7 +5488,7 @@ const deptOf=k=>SEC_OF[k]||OWNER[k]||null;
 renderNav=function(){if(window.__finNotas)__finNotas();const {k}=route();let d=deptOf(k);if(!d||!NAV.some(s=>s.id===d))d=S.__dept||'home';S.__dept=d;const sn=document.getElementById('subnav');
  if(d==='fin'&&__RN.fin){try{__RN.fin()}catch(e){console.error(e)}}
  else{let c={};try{c=counts()||{}}catch(e){}if(d==='bd'){try{c.dbmapa=ASM.findings().filter(x=>x.nivel==='dup'||x.nivel==='conf'||x.nivel==='orf').length;c.dbpessoas=ASM.pessoas().lista.filter(p=>p.n>1).length}catch(e){}}
-  const s=NAV.find(x=>x.id===d)||NAV[0];const hk=({lugar:'estoque',celula:'estoque',sit:'estoque',unidade:'estoque',produto:'estoque',ocprop:'obrascompras'})[k]||k;sn.innerHTML=`<h6>${s.label}</h6>`+s.items.map(([key,lb])=>`<a href="#/${key}" class="${key===hk?'on':''}">${lb}${c[key]?`<span class="cnt">${c[key]}</span>`:''}</a>`).join('')}
+  const s=NAV.find(x=>x.id===d)||NAV[0];const hk=({lugar:'estoque',celula:'estoque',sit:'estoque',unidade:'estoque',produto:'dbprodutos',ocprop:'obrascompras'})[k]||k;sn.innerHTML=`<h6>${s.label}</h6>`+s.items.map(([key,lb])=>`<a href="#/${key}" class="${key===hk?'on':''}">${lb}${c[key]?`<span class="cnt">${c[key]}</span>`:''}</a>`).join('')}
  document.getElementById('rail').innerHTML=NAV.map(s=>`<button class="${s.id===d?'on':''}" title="${s.label}" onclick="location.hash='#/${s.items[0][0]}'"><i class="bi ${s.icon}"></i><span class="rl">${RAILNOME[s.id]||s.label}</span></button>`).join('')};
 /* the rail says which department each icon is (on the phone there is no hover tooltip) */
 const RAILNOME={home:'Início',com:'Comercial',ope:'Operação',est:'Estoque',fin:'Financeiro',bd:'Base'};
@@ -13689,14 +13689,15 @@ const _cepFX2 = SCREENS.cep; SCREENS.cep = function (arg) { let h = _cepFX2.appl
 const _ocFX = SCREENS.ocprop; if (_ocFX) SCREENS.ocprop = function (arg) { let h = _ocFX.apply(this, arguments); if (typeof h !== 'string' || !arg) return h; return h.replace(/<span class="k pill">(\d+ itens vendidos)<\/span>/, `<a class="k pill" href="#/editor/${arg}" title="abrir a proposta" style="text-decoration:none">$1</a>`); };
 const _verArq = window.verArquivo; if (typeof _verArq === 'function') window.verArquivo = function (fid, nomeHint) { if (!fid) return toast(`Arquivo “${nomeHint || ''}” ainda não foi enviado ao sistema — anexe em Documentos.`, true); return _verArq.apply(this, arguments); };
 const _setAj = A.setAjuste; A.setAjuste = function (a, b, c, d) { if (typeof a === 'string' && !get('propostas', a) && S.db.folha.some(p => p.nome === a)) { const p = S.db.folha.find(p => p.nome === a); p.ajustes = p.ajustes || {}; p.ajustes[b] = { valor: +c || 0, motivo: d || '' }; log('folha', a, 'ajuste ' + b, null, c); return; } return _setAj.apply(A, arguments); };
-const _dbprodFX = SCREENS.dbprodutos; if (_dbprodFX) SCREENS.dbprodutos = function (arg) { let h = _dbprodFX.apply(this, arguments); if (typeof h !== 'string') return h; return h.replace(/location\.hash='#\/produto\/(k_[^']+)'/g, "location.hash='#/dbprodutos/kits'"); };
+/* (removido) a ficha de produtos com id k_ abria a aba Kits — são produtos normais; a ficha abre #/produto/<id> */
 
 const _dbcliFX = SCREENS.dbclientes; if (_dbcliFX) SCREENS.dbclientes = function () { let h = _dbcliFX.apply(this, arguments); return typeof h === 'string' ? h.replace('não existe outro cadastro de cliente', 'é o único cadastro de cliente') : h; };
 /* ---------- busca + "Mostrando N de M" em toda lista grande (DOM, depois de cada render) ---------- */
 function listas(root) {
   try {
     const temBusca = !!root.querySelector('input[type=search],input[placeholder*="Buscar" i],input[placeholder*="Procurar" i],input[placeholder*="Filtrar" i],input[placeholder*="pesquis" i]');
-    const tabs = [...root.querySelectorAll('table')].filter(t => t.querySelectorAll('tbody tr').length >= 7 && !t.closest('.fx2-wrapped'));
+    const isForm = t => !t.tHead || [...t.querySelectorAll('tbody tr')].every(tr => tr.cells.length <= 2 && tr.querySelector('input,select,textarea'));
+    const tabs = [...root.querySelectorAll('table')].filter(t => t.querySelectorAll('tbody tr').length >= 7 && !t.closest('.fx2-wrapped') && !isForm(t));
     tabs.forEach((t, i) => {
       const n = t.querySelectorAll('tbody tr').length; const bar = document.createElement('div'); bar.className = 'fx2-search';
       const id = 'fx2q_' + i; const withInput = !temBusca || i > 0;
@@ -27457,6 +27458,7 @@ try{renderNav()}catch(e){}
 })();
 </script>
 
+<script>try{SEC_OF.produto='bd';if(window.OWNER)OWNER.produto='bd';LABEL.produto='Produto';}catch(e){}</script>
 
 <!-- SYSTAAG review layer · self-contained · injected before </body> · every id/class is prefixed staag-rev- -->
 <style id="staag-rev-style">
