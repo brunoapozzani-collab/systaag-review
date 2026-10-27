@@ -9,38 +9,63 @@
   (Usuários › exceções, the same mechanism the rest of the system uses). ids/classes prefixed dir- .
 =================================================================================================== -->
 <style>
-.dir-wrap .card{border-radius:16px}
-.dir-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:14px}
-.dir-k{padding:14px 16px;cursor:pointer;position:relative;min-height:96px}
-.dir-k .lb{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;opacity:.65;font-weight:700}
-.dir-k .v{font-size:clamp(15px,1.3vw,21px);font-weight:800;line-height:1.15;margin:4px 0 2px;white-space:nowrap;letter-spacing:-.01em}
-.dir-k .s{font-size:11.5px;opacity:.7}
-.dir-k .dot{position:absolute;top:12px;right:12px;width:10px;height:10px;border-radius:50%}
-.dir-ok{background:#198754}.dir-warn{background:#ffc107}.dir-bad{background:#dc3545}.dir-mute{background:#adb5bd}
-.dir-sec{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:8px;margin:22px 0 10px}
-.dir-sec h5{margin:0;font-weight:800;font-size:16px}
-.dir-sec .n{font-size:11px;letter-spacing:.08em;text-transform:uppercase;opacity:.6;font-weight:700;display:block;margin-bottom:2px}
-.dir-sec a{font-size:12.5px;text-decoration:none;white-space:nowrap}
-.dir-formula{font-family:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;background:rgba(127,127,127,.08);border:1px dashed var(--bd,#dee2e6);border-radius:10px;padding:8px 12px;margin-bottom:10px;line-height:1.5}
-.dir-formula b{color:#0d6efd}
+.dir-wrap{--ml:#3483fa;--mlk:#00a650;--mlr:#f23d4f;--mly:#f5a623}
+.dir-wrap .card{border-radius:10px;box-shadow:0 1px 2px rgba(0,0,0,.06);border:1px solid var(--bd,#e6e6e6)}
+.dir-tabs{display:flex;gap:4px;flex-wrap:wrap;margin:0 0 16px;border-bottom:1px solid var(--bd,#e6e6e6)}
+.dir-tabs button{border:none;background:transparent;color:inherit;opacity:.7;padding:9px 12px;font-size:13.5px;font-weight:600;cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-1px;white-space:nowrap}
+.dir-tabs button.on{opacity:1;color:var(--ml);border-bottom-color:var(--ml)}
+.dir-sub{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.dir-sub button{border:1px solid var(--bd,#e6e6e6);background:transparent;color:inherit;border-radius:999px;padding:4px 12px;font-size:12px;cursor:pointer}
+.dir-sub button.on{background:var(--ml);color:#fff;border-color:var(--ml)}
+.dir-hero{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-bottom:18px}
+.dir-hero .card{padding:16px 18px;text-decoration:none;color:inherit;display:block}
+.dir-hero .lb{font-size:12px;opacity:.7;font-weight:600}
+.dir-hero .v{font-size:30px;font-weight:800;letter-spacing:-.02em;line-height:1.1;margin:6px 0 4px;white-space:nowrap}
+.dir-hero .s{font-size:12px;opacity:.7}
+.dir-trend{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;padding:2px 8px;border-radius:999px}
+.dir-trend.up{background:rgba(0,166,80,.12);color:var(--mlk)}.dir-trend.down{background:rgba(242,61,79,.12);color:var(--mlr)}.dir-trend.flat{background:rgba(127,127,127,.12);opacity:.8}
+.dir-h{display:flex;justify-content:space-between;align-items:baseline;margin:22px 0 10px}
+.dir-h h5{margin:0;font-size:17px;font-weight:700}
+.dir-h a{font-size:13px;color:var(--ml);text-decoration:none;font-weight:600}
+.dir-tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px}
+.dir-tile{padding:16px 18px;cursor:pointer;display:flex;flex-direction:column;gap:8px;transition:box-shadow .15s}
+.dir-tile:hover{box-shadow:0 6px 16px rgba(0,0,0,.1)}
+.dir-tile .t{display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:700}
+.dir-tile .t i{font-size:16px;color:var(--ml);margin-right:6px}
+.dir-tile .big{font-size:26px;font-weight:800;letter-spacing:-.02em;line-height:1.1;white-space:nowrap}
+.dir-tile .big small{font-size:12px;font-weight:500;opacity:.65;margin-left:6px;letter-spacing:0}
+.dir-tile .rows{font-size:12.5px;display:flex;flex-direction:column;gap:3px}
+.dir-tile .rows div{display:flex;justify-content:space-between;gap:10px}
+.dir-tile .rows span:last-child{font-weight:600;white-space:nowrap}
+.dir-tile .go{font-size:12.5px;color:var(--ml);font-weight:600;margin-top:auto;padding-top:6px}
+.dir-alerts{padding:4px 18px}
+.dir-alerts .al{display:flex;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--bd,#e6e6e6);font-size:13.5px;cursor:pointer}
+.dir-alerts .al:first-child{border-top:none}
+.dir-alerts .al .ic{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-size:14px;flex:0 0 auto}
+.dir-alerts .al .ic.bad{background:rgba(242,61,79,.12);color:var(--mlr)}.dir-alerts .al .ic.warn{background:rgba(245,166,35,.15);color:#b7780c}.dir-alerts .al .ic.ok{background:rgba(0,166,80,.12);color:var(--mlk)}
+.dir-alerts .al b{display:block}.dir-alerts .al .sub{font-size:12px}
+.dir-alerts .al .arr{margin-left:auto;color:var(--ml);font-weight:700}
+.dir-formula{font-size:12.5px;background:rgba(52,131,250,.07);border-left:3px solid var(--ml);border-radius:8px;padding:10px 14px;margin-bottom:14px;line-height:1.55}
+.dir-formula b{color:var(--ml)}
 .dir-chart{width:100%;height:auto;display:block;overflow:visible}
-.dir-chart text{font-size:10.5px;fill:currentColor;opacity:.75}
-.dir-chart .ax{stroke:var(--bd,#dee2e6);stroke-width:1}
+.dir-chart text{font-size:10.5px;fill:currentColor;opacity:.7}
+.dir-chart .ax{stroke:var(--bd,#e6e6e6);stroke-width:1}
 .dir-chart .bar{cursor:pointer}
-.dir-tbl td,.dir-tbl th{white-space:nowrap}
-.dir-tbl td.l{white-space:normal;min-width:160px}
-.dir-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
-.dir-tabs button{border:1px solid var(--bd,#dee2e6);background:transparent;color:inherit;border-radius:999px;padding:4px 12px;font-size:12px;cursor:pointer}
-.dir-tabs button.on{background:#212529;color:#fff;border-color:#212529}
-[data-theme=dark] .dir-tabs button.on{background:#f8f9fa;color:#111;border-color:#f8f9fa}
-.dir-meta input{width:110px;text-align:right}
-.dir-err{border-left:4px solid #dc3545;background:rgba(220,53,69,.08);padding:10px 14px;border-radius:10px;font-size:12.5px;margin-bottom:12px}
+.dir-spark{width:100%;height:38px;display:block}
+.dir-tbl td,.dir-tbl th{white-space:nowrap}.dir-tbl td.l{white-space:normal;min-width:160px}
+.dir-meta input{width:120px;text-align:right}
+.dir-err{border-left:4px solid var(--mlr);background:rgba(242,61,79,.08);padding:10px 14px;border-radius:8px;font-size:12.5px;margin-bottom:12px}
 .dir-chip{display:inline-block;font-size:11px;padding:2px 8px;border-radius:999px;background:rgba(127,127,127,.12)}
-.dir-chip.ok{background:rgba(25,135,84,.15);color:#198754}.dir-chip.bad{background:rgba(220,53,69,.15);color:#dc3545}.dir-chip.warn{background:rgba(255,193,7,.2);color:#9a6b00}
+.dir-chip.ok{background:rgba(0,166,80,.12);color:var(--mlk)}.dir-chip.bad{background:rgba(242,61,79,.12);color:var(--mlr)}.dir-chip.warn{background:rgba(245,166,35,.18);color:#9a6b00}
 .dir-bullet{height:10px;border-radius:5px;background:rgba(127,127,127,.15);position:relative;overflow:hidden}
-.dir-bullet i{position:absolute;left:0;top:0;bottom:0;background:#0d6efd;border-radius:5px}
-.dir-bullet.ok i{background:#198754}.dir-bullet.bad i{background:#dc3545}
-@media (max-width:700px){.dir-grid{grid-template-columns:repeat(2,1fr)}.dir-k .v{font-size:15px}.dir-k{padding:12px 12px;min-height:88px}}
+.dir-bullet i{position:absolute;left:0;top:0;bottom:0;background:var(--ml);border-radius:5px}
+.dir-bullet.ok i{background:var(--mlk)}.dir-bullet.bad i{background:var(--mlr)}
+.dir-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:14px}
+.dir-k{padding:14px 16px;cursor:pointer;position:relative;min-height:92px;text-decoration:none;color:inherit;display:block}
+.dir-k .lb{font-size:11px;opacity:.65;font-weight:700}.dir-k .v{font-size:21px;font-weight:800;line-height:1.15;margin:4px 0 2px;white-space:nowrap;letter-spacing:-.01em}.dir-k .s{font-size:11.5px;opacity:.7}
+.dir-k .dot{position:absolute;top:12px;right:12px;width:9px;height:9px;border-radius:50%}
+.dir-ok{background:var(--mlk)}.dir-warn{background:var(--mly)}.dir-bad{background:var(--mlr)}.dir-mute{background:#c4c4c4}
+@media (max-width:700px){.dir-hero .v{font-size:24px}.dir-tiles{grid-template-columns:1fr}.dir-grid{grid-template-columns:repeat(2,1fr)}.dir-k .v{font-size:16px}.dir-tabs{overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch}}
 </style>
 <script>
 (function(){ 'use strict';
@@ -152,158 +177,165 @@ function svgBarsH(items,opts){ /* items: [{x,y(pct 0..1),color,href,title,txt}] 
   var bars=items.map(function(p,i){var y=4+i*rowH;var w=Math.max(0,sx(p.y)-L);return '<g class="bar"'+(p.href?' onclick="location.hash=\''+E(p.href)+'\'"':'')+'><title>'+E(p.title||p.x)+'</title><text x="'+(L-8)+'" y="'+(y+14)+'" text-anchor="end">'+E(p.x.length>30?p.x.slice(0,29)+'…':p.x)+'</text><rect x="'+L+'" y="'+y+'" width="'+w.toFixed(1)+'" height="'+(rowH-6)+'" rx="4" fill="'+(p.color||'#0d6efd')+'"/><text x="'+(L+w+6).toFixed(1)+'" y="'+(y+14)+'" style="font-weight:700;opacity:.9">'+E(p.txt||P1(p.y))+'</text></g>'}).join('');
   return '<svg class="dir-chart" viewBox="0 0 '+W+' '+(H+10)+'" style="aspect-ratio:'+W+'/'+(H+10)+'">'+bars+ref+'</svg>'}
 
-/* ───────────────── 5. the screen ───────────────── */
-function K(lb,v,s,href,light){return '<a class="card dir-k text-decoration-none d-block" href="'+E(href||'#')+'" style="color:inherit"><span class="dot dir-'+(light||'mute')+'"></span><div class="lb">'+lb+'</div><div class="v">'+v+'</div><div class="s">'+(s||'')+'</div></a>'}
-function sec(n,t,href,lb){return '<div class="dir-sec"><div><span class="n">'+E(n)+'</span><h5>'+t+'</h5></div>'+(href?'<a href="'+E(href)+'">'+E(lb||'abrir no departamento')+' →</a>':'')+'</div>'}
+/* ───────────────── 5. the screen — Mercado Livre-style: overview with one headline per area, detail per tab ───────────────── */
+var TABS=[['geral','Visão geral'],['caixa','Caixa'],['vendas','Vendas'],['lucro','Lucro por venda'],['linhas','Centros de custo'],['estoque','Estoque'],['operacao','Operação'],['posvenda','Pós-venda'],['pessoas','Pessoas'],['config','Configurar']];
+function K(lb,v,s,href,light){return '<a class="card dir-k" href="'+E(href||'#')+'"><span class="dot dir-'+(light||'mute')+'"></span><div class="lb">'+lb+'</div><div class="v">'+v+'</div><div class="s">'+(s||'')+'</div></a>'}
+function hd(t,href,lb){return '<div class="dir-h"><h5>'+t+'</h5>'+(href?'<a href="'+E(href)+'">'+E(lb||'Ver no departamento')+' ›</a>':'')+'</div>'}
+function trend(v,ref,inv){if(ref==null||!isFinite(v))return '';var d=v-ref;var up=inv?d<0:d>0;var cls=Math.abs(d)<0.0005?'flat':up?'up':'down';var ar=cls==='flat'?'•':d>0?'▲':'▼';return '<span class="dir-trend '+cls+'">'+ar+' '+E(typeof ref==='number'&&Math.abs(ref)>2?Rk(Math.abs(d)):P1(Math.abs(d)))+'</span>'}
+function spark(vals,color){if(!vals||vals.length<2)return '';var W=200,H=38,lo=Math.min.apply(null,vals),hi=Math.max.apply(null,vals);if(hi===lo)hi=lo+1;var sx=function(i){return 4+(W-8)*i/(vals.length-1)},sy=function(v){return 4+(H-8)*(1-(v-lo)/(hi-lo))};var d=vals.map(function(v,i){return (i?'L':'M')+sx(i).toFixed(1)+' '+sy(v).toFixed(1)}).join(' ');return '<svg class="dir-spark" viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none"><path d="'+d+' L'+sx(vals.length-1).toFixed(1)+' '+H+' L4 '+H+' Z" fill="'+(color||'#3483fa')+'" opacity=".12"/><path d="'+d+'" fill="none" stroke="'+(color||'#3483fa')+'" stroke-width="2"/></svg>'}
+function tile(o){return '<div class="card dir-tile" onclick="location.hash=\'#/diretoria/'+o.tab+'\'"><div class="t"><span><i class="bi '+o.icon+'"></i>'+E(o.title)+'</span>'+(o.chip||'')+'</div><div class="big">'+o.big+(o.small?'<small>'+o.small+'</small>':'')+'</div>'+(o.spark||'')+'<div class="rows">'+(o.rows||[]).map(function(r){return '<div><span>'+r[0]+'</span><span>'+r[1]+'</span></div>'}).join('')+'</div><div class="go">Ver '+E(o.title.toLowerCase())+' ›</div></div>'}
+function chip(st,txt){return st?'<span class="dir-chip '+st+'">'+E(txt)+'</span>':''}
 function go(k,v){DIR[k]=v;try{renderMain()}catch(e){render()}}
 window.DIRX={go:go,setMeta:function(k,v){v=+String(v).replace(',','.');var p=pf();if(k==='caixaMinimo')p.caixaMinimo=v;else if(k==='margemMinima')p.margemMinima=v;else if(k==='metaEmpresa'){S.db.metas=S.db.metas||{};S.db.metas.empresa=v}
     try{save()}catch(e){}try{log('params',k,'meta da Diretoria',null,String(v))}catch(e){}try{toast('Meta atualizada: '+k)}catch(e){}go('_',0)},
   autorizar:function(sel){var login=sel.value;if(!login)return;try{UQ.setExc(login,'diretoria',1);toast('Autorizado: '+login+' passa a ver o Painel da Diretoria.')}catch(e){toast('Não foi possível autorizar: '+(e&&e.message||e),true)}go('_',0)},
   revogar:function(login){try{UQ.setExc(login,'diretoria',null);toast('Autorização removida: '+login)}catch(e){toast(String(e&&e.message||e),true)}go('_',0)}};
 
-SCREENS.diretoria=function(arg){
-  DIR.err=[];
-  if(!podeVer())return head('Painel da Diretoria','')+'<div class="card p-4" style="border-left:4px solid #dc3545"><h5 class="mb-1">Acesso restrito à Diretoria</h5><div class="sub">Este painel é visto pelos perfis Diretoria e TI. Outra pessoa só entra com uma autorização individual, dada em <a href="#/equipe">Usuários e permissões</a> ou no próprio painel por quem já tem acesso.</div></div>';
-  var ms=meses();if(!DIR.ym||ms.indexOf(DIR.ym)<0)DIR.ym=ms[0];var ym=DIR.ym;var p=pf();var margMin=(+p.margemMinima||30)/100;var cxMin=+p.caixaMinimo||0;
-  var H='';
-  /* ── saúde hoje ── */
-  var cx=caixaHoje(),fo=folego(),rec=aReceber(),pag=aPagar();var d0=safe('DRE do mês',function(){return dre(ym,'')});var vend=safe('Vendido no mês',function(){return vendidasNoMes(ym).reduce(function(a,p){return a+Mtot(p)},0)})||0;var nV=vendidasNoMes(ym).length;
-  var mt=metas();var metaMes=(+mt.empresa||0)/12;var capital=safe('Capital parado',function(){return D.capitalParado()})||0;var nInv=safe('Inventário',function(){return D.emInventario().length})||0;
-  var sem=safe('13 semanas',semanas)||[];var menor=sem.length?sem.reduce(function(m,w){return w.saldoFinal<m.saldoFinal?w:m},sem[0]):null;
-  H+=head('Painel da Diretoria','Uma tela, todos os departamentos. Cada número vem da tela do departamento que o produz e abre nela. '+E(dBR(hoje()))+'/'+hoje().slice(0,4),
-    '<div class="dir-tabs mb-0">'+ms.map(function(m){return '<button class="'+(m===ym?'on':'')+'" onclick="DIRX.go(\'ym\',\''+m+'\')">'+ymLb(m)+'</button>'}).join('')+'</div>');
-  H+='<div class="dir-grid">'
-    +K('Caixa hoje',R0(cx),(cxMin?'mínimo '+R0(cxMin)+' · ':'')+'bancos somados','#/fluxo',cx<cxMin?'bad':cx<cxMin*1.5&&cxMin?'warn':'ok')
-    +K('Autonomia de caixa',fo==null?'—':fo.toFixed(1).replace('.',',')+' meses','caixa ÷ saídas fixas ('+R0(fixosMes())+'/mês)','#/fhoje',fo==null?'mute':fo<3?'bad':fo<6?'warn':'ok')
-    +K('Menor saldo em 13 semanas',menor?R0(menor.saldoFinal):'—',menor?'semana '+menor.n+' · '+dBR(menor.inicio):'','#/fluxo',!menor?'mute':menor.saldoFinal<cxMin?'bad':'ok')
-    +K('Resultado do mês ('+ymLb(ym)+')',d0?R0(d0.res):'—',d0?'margem de contribuição '+P1(d0.mcPct)+' · EBITDA '+R0(d0.ebitda):'','#/dre',!d0?'mute':d0.res<0?'bad':'ok')
-    +K('Vendido no mês',R0(vend),nV+' proposta(s)'+(metaMes?' · meta '+R0(metaMes)+' ('+P1(metaMes?vend/metaMes:0)+')':''),'#/gestao',!metaMes?'mute':vend>=metaMes?'ok':vend>=metaMes*.7?'warn':'bad')
-    +K('A receber − a pagar',R0(rec-pag),R0(rec)+' − '+R0(pag),'#/receber',rec-pag<0?'bad':'ok')
-    +K('Capital parado em estoque',R0(capital),N0(nInv)+' unidades no inventário','#/epainel','mute')
-    +'</div>';
+/* one model, computed once per render; every tab reads from it */
+function model(){
+  var ms=meses();if(!DIR.ym||ms.indexOf(DIR.ym)<0)DIR.ym=ms[0];var ym=DIR.ym;var p=pf();var m={ym:ym,ms:ms,p:p,margMin:(+p.margemMinima||30)/100,cxMin:+p.caixaMinimo||0};
+  m.cx=caixaHoje();m.fo=folego();m.rec=aReceber();m.pag=aPagar();m.fixos=fixosMes();
+  m.d0=safe('DRE do mês',function(){return dre(ym,'')});var prevYm=ms[ms.indexOf(ym)+1];m.d1=prevYm?safe('DRE anterior',function(){return dre(prevYm,'')}):null;m.prevYm=prevYm;
+  m.vendMes=vendidasNoMes(ym);m.vend=m.vendMes.reduce(function(a,p){return a+Mtot(p)},0);m.mt=metas();m.metaMes=(+m.mt.empresa||0)/12;
+  m.capital=safe('Capital parado',function(){return D.capitalParado()})||0;m.nInv=safe('Inventário',function(){return D.emInventario().length})||0;
+  m.sem=safe('13 semanas',semanas)||[];m.menor=m.sem.length?m.sem.reduce(function(a,w){return w.saldoFinal<a.saldoFinal?w:a},m.sem[0]):null;
+  m.dias=safe('Fluxo diário',function(){return fluxoDiario(30)})||[];
+  m.rows=safe('Lucratividade por venda',obraRows)||[];
+  var unis=unidades();m.linhas=unis.filter(function(u){return LINHAS.indexOf(u)>=0});m.outras=unis.filter(function(u){return LINHAS.indexOf(u)<0});
+  m.cc=m.linhas.map(function(u){return {u:u,d:safe('DRE '+u,function(){return dre(ym,u)})}});
+  var N=S.db.negociacoes||[];m.jogo=N.filter(function(n){return !n.resultado});m.fech=N.filter(function(n){return n.resultado==='fechada'});m.perd=N.filter(function(n){return n.resultado==='perdida'});m.dec=m.fech.length+m.perd.length;
+  m.ano=String(m.mt.ano||hoje().slice(0,4));m.vAno=vendidasNoAno(m.ano);m.vendAno=m.vAno.reduce(function(a,p){return a+Mtot(p)},0);m.pipeVal=r2(m.jogo.reduce(function(a,n){return a+(+n.valor||0)},0));m.prev=(S.db.propostas||[]).filter(function(p){return p.estado==='em_prevendas'}).length;
+  var ep=safe('Painel do Estoque',function(){return scrape('epainel')});m.est={dev:kpiFrom(ep,'O QUE DEVEMOS'),vdv:kpiFrom(ep,'ESTOQUE VENDÁVEL'),spp:kpiFrom(ep,'SEM PROPÓSITO'),nav:kpiFrom(ep,'NÃO ESTÁ À VENDA'),custo:safe('Estoque ao custo',function(){return FS.estoqueCusto()})};
+  var cp=safe('Painel da Operação',function(){return scrape('copainel')});m.ope={and:kpiFrom(cp,'EM ANDAMENTO'),hold:kpiFrom(cp,'ON HOLD'),conc:kpiFrom(cp,'CONCLUÍDAS'),pend:kpiFrom(cp,'PENDÊNCIAS ABERTAS'),atr:kpiFrom(cp,'ATIVIDADES ATRASADAS'),px:kpiFrom(cp,'PRÓXIMOS 7 DIAS')};
+  m.osAb=(S.db.os||[]).filter(function(x){return x.estado==='aberta'}).length;m.fila=safe('Fila crítica',function(){var d=scrape('posfila');if(!d)return null;var b=Array.prototype.find.call(d.querySelectorAll('button'),function(x){return /^Todos \(/.test(x.textContent||'')});var r=b&&/\((\d+)\)/.exec(b.textContent);return r?+r[1]:null});
+  var tot=safe('Totais do Pós-venda',function(){return FPV.totais()});m.pv={g:tot&&tot.por&&tot.por.garantia,cb:tot&&tot.por&&tot.por.cobravel,ct:tot&&tot.por&&tot.por.contrato};
+  m.folha=S.db.folha||[];var enc=p.encargos||{};m.encPct=((+enc.inss||0)+(+enc.fgts||0)+(+enc.terc||0))/100;m.custoPessoa=function(f){return r2((+f.salario||0)*(f.regime==='CLT'?1+m.encPct:1))};m.totFolha=r2(m.folha.reduce(function(a,f){return a+m.custoPessoa(f)},0));
+  m.aps=(S.db.apontamentos||[]).filter(function(a){return ymOf(a.data)===ym});var rate=(typeof RATE==='object'&&RATE)?RATE:{};
+  m.tecs=m.folha.filter(function(f){return f.classe==='cmv'||/t[eé]cnic|instala|program|projetista/i.test(String(f.cargo||''))}).map(function(f){var mine=m.aps.filter(function(a){return a.tecnico===f.nome});var dias=r2(mine.reduce(function(a,x){return a+(+x.dias||0)},0));var prod=r2(mine.reduce(function(a,x){var rt=rate[x.disc]||rate.instalacao||{venda:0};return a+(+x.dias||0)*(+rt.venda||0)},0));return {f:f,dias:dias,prod:prod,custo:m.custoPessoa(f),ok:prod>=m.custoPessoa(f)}});
+  /* alerts — only what is red or yellow, each with its door */
+  var A=[];var nz=function(k){return k&&!/^0\b/.test(k.v)};
+  if(m.cxMin&&m.cx<m.cxMin)A.push(['bad','Caixa abaixo do mínimo','hoje '+R$(m.cx)+' · mínimo '+R$(m.cxMin),'#/diretoria/caixa']);
+  if(m.dias.some(function(d){return d.abaixo}))A.push(['bad','Caixa fura o mínimo nos próximos 30 dias','primeiro dia '+dBR(m.dias.find(function(d){return d.abaixo}).d),'#/diretoria/caixa']);
+  if(m.dias.length&&m.dias[0].vencido)A.push(['warn',m.dias[0].vencido+' título(s) a receber vencido(s)','cobram no dia 1 do fluxo','#/receber']);
+  if(m.d0&&m.d0.res<0)A.push(['bad','Mês '+ymLb(ym)+' fecha negativo','resultado '+R$(m.d0.res)+' · margem de contribuição '+P1(m.d0.mcPct),'#/diretoria/linhas']);
+  var prej=m.rows.filter(function(r){return r.receita&&r.lucro<0});if(prej.length)A.push(['bad',prej.length+' venda(s) dando prejuízo',prej.slice(0,3).map(function(r){return r.nome}).join(' · '),'#/diretoria/lucro']);
+  var low=m.rows.filter(function(r){return r.receita&&r.margem>=0&&r.margem<m.margMin});if(low.length)A.push(['warn',low.length+' venda(s) abaixo da margem mínima ('+P1(m.margMin)+')',low.slice(0,3).map(function(r){return r.nome+' '+P1(r.margem)}).join(' · '),'#/diretoria/lucro']);
+  if(m.metaMes&&m.vend<m.metaMes*.7)A.push(['warn','Vendas do mês em '+P1(m.vend/m.metaMes)+' da meta',R$(m.vend)+' de '+R$(m.metaMes),'#/diretoria/vendas']);
+  if(m.prev>3)A.push(['warn',m.prev+' propostas paradas na pré-vendas','aguardando validação do Guilherme','#/prevendas']);
+  if(m.est.dev&&/a comprar/.test(m.est.dev.s))A.push(['warn','Há unidades vendidas a comprar',m.est.dev.s,'#/obrascompras']);
+  if(nz(m.ope.pend)&&/[1-9]\d* urgente/.test(m.ope.pend.s))A.push(['bad',m.ope.pend.v+' pendência(s) de obra, '+m.ope.pend.s,'','#/pendencias']);
+  if(nz(m.ope.atr))A.push(['warn',m.ope.atr.v+' atividades de obra atrasadas','fim previsto já passou','#/cronogramas']);
+  if(m.fila>0)A.push(['warn',m.fila+' clientes na fila crítica do Pós-venda','rede, Savant ou energia com falha','#/posfila']);
+  if(m.pv.g&&m.pv.g.custo>0)A.push(['warn','Garantia custou '+R$(m.pv.g.custo),m.pv.g.n+' OS · reduz a margem das obras de origem','#/diretoria/posvenda']);
+  if(m.d0&&m.d0.mc>0&&m.totFolha/m.d0.mc>0.8)A.push(['warn','Folha consome '+P1(m.totFolha/m.d0.mc)+' da margem de contribuição','equipe '+R$(m.totFolha)+'/mês · margem '+R$(m.d0.mc),'#/diretoria/pessoas']);
+  if(!m.aps.length)A.push(['warn','Nenhum apontamento de diária em '+ymLb(ym),'sem apontamento não há como medir a produção da equipe','#/fobras']);
+  m.alerts=A;return m}
 
-  /* ── 1. fluxo de caixa ── */
-  H+=sec('Relatório 1','Fluxo de caixa — diário e futuro','#/fluxo','Financeiro › Fluxo de caixa');
-  H+='<div class="dir-formula">entradas = títulos a <b>receber</b> por vencimento · saídas = títulos a <b>pagar</b> + fixos e folha rateados por dia · o que já venceu cai no dia 1 · mesma receita da tela de 13 semanas, só muda o balde (dia × semana)</div>';
-  var dias=safe('Fluxo diário',function(){return fluxoDiario(30)})||[];
-  H+='<div class="dir-tabs"><button class="'+(DIR.cx==='dia'?'on':'')+'" onclick="DIRX.go(\'cx\',\'dia\')">Próximos 30 dias</button><button class="'+(DIR.cx==='sem'?'on':'')+'" onclick="DIRX.go(\'cx\',\'sem\')">13 semanas</button></div>';
+/* ── tabs ── */
+function tabGeral(m){var H='';
+  var mcSerie=m.ms.slice().reverse().map(function(x){var d=dre(x,'');return d?d.res:0});
+  H+='<div class="dir-hero">'
+    +'<a class="card" href="#/diretoria/caixa"><div class="lb">Caixa hoje</div><div class="v">'+R$(m.cx)+'</div><div class="s">'+(m.fo==null?'':'<b>'+m.fo.toFixed(1).replace('.',',')+' meses</b> de autonomia · ')+'menor saldo em 13 sem. '+(m.menor?Rk(m.menor.saldoFinal):'—')+'</div>'+spark(m.dias.map(function(d){return d.saldo}),m.dias.some(function(d){return d.abaixo})?'#f23d4f':'#00a650')+'</a>'
+    +'<a class="card" href="#/diretoria/linhas"><div class="lb">Resultado de '+ymLb(m.ym)+'</div><div class="v" style="color:'+(m.d0&&m.d0.res<0?'var(--mlr)':'inherit')+'">'+(m.d0?R$(m.d0.res):'—')+'</div><div class="s">'+(m.d0?'receita '+Rk(m.d0.receita)+' · margem de contribuição '+P1(m.d0.mcPct)+' ':'')+(m.d1?trend(m.d0.res,m.d1.res):'')+'</div>'+spark(mcSerie,'#3483fa')+'</a>'
+    +'<a class="card" href="#/diretoria/vendas"><div class="lb">Vendido em '+ymLb(m.ym)+'</div><div class="v">'+R$(m.vend)+'</div><div class="s">'+m.vendMes.length+' proposta(s)'+(m.metaMes?' · <b>'+P1(m.vend/m.metaMes)+'</b> da meta mensal':'')+'</div>'+(m.metaMes?'<div class="dir-bullet mt-2 '+(m.vend>=m.metaMes?'ok':m.vend<m.metaMes*.5?'bad':'')+'"><i style="width:'+Math.min(100,Math.round(m.vend/m.metaMes*100))+'%"></i></div>':'')+'</a>'
+    +'</div>';
+  H+=hd('O que precisa de você'+(m.alerts.length?' <span class="dir-chip bad">'+m.alerts.length+'</span>':''));
+  H+='<div class="card dir-alerts">'+(m.alerts.length?m.alerts.slice(0,8).map(function(a){return '<div class="al" onclick="location.hash=\''+E(a[3])+'\'"><span class="ic '+a[0]+'"><i class="bi '+(a[0]==='bad'?'bi-exclamation-lg':'bi-exclamation')+'"></i></span><span><b>'+E(a[1])+'</b><span class="sub">'+E(a[2])+'</span></span><span class="arr">›</span></div>'}).join(''):'<div class="al"><span class="ic ok"><i class="bi bi-check-lg"></i></span><span><b>Tudo dentro das metas</b><span class="sub">nenhum alerta aberto</span></span></div>')+'</div>';
+  H+=hd('Por área');
+  var g=m.pv.g,cb=m.pv.cb;var pct=function(k){return k?E(k.v):'—'};
+  var rowsA=m.rows.filter(function(r){return r.status==='andamento'});var lucroA=r2(rowsA.reduce(function(a,r){return a+r.lucro},0)),recA=r2(rowsA.reduce(function(a,r){return a+r.receita},0));
+  var best=m.cc.slice().sort(function(a,b){return (b.d?b.d.mc:0)-(a.d?a.d.mc:0)})[0];
+  H+='<div class="dir-tiles">'
+    +tile({tab:'caixa',icon:'bi-cash-stack',title:'Caixa',big:R$(m.rec-m.pag),small:'a receber − a pagar',chip:chip(m.rec-m.pag<0?'bad':'ok',m.rec-m.pag<0?'descoberto':'coberto'),rows:[['A receber',R$(m.rec)],['A pagar',R$(m.pag)],['Saídas fixas / mês',R$(m.fixos)]]})
+    +tile({tab:'vendas',icon:'bi-bag-check',title:'Vendas',big:R$(m.vendAno),small:'no ano '+m.ano,chip:chip(m.dec?(m.fech.length/m.dec>=0.35?'ok':'warn'):'','conversão '+(m.dec?P1(m.fech.length/m.dec):'—')),rows:[['Meta do ano',m.mt.empresa?R$(m.mt.empresa)+' ('+P1(m.vendAno/m.mt.empresa)+')':'sem meta'],['Negociações em jogo',N0(m.jogo.length)+' · '+Rk(m.pipeVal)],['Aguardando pré-vendas',N0(m.prev)]]})
+    +tile({tab:'lucro',icon:'bi-graph-up-arrow',title:'Lucro por venda',big:R$(lucroA),small:'obras em andamento',chip:chip(recA?(lucroA/recA>=m.margMin?'ok':lucroA<0?'bad':'warn'):'','margem '+(recA?P1(lucroA/recA):'—')),rows:[['Receita reconhecida',R$(recA)],['Vendas com prejuízo',N0(rowsA.filter(function(r){return r.receita&&r.lucro<0}).length)],['Abaixo da margem mínima',N0(rowsA.filter(function(r){return r.receita&&r.margem>=0&&r.margem<m.margMin}).length)]]})
+    +tile({tab:'linhas',icon:'bi-diagram-3',title:'Centros de custo',big:m.d0?R$(m.d0.mc):'—',small:'soma das linhas · '+ymLb(m.ym),chip:best&&best.d?chip('ok','melhor: '+best.u):'',rows:m.cc.map(function(x){return [x.u,x.d?R$(x.d.mc):'—']}).concat([['Gastos compartilhados',m.d0?R$(-(m.d0.fixas+m.d0.financeiro)):'—']])})
+    +tile({tab:'estoque',icon:'bi-box-seam',title:'Estoque',big:m.est.custo==null?'—':R$(m.est.custo),small:'ao custo, à venda',chip:chip(m.est.dev&&/a comprar/.test(m.est.dev.s)?'warn':'ok',m.est.dev&&/a comprar/.test(m.est.dev.s)?'falta comprar':'tudo coberto'),rows:[['Devemos aos clientes',pct(m.est.dev)],['Vendável',pct(m.est.vdv)],['Sem propósito',pct(m.est.spp)+(m.est.spp?' · '+E((m.est.spp.s.match(/R\$ [\d.]+/)||[''])[0]):'')]]})
+    +tile({tab:'operacao',icon:'bi-tools',title:'Operação',big:pct(m.ope.and),small:'obras em andamento',chip:chip(m.ope.atr&&!/^0\b/.test(m.ope.atr.v)?'bad':'ok',(m.ope.atr?m.ope.atr.v:'0')+' atrasadas'),rows:[['Pendências abertas',pct(m.ope.pend)+(m.ope.pend?' · '+E(m.ope.pend.s):'')],['On hold',pct(m.ope.hold)],['Próximos 7 dias',pct(m.ope.px)+' atividades']]})
+    +tile({tab:'posvenda',icon:'bi-headset',title:'Pós-venda',big:N0(m.osAb),small:'solicitações abertas',chip:chip(m.fila>0?'warn':'ok','fila crítica '+(m.fila==null?'—':m.fila)),rows:[['Garantia custou',g?R$(g.custo):'—'],['Cobrável (receita)',cb?R$(cb.receita):'—'],['Contratos',m.pv.ct?N0(m.pv.ct.n)+' OS':'—']]})
+    +tile({tab:'pessoas',icon:'bi-people',title:'Pessoas',big:R$(m.totFolha),small:'equipe / mês',chip:chip(!m.d0||m.d0.mc<=0?'bad':m.totFolha/m.d0.mc<=0.6?'ok':'warn',m.d0&&m.d0.mc>0?P1(m.totFolha/m.d0.mc)+' da margem':'margem negativa'),rows:[['Pessoas',N0(m.folha.length)+' ('+m.folha.filter(function(f){return f.regime==='CLT'}).length+' CLT)'],['Diárias apontadas no mês',N0(r2(m.aps.reduce(function(a,x){return a+(+x.dias||0)},0)))],['Técnicos que se pagam',m.aps.length?N0(m.tecs.filter(function(t){return t.dias&&t.ok}).length)+' de '+N0(m.tecs.length):'sem apontamento']]})
+    +'</div>';
+  return H}
+
+function tabCaixa(m){var H=hd('Fluxo de caixa — diário e futuro','#/fluxo','Financeiro › Fluxo de caixa');
+  H+='<div class="dir-grid">'+K('Caixa hoje',R$(m.cx),'bancos somados'+(m.cxMin?' · mínimo '+Rk(m.cxMin):''),'#/fluxo',m.cx<m.cxMin?'bad':'ok')+K('Autonomia',m.fo==null?'—':m.fo.toFixed(1).replace('.',',')+' meses','caixa ÷ saídas fixas ('+Rk(m.fixos)+'/mês)','#/fhoje',m.fo==null?'mute':m.fo<3?'bad':m.fo<6?'warn':'ok')+K('A receber',R$(m.rec),'títulos em aberto','#/receber','mute')+K('A pagar',R$(m.pag),'títulos em aberto','#/pagar','mute')+'</div>';
+  H+='<div class="dir-formula">entradas = títulos a <b>receber</b> por vencimento · saídas = títulos a <b>pagar</b> + fixos e folha rateados · o que já venceu cai no dia 1 · a mesma receita da tela de 13 semanas, só muda o balde</div>';
+  H+='<div class="dir-sub"><button class="'+(DIR.cx==='dia'?'on':'')+'" onclick="DIRX.go(\'cx\',\'dia\')">Próximos 30 dias</button><button class="'+(DIR.cx==='sem'?'on':'')+'" onclick="DIRX.go(\'cx\',\'sem\')">13 semanas</button></div>';
+  var dias=m.dias,sem=m.sem;
   if(DIR.cx==='dia'&&dias.length){var pts=dias.map(function(d){return {x:dBR(d.d),y:d.saldo,bad:d.abaixo}});var tE=r2(dias.reduce(function(a,d){return a+d.entradas},0)),tS=r2(dias.reduce(function(a,d){return a+d.saidas},0));
-    H+='<div class="card p-3 mb-3"><div class="d-flex justify-content-between flex-wrap gap-2 mb-2"><div><b>Saldo projetado, dia a dia</b><div class="sub">'+R$(cx)+' hoje + '+R$(tE)+' entradas − '+R$(tS)+' saídas = <b>'+R$(dias[dias.length-1].saldo)+'</b> em '+dBR(dias[dias.length-1].d)+(dias[0].vencido?' · <span class="dir-chip warn">'+dias[0].vencido+' título(s) vencido(s) cobrando no dia 1</span>':'')+'</div></div>'+(dias.some(function(d){return d.abaixo})?'<span class="dir-chip bad">fica abaixo do mínimo em '+dias.filter(function(d){return d.abaixo}).length+' dia(s)</span>':'<span class="dir-chip ok">acima do mínimo nos 30 dias</span>')+'</div>'+svgLine(pts,{min:cxMin})+'</div>';
-    H+='<div class="card"><div class="tblwrap"><table class="tbl dir-tbl"><thead><tr><th>Dia</th><th class="text-end">Entradas</th><th class="text-end">Saídas</th><th class="text-end">Saldo</th><th></th></tr></thead><tbody>'+dias.filter(function(d,i){return i<14||d.entradas>0||d.saidas>fixosMes()*12/365+0.01}).slice(0,30).map(function(d){return '<tr><td>'+dBR(d.d)+'</td><td class="text-end" style="color:#198754">'+(d.entradas?R$(d.entradas):'—')+'</td><td class="text-end" style="color:#dc3545">'+R$(d.saidas)+'</td><td class="text-end"><b>'+R$(d.saldo)+'</b></td><td>'+(d.abaixo?'<span class="dir-chip bad">abaixo do mínimo</span>':'')+'</td></tr>'}).join('')+'</tbody></table></div></div>'}
-  else if(sem.length){var ptsS=sem.map(function(w){return {x:'S'+w.n,y:w.saldoFinal,color:w.abaixoDoMinimo?'#dc3545':'#0d6efd',title:'Semana '+w.n+' ('+dBR(w.inicio)+'–'+dBR(w.fim)+') · entradas '+R$(w.entradas)+' · saídas '+R$(w.saidas)+' · saldo '+R$(w.saldoFinal),href:'#/fluxo'}});
+    H+='<div class="card p-3 mb-3"><div class="d-flex justify-content-between flex-wrap gap-2 mb-2"><div><b>Saldo projetado, dia a dia</b><div class="sub">'+R$(m.cx)+' hoje + '+R$(tE)+' entradas − '+R$(tS)+' saídas = <b>'+R$(dias[dias.length-1].saldo)+'</b> em '+dBR(dias[dias.length-1].d)+(dias[0].vencido?' · <span class="dir-chip warn">'+dias[0].vencido+' título(s) vencido(s) no dia 1</span>':'')+'</div></div>'+(dias.some(function(d){return d.abaixo})?'<span class="dir-chip bad">abaixo do mínimo em '+dias.filter(function(d){return d.abaixo}).length+' dia(s)</span>':'<span class="dir-chip ok">acima do mínimo nos 30 dias</span>')+'</div>'+svgLine(pts,{min:m.cxMin})+'</div>';
+    H+='<div class="card"><div class="tblwrap"><table class="tbl dir-tbl"><thead><tr><th>Dia</th><th class="text-end">Entradas</th><th class="text-end">Saídas</th><th class="text-end">Saldo</th><th></th></tr></thead><tbody>'+dias.filter(function(d,i){return i<14||d.entradas>0||d.saidas>m.fixos*12/365+0.01}).map(function(d){return '<tr><td>'+dBR(d.d)+'</td><td class="text-end" style="color:var(--mlk)">'+(d.entradas?R$(d.entradas):'—')+'</td><td class="text-end" style="color:var(--mlr)">'+R$(d.saidas)+'</td><td class="text-end"><b>'+R$(d.saldo)+'</b></td><td>'+(d.abaixo?'<span class="dir-chip bad">abaixo do mínimo</span>':'')+'</td></tr>'}).join('')+'</tbody></table></div></div>'}
+  else if(sem.length){var ptsS=sem.map(function(w){return {x:'S'+w.n,y:w.saldoFinal,color:w.abaixoDoMinimo?'#f23d4f':'#3483fa',title:'Semana '+w.n+' ('+dBR(w.inicio)+'–'+dBR(w.fim)+') · entradas '+R$(w.entradas)+' · saídas '+R$(w.saidas)+' · saldo '+R$(w.saldoFinal),href:'#/fluxo'}});
     H+='<div class="card p-3 mb-3"><b>Saldo ao fim de cada semana</b><div class="sub mb-2">a mesma tabela da tela Fluxo de caixa (13 semanas)</div>'+svgBarsV(ptsS,{h:190})+'</div>'}
+  return H}
 
-  /* ── 2. lucratividade por venda ── */
-  var rows=safe('Lucratividade por venda',obraRows)||[];var rowsF=rows.filter(function(r){return DIR.obras==='todas'||r.status===DIR.obras});rowsF.sort(function(a,b){return b.contratado-a.contratado});
-  var cnt={andamento:0,concluida:0};rows.forEach(function(r){if(cnt[r.status]!=null)cnt[r.status]++});
-  H+=sec('Relatório 2','Lucratividade por pedido de venda','#/fobras','Financeiro › Obras');
-  H+='<div class="dir-formula">(produtos + serviços) − <b>custo do produto</b> − <b>serviços de garantia</b> − <b>despesas da obra</b> = lucro da venda &nbsp;·&nbsp; depois: − impostos e comissões/RT = lucro real &nbsp;<span class="dir-chip warn">fórmula a confirmar · Rodolfo / Cesar</span><br><span class="sub">receita = o contratado reconhecido pelo avanço físico · custo do produto = unidades entregues ao custo de compra · garantia = OS do Pós-venda fechadas como Garantia nesta obra · despesas da obra = diárias dos técnicos + viagem (uber, hotel, alimentação, terceiros, frete) + extras lançados na obra</span></div>';
-  H+='<div class="dir-tabs"><button class="'+(DIR.obras==='andamento'?'on':'')+'" onclick="DIRX.go(\'obras\',\'andamento\')">Em andamento ('+cnt.andamento+')</button><button class="'+(DIR.obras==='concluida'?'on':'')+'" onclick="DIRX.go(\'obras\',\'concluida\')">Concluídas ('+cnt.concluida+')</button><button class="'+(DIR.obras==='todas'?'on':'')+'" onclick="DIRX.go(\'obras\',\'todas\')">Todas ('+rows.length+')</button></div>';
-  if(rowsF.length){var T=function(k){return r2(rowsF.reduce(function(a,r){return a+r[k]},0))};var tR=T('receita'),tL=T('lucro');
-    var top=rowsF.slice(0,12).map(function(r){return {x:r.nome,y:Math.max(0,r.margem),color:!r.receita?'#adb5bd':r.margem<0?'#dc3545':r.margem<margMin?'#ffc107':'#198754',href:'#/fobras/'+r.o.id,title:r.nome+' · margem '+P1(r.margem)+' · lucro '+R$(r.lucro),txt:r.receita?P1(r.margem)+(r.margem<0?' (prejuízo)':''):'sem avanço ainda'}});
-    H+='<div class="row g-3 mb-3"><div class="col-lg-7"><div class="card p-3 h-100"><b>Margem por venda</b> <span class="sub">· as '+top.length+' maiores · vermelho = prejuízo · amarelo = abaixo da margem mínima ('+P1(margMin)+')</span>'+svgBarsH(top,{ref:margMin,max:0.5})+'</div></div>'
-      +'<div class="col-lg-5"><div class="card p-3 h-100"><b>Somatório deste recorte</b><table class="tbl mt-2" style="font-size:13px"><tr><td>Receita reconhecida</td><td class="text-end"><b>'+R$(tR)+'</b></td></tr><tr><td>− Custo do produto</td><td class="text-end">'+R$(T('produto'))+'</td></tr><tr><td>− Serviços de garantia</td><td class="text-end">'+R$(T('gar'))+'</td></tr><tr><td>− Despesas da obra</td><td class="text-end">'+R$(T('despesas'))+'</td></tr><tr><td>− Impostos e comissões/RT</td><td class="text-end">'+R$(T('impCom'))+'</td></tr><tr style="font-weight:800;border-top:2px solid var(--bd)"><td>= Lucro</td><td class="text-end" style="color:'+(tL<0?'#dc3545':'#198754')+'">'+R$(tL)+' <span class="sub">('+P1(tR?tL/tR:0)+')</span></td></tr></table><div class="sub mt-2">'+rowsF.filter(function(r){return r.lucro<0}).length+' venda(s) dando prejuízo · '+rowsF.filter(function(r){return r.margem>=0&&r.margem<margMin}).length+' abaixo da margem mínima</div></div></div></div>';
-    H+='<div class="card"><div class="tblwrap"><table class="tbl dir-tbl"><thead><tr><th>Venda · obra</th><th>Linha</th><th class="text-end">Contratado</th><th class="text-end">Avanço</th><th class="text-end">Receita</th><th class="text-end">Custo produto</th><th class="text-end">Garantia</th><th class="text-end">Despesas obra</th><th class="text-end">Impostos+com.</th><th class="text-end">Lucro</th><th class="text-end">Margem</th><th class="text-end">Plano</th></tr></thead><tbody>'
-      +rowsF.map(function(r){return '<tr class="rowlink" style="cursor:pointer" onclick="location.hash=\'#/fobras/'+E(r.o.id)+'\'"><td class="l"><b>'+E(r.nome)+'</b></td><td>'+E(r.uni)+'</td><td class="text-end">'+R$(r.contratado)+'</td><td class="text-end">'+P1(r.av)+'</td><td class="text-end">'+R$(r.receita)+'</td><td class="text-end">'+R$(r.produto)+'</td><td class="text-end">'+(r.gar?R$(r.gar):'—')+'</td><td class="text-end">'+R$(r.despesas)+'</td><td class="text-end">'+R$(r.impCom)+'</td><td class="text-end" style="font-weight:700;color:'+(r.lucro<0?'#dc3545':'inherit')+'">'+R$(r.lucro)+'</td><td class="text-end">'+(r.receita?'<span class="dir-chip '+(r.margem<0?'bad':r.margem<margMin?'warn':'ok')+'">'+P1(r.margem)+'</span>':'—')+'</td><td class="text-end sub">'+P1(r.margemPlano)+'</td></tr>'}).join('')
-      +'</tbody></table></div></div>'}
-  else H+='<div class="card place p-4">Nenhuma venda neste recorte.</div>';
-
-  /* ── 3. centros de custo ── */
-  H+=sec('Relatório 3','Lucratividade dos centros de custo — '+ymLb(ym),'#/dre','Financeiro › DRE');
-  H+='<div class="dir-formula">resultado da linha = receita − custos diretos dela (produto, técnicos, viagens, terceiros, comissões, RT) &nbsp;·&nbsp; <b>gastos compartilhados</b> (administrativo, aluguel, softwares, contabilidade…) ficam no total da empresa, não são rateados</div>';
-  var unis=unidades();var cons=d0;var linhas=unis.filter(function(u){return LINHAS.indexOf(u)>=0});var outras=unis.filter(function(u){return LINHAS.indexOf(u)<0});
-  var cc=linhas.map(function(u){var d=safe('DRE '+u,function(){return dre(ym,u)});return {u:u,d:d}});
-  if(cons){var somaMC=r2(cc.reduce(function(a,x){return a+(x.d?x.d.mc:0)},0));var outrasMC=r2(cons.mc-somaMC);var shared=r2((+cons.fixas||0)+(+cons.financeiro||0));
-    var itemsCC=cc.map(function(x){return {x:x.u,y:x.d?x.d.mc:0,color:(x.d&&x.d.mc<0)?'#dc3545':'#0d6efd',href:'#/dre/'+encodeURIComponent(x.u),title:x.u+' · receita '+R$(x.d?x.d.receita:0)+' · resultado da linha '+R$(x.d?x.d.mc:0)}});
-    H+='<div class="row g-3 mb-3"><div class="col-12"><div class="card p-3"><b>Resultado de cada linha</b> <span class="sub">· antes dos gastos compartilhados</span>'+svgBarsV(itemsCC,{h:150})+'</div></div><div class="col-12"><div class="card"><div class="tblwrap"><table class="tbl dir-tbl"><thead><tr><th>Centro de custo</th><th class="text-end">Receita</th><th class="text-end">Custos diretos</th><th class="text-end">Resultado</th><th class="text-end">%</th></tr></thead><tbody>'
-      +cc.map(function(x){var d=x.d||{};var direto=r2((+d.cmv||0)+(+d.diretos||0)+(+d.variaveis||0)+(+d.deducoes||0));return '<tr class="rowlink" style="cursor:pointer" onclick="location.hash=\'#/dre/'+E(encodeURIComponent(x.u))+'\'"><td><b>'+E(x.u)+'</b></td><td class="text-end">'+R$(d.receita||0)+'</td><td class="text-end">'+R$(direto)+'</td><td class="text-end" style="font-weight:700;color:'+((d.mc||0)<0?'#dc3545':'inherit')+'">'+R$(d.mc||0)+'</td><td class="text-end sub">'+(d.receita?P1(d.mc/d.receita):'—')+'</td></tr>'}).join('')
-      +(Math.abs(outrasMC)>=0.05?'<tr><td class="sub">'+E(outras.join(' / ')||'Outras')+' (linhas fora das quatro)</td><td></td><td></td><td class="text-end sub">'+R$(outrasMC)+'</td><td></td></tr>':'')
-      +'<tr style="border-top:2px solid var(--bd)"><td><b>Soma das linhas</b></td><td class="text-end">'+R$(cons.receita)+'</td><td></td><td class="text-end"><b>'+R$(cons.mc)+'</b></td><td class="text-end sub">'+P1(cons.mcPct)+'</td></tr>'
-      +'<tr><td>− Gastos compartilhados <span class="sub">(fixos '+R$(cons.fixas)+' + financeiro '+R$(cons.financeiro)+')</span></td><td></td><td></td><td class="text-end">'+R$(-shared)+'</td><td></td></tr>'
-      +'<tr style="font-weight:800"><td>= Resultado da empresa</td><td></td><td></td><td class="text-end" style="color:'+(cons.res<0?'#dc3545':'#198754')+'">'+R$(cons.res)+'</td><td class="text-end sub">'+(cons.receita?P1(cons.res/cons.receita):'—')+'</td></tr></tbody></table></div></div></div></div>'}
-  else H+='<div class="card place p-4">DRE indisponível para '+E(ymLb(ym))+'.</div>';
-
-  /* ── Comercial ── */
-  H+=sec('Comercial','Vendas, meta e funil','#/gestao','Comercial › Gestão');
-  var N=S.db.negociacoes||[];var jogo=N.filter(function(n){return !n.resultado}),fech=N.filter(function(n){return n.resultado==='fechada'}),perd=N.filter(function(n){return n.resultado==='perdida'});var dec=fech.length+perd.length;
-  var ano=String(mt.ano||hoje().slice(0,4));var vAno=vendidasNoAno(ano);var vendAno=vAno.reduce(function(a,p){return a+Mtot(p)},0);var pipeVal=r2(jogo.reduce(function(a,n){return a+(+n.valor||0)},0));var prev=(S.db.propostas||[]).filter(function(p){return p.estado==='em_prevendas'}).length;
-  H+='<div class="dir-grid">'
-    +K('Vendido no ano '+ano,R0(vendAno),vAno.length+' propostas'+(mt.empresa?' · meta '+R0(mt.empresa)+' ('+P1(vendAno/mt.empresa)+')':''),'#/gestao',!mt.empresa?'mute':vendAno/mt.empresa>=(new Date().getMonth()+1)/12?'ok':'warn')
-    +K('Negociações em jogo',N0(jogo.length),pipeVal?R0(pipeVal)+' em propostas abertas':'pipeline aberto','#/pipeline','mute')
-    +K('Conversão',dec?P1(fech.length/dec):'—',fech.length+' fechadas / '+dec+' decididas','#/gestao',!dec?'mute':fech.length/dec>=0.35?'ok':'warn')
-    +K('Aguardando pré-vendas',N0(prev),'propostas paradas na validação','#/prevendas',prev>3?'warn':'ok')
-    +'</div>';
-  var cons2=mt.consultores||{};var porC={};vAno.forEach(function(p){(p.consultores||['—']).forEach(function(c){porC[c]=(porC[c]||0)+Mtot(p)/((p.consultores||[1]).length||1)})});
-  var norm=function(x){return String(x||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim()};var metaDe=function(c){if(cons2[c]!=null)return {k:c,m:+cons2[c]};var f=norm(c).split(' ')[0];var k=Object.keys(cons2).find(function(k){return norm(k).split(' ')[0]===f||norm(k).split(' ').indexOf(f)>=0});return k?{k:k,m:+cons2[k]}:{k:c,m:0}};
+function tabVendas(m){var H=hd('Vendas, meta e funil','#/gestao','Comercial › Gestão');
+  H+='<div class="dir-grid">'+K('Vendido no ano '+m.ano,R$(m.vendAno),m.vAno.length+' propostas'+(m.mt.empresa?' · meta '+Rk(m.mt.empresa)+' ('+P1(m.vendAno/m.mt.empresa)+')':''),'#/gestao',!m.mt.empresa?'mute':m.vendAno/m.mt.empresa>=(new Date().getMonth()+1)/12?'ok':'warn')+K('Vendido em '+ymLb(m.ym),R$(m.vend),m.vendMes.length+' proposta(s)'+(m.metaMes?' · meta '+Rk(m.metaMes):''),'#/propostas',!m.metaMes?'mute':m.vend>=m.metaMes?'ok':m.vend>=m.metaMes*.7?'warn':'bad')+K('Negociações em jogo',N0(m.jogo.length),Rk(m.pipeVal)+' em propostas abertas','#/pipeline','mute')+K('Conversão',m.dec?P1(m.fech.length/m.dec):'—',m.fech.length+' fechadas / '+m.dec+' decididas','#/gestao',!m.dec?'mute':m.fech.length/m.dec>=0.35?'ok':'warn')+K('Aguardando pré-vendas',N0(m.prev),'propostas paradas na validação','#/prevendas',m.prev>3?'warn':'ok')+'</div>';
+  var serie=m.ms.slice().reverse().map(function(x){return {x:ymLb(x),y:vendidasNoMes(x).reduce(function(a,p){return a+Mtot(p)},0),color:'#3483fa',href:'#/propostas'}});
+  H+='<div class="card p-3 mb-3"><b>Vendido por mês</b>'+(m.metaMes?' <span class="sub">· meta mensal '+Rk(m.metaMes)+'</span>':'')+svgBarsV(serie,{h:170})+'</div>';
+  var cons2=m.mt.consultores||{};var porC={};m.vAno.forEach(function(p){(p.consultores||['—']).forEach(function(c){porC[c]=(porC[c]||0)+Mtot(p)/((p.consultores||[1]).length||1)})});
+  var norm=function(x){return String(x||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').trim()};var metaDe=function(c){if(cons2[c]!=null)return {k:c,m:+cons2[c]};var f=norm(c).split(' ')[0];var k=Object.keys(cons2).find(function(k){return norm(k).split(' ')[0]===f||norm(k).split(' ').indexOf(f)>=0});return k?{k:k,m:+cons2[k]}:{k:c,m:0}};
   var merged={};Object.keys(porC).forEach(function(c){var md=metaDe(c);merged[md.k]=merged[md.k]||{c:md.k,v:0,m:md.m};merged[md.k].v=r2(merged[md.k].v+porC[c])});Object.keys(cons2).forEach(function(k){merged[k]=merged[k]||{c:k,v:0,m:+cons2[k]}});
   var consRows=Object.keys(merged).map(function(k){var r=merged[k];r.p=r.m?r.v/r.m:0;return r}).sort(function(a,b){return b.v-a.v});
-  if(consRows.length)H+='<div class="card p-3 mb-3"><b>Vendido por consultor</b> <span class="sub">· '+ano+' · divisão igual quando a proposta tem dois consultores · barra = % da meta</span><div class="mt-2">'+consRows.map(function(r){return '<div class="d-flex align-items-center gap-2 py-1" style="font-size:13px"><div style="width:150px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+E(r.c)+'</div><div class="flex-grow-1 dir-bullet '+(r.m?(r.p>=1?'ok':r.p<0.5?'bad':''):'')+'"><i style="width:'+Math.min(100,Math.round(r.p*100))+'%"></i></div><div style="width:200px;text-align:right">'+R0(r.v)+(r.m?' <span class="sub">de '+R0(r.m)+' · '+P1(r.p)+'</span>':' <span class="sub">sem meta</span>')+'</div></div>'}).join('')+'</div></div>';
+  if(consRows.length)H+='<div class="card p-3"><b>Vendido por consultor</b> <span class="sub">· '+m.ano+' · divisão igual quando a proposta tem dois consultores · barra = % da meta</span><div class="mt-2">'+consRows.map(function(r){return '<div class="d-flex align-items-center gap-2 py-1" style="font-size:13px"><div style="width:150px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+E(r.c)+'</div><div class="flex-grow-1 dir-bullet '+(r.m?(r.p>=1?'ok':r.p<0.5?'bad':''):'')+'"><i style="width:'+Math.min(100,Math.round(r.p*100))+'%"></i></div><div style="width:210px;text-align:right">'+R$(r.v)+(r.m?' <span class="sub">de '+Rk(r.m)+' · '+P1(r.p)+'</span>':' <span class="sub">sem meta</span>')+'</div></div>'}).join('')+'</div></div>';
+  return H}
 
-  /* ── Estoque ── */
-  H+=sec('Estoque','O que temos, o que devemos, o que está parado','#/epainel','Estoque › Painel Geral');
-  var ep=safe('Painel do Estoque',function(){return scrape('epainel')});var dev=kpiFrom(ep,'O QUE DEVEMOS'),vdv=kpiFrom(ep,'ESTOQUE VENDÁVEL'),spp=kpiFrom(ep,'SEM PROPÓSITO'),nav=kpiFrom(ep,'NÃO ESTÁ À VENDA');var estC=safe('Estoque ao custo',function(){return FS.estoqueCusto()});
-  H+='<div class="dir-grid">'
-    +K('Estoque ao custo',estC==null?'—':R0(estC),'unidades à venda no inventário · entra no balanço','#/balanco','mute')
-    +K('Devemos aos clientes',dev?E(dev.v):'—',dev?E(dev.s):'','#/obrascompras',dev&&/a comprar/.test(dev.s)?'warn':'ok')
-    +K('Estoque vendável',vdv?E(vdv.v):'—',vdv?E(vdv.s):'','#/estoque','mute')
-    +K('Sem propósito',spp?E(spp.v):'—',spp?E(spp.s):'','#/semproposito',spp&&/^0 /.test(spp.v)?'ok':'warn')
-    +K('Não está à venda',nav?E(nav.v):'—',nav?E(nav.s):'','#/celula/terceiro','mute')
-    +'</div>';
+function tabLucro(m){var H=hd('Lucratividade por pedido de venda','#/fobras','Financeiro › Obras');
+  H+='<div class="dir-formula">(produtos + serviços) − <b>custo do produto</b> − <b>serviços de garantia</b> − <b>despesas da obra</b> = lucro da venda &nbsp;·&nbsp; depois − impostos e comissões/RT = lucro real &nbsp;<span class="dir-chip warn">fórmula a confirmar · Rodolfo / Cesar</span><br><span class="sub">receita = contratado reconhecido pelo avanço físico · custo do produto = unidades entregues ao custo de compra · garantia = OS do Pós-venda fechadas como Garantia nesta obra · despesas da obra = diárias + viagem (uber, hotel, alimentação, terceiros, frete) + extras lançados</span></div>';
+  var rows=m.rows;var rowsF=rows.filter(function(r){return DIR.obras==='todas'||r.status===DIR.obras}).sort(function(a,b){return b.contratado-a.contratado});var cnt={andamento:0,concluida:0};rows.forEach(function(r){if(cnt[r.status]!=null)cnt[r.status]++});
+  H+='<div class="dir-sub"><button class="'+(DIR.obras==='andamento'?'on':'')+'" onclick="DIRX.go(\'obras\',\'andamento\')">Em andamento ('+cnt.andamento+')</button><button class="'+(DIR.obras==='concluida'?'on':'')+'" onclick="DIRX.go(\'obras\',\'concluida\')">Concluídas ('+cnt.concluida+')</button><button class="'+(DIR.obras==='todas'?'on':'')+'" onclick="DIRX.go(\'obras\',\'todas\')">Todas ('+rows.length+')</button></div>';
+  if(!rowsF.length)return H+'<div class="card place p-4">Nenhuma venda neste recorte.</div>';
+  var T=function(k){return r2(rowsF.reduce(function(a,r){return a+r[k]},0))};var tR=T('receita'),tL=T('lucro');
+  var top=rowsF.slice(0,12).map(function(r){return {x:r.nome,y:Math.max(0,r.margem),color:!r.receita?'#c4c4c4':r.margem<0?'#f23d4f':r.margem<m.margMin?'#f5a623':'#00a650',href:'#/fobras/'+r.o.id,title:r.nome+' · margem '+P1(r.margem)+' · lucro '+R$(r.lucro),txt:r.receita?P1(r.margem)+(r.margem<0?' (prejuízo)':''):'sem avanço ainda'}});
+  H+='<div class="row g-3 mb-3"><div class="col-lg-7"><div class="card p-3 h-100"><b>Margem por venda</b> <span class="sub">· as '+top.length+' maiores · vermelho = prejuízo · amarelo = abaixo de '+P1(m.margMin)+'</span>'+svgBarsH(top,{ref:m.margMin,max:0.5})+'</div></div>'
+    +'<div class="col-lg-5"><div class="card p-3 h-100"><b>Somatório deste recorte</b><table class="tbl mt-2" style="font-size:13px"><tr><td>Receita reconhecida</td><td class="text-end"><b>'+R$(tR)+'</b></td></tr><tr><td>− Custo do produto</td><td class="text-end">'+R$(T('produto'))+'</td></tr><tr><td>− Serviços de garantia</td><td class="text-end">'+R$(T('gar'))+'</td></tr><tr><td>− Despesas da obra</td><td class="text-end">'+R$(T('despesas'))+'</td></tr><tr><td>− Impostos e comissões/RT</td><td class="text-end">'+R$(T('impCom'))+'</td></tr><tr style="font-weight:800;border-top:2px solid var(--bd)"><td>= Lucro</td><td class="text-end" style="color:'+(tL<0?'var(--mlr)':'var(--mlk)')+'">'+R$(tL)+' <span class="sub">('+P1(tR?tL/tR:0)+')</span></td></tr></table><div class="sub mt-2">'+rowsF.filter(function(r){return r.receita&&r.lucro<0}).length+' com prejuízo · '+rowsF.filter(function(r){return r.receita&&r.margem>=0&&r.margem<m.margMin}).length+' abaixo da margem mínima · '+rowsF.filter(function(r){return !r.receita}).length+' sem avanço ainda</div></div></div></div>';
+  H+='<div class="card"><div class="tblwrap"><table class="tbl dir-tbl"><thead><tr><th>Venda · obra</th><th>Linha</th><th class="text-end">Contratado</th><th class="text-end">Avanço</th><th class="text-end">Receita</th><th class="text-end">Custo produto</th><th class="text-end">Garantia</th><th class="text-end">Despesas obra</th><th class="text-end">Impostos+com.</th><th class="text-end">Lucro</th><th class="text-end">Margem</th><th class="text-end">Plano</th></tr></thead><tbody>'
+    +rowsF.map(function(r){return '<tr class="rowlink" style="cursor:pointer" onclick="location.hash=\'#/fobras/'+E(r.o.id)+'\'"><td class="l"><b>'+E(r.nome)+'</b></td><td>'+E(r.uni)+'</td><td class="text-end">'+R$(r.contratado)+'</td><td class="text-end">'+P1(r.av)+'</td><td class="text-end">'+R$(r.receita)+'</td><td class="text-end">'+R$(r.produto)+'</td><td class="text-end">'+(r.gar?R$(r.gar):'—')+'</td><td class="text-end">'+R$(r.despesas)+'</td><td class="text-end">'+R$(r.impCom)+'</td><td class="text-end" style="font-weight:700;color:'+(r.lucro<0?'var(--mlr)':'inherit')+'">'+R$(r.lucro)+'</td><td class="text-end">'+(r.receita?'<span class="dir-chip '+(r.margem<0?'bad':r.margem<m.margMin?'warn':'ok')+'">'+P1(r.margem)+'</span>':'—')+'</td><td class="text-end sub">'+P1(r.margemPlano)+'</td></tr>'}).join('')+'</tbody></table></div></div>';
+  return H}
 
-  /* ── Operação ── */
-  H+=sec('Operação','Obras em execução','#/copainel','Operação › Painel');
-  var cp=safe('Painel da Operação',function(){return scrape('copainel')});var k1=kpiFrom(cp,'EM ANDAMENTO'),k2=kpiFrom(cp,'ON HOLD'),k3=kpiFrom(cp,'CONCLUÍDAS'),k4=kpiFrom(cp,'PENDÊNCIAS ABERTAS'),k5=kpiFrom(cp,'ATIVIDADES ATRASADAS'),k6=kpiFrom(cp,'PRÓXIMOS 7 DIAS');
-  var isZ=function(k){return !k||/^0\b/.test(k.v)};
-  H+='<div class="dir-grid">'
-    +K('Obras em andamento',k1?E(k1.v):'—',k1?E(k1.s):'','#/obras','mute')
-    +K('On hold',k2?E(k2.v):'—',k2?E(k2.s):'','#/obras',isZ(k2)?'ok':'warn')
-    +K('Concluídas',k3?E(k3.v):'—',k3?E(k3.s):'','#/obras','mute')
-    +K('Pendências abertas',k4?E(k4.v):'—',k4?E(k4.s):'','#/pendencias',isZ(k4)?'ok':/[1-9]\d* urgente/.test(k4.s)?'bad':'warn')
-    +K('Atividades atrasadas',k5?E(k5.v):'—',k5?E(k5.s):'','#/cronogramas',isZ(k5)?'ok':'bad')
-    +K('Próximos 7 dias',k6?E(k6.v):'—',k6?E(k6.s):'','#/agendaobras','mute')
-    +'</div>';
+function tabLinhas(m){var H=hd('Lucratividade dos centros de custo — '+ymLb(m.ym),'#/dre','Financeiro › DRE');
+  H+='<div class="dir-formula">resultado da linha = receita − custos diretos dela (produto, técnicos, viagens, terceiros, comissões, RT) &nbsp;·&nbsp; <b>gastos compartilhados</b> (administrativo, aluguel, softwares, contabilidade…) ficam no total da empresa, não são rateados</div>';
+  var cons=m.d0;if(!cons)return H+'<div class="card place p-4">DRE indisponível para '+E(ymLb(m.ym))+'.</div>';
+  var cc=m.cc;var somaMC=r2(cc.reduce(function(a,x){return a+(x.d?x.d.mc:0)},0));var outrasMC=r2(cons.mc-somaMC);var shared=r2((+cons.fixas||0)+(+cons.financeiro||0));
+  var items=cc.map(function(x){return {x:x.u,y:x.d?x.d.mc:0,color:(x.d&&x.d.mc<0)?'#f23d4f':'#3483fa',href:'#/dre/'+encodeURIComponent(x.u),title:x.u+' · receita '+R$(x.d?x.d.receita:0)+' · resultado '+R$(x.d?x.d.mc:0)}});
+  H+='<div class="card p-3 mb-3"><b>Resultado de cada linha</b> <span class="sub">· antes dos gastos compartilhados</span>'+svgBarsV(items,{h:150})+'</div>';
+  H+='<div class="card"><div class="tblwrap"><table class="tbl dir-tbl"><thead><tr><th>Centro de custo</th><th class="text-end">Receita</th><th class="text-end">Custos diretos</th><th class="text-end">Resultado</th><th class="text-end">%</th></tr></thead><tbody>'
+    +cc.map(function(x){var d=x.d||{};var direto=r2((+d.cmv||0)+(+d.diretos||0)+(+d.variaveis||0)+(+d.deducoes||0));return '<tr class="rowlink" style="cursor:pointer" onclick="location.hash=\'#/dre/'+E(encodeURIComponent(x.u))+'\'"><td><b>'+E(x.u)+'</b></td><td class="text-end">'+R$(d.receita||0)+'</td><td class="text-end">'+R$(direto)+'</td><td class="text-end" style="font-weight:700;color:'+((d.mc||0)<0?'var(--mlr)':'inherit')+'">'+R$(d.mc||0)+'</td><td class="text-end sub">'+(d.receita?P1(d.mc/d.receita):'—')+'</td></tr>'}).join('')
+    +(Math.abs(outrasMC)>=0.05?'<tr><td class="sub">'+E(m.outras.join(' / ')||'Outras')+'</td><td></td><td></td><td class="text-end sub">'+R$(outrasMC)+'</td><td></td></tr>':'')
+    +'<tr style="border-top:2px solid var(--bd)"><td><b>Soma das linhas</b></td><td class="text-end">'+R$(cons.receita)+'</td><td></td><td class="text-end"><b>'+R$(cons.mc)+'</b></td><td class="text-end sub">'+P1(cons.mcPct)+'</td></tr>'
+    +'<tr><td>− Gastos compartilhados <span class="sub">(fixos '+R$(cons.fixas)+' + financeiro '+R$(cons.financeiro)+')</span></td><td></td><td></td><td class="text-end">'+R$(-shared)+'</td><td></td></tr>'
+    +'<tr style="font-weight:800"><td>= Resultado da empresa</td><td></td><td></td><td class="text-end" style="color:'+(cons.res<0?'var(--mlr)':'var(--mlk)')+'">'+R$(cons.res)+'</td><td class="text-end sub">'+(cons.receita?P1(cons.res/cons.receita):'—')+'</td></tr></tbody></table></div></div>';
+  return H}
 
-  /* ── Pós-venda ── */
-  H+=sec('Pós-venda','Chamados, garantia e o que ela custa','#/posvisao','Pós-venda › Visão geral');
-  var osAb=(S.db.os||[]).filter(function(x){return x.estado==='aberta'}).length;var fila=safe('Fila crítica',function(){var d=scrape('posfila');if(!d)return null;var b=Array.prototype.find.call(d.querySelectorAll('button'),function(x){return /^Todos \(/.test(x.textContent||'')});var m=b&&/\((\d+)\)/.exec(b.textContent);return m?+m[1]:null});
-  var tot=safe('Totais do Pós-venda',function(){return FPV.totais()});var g=tot&&tot.por&&tot.por.garantia,cb=tot&&tot.por&&tot.por.cobravel,ct=tot&&tot.por&&tot.por.contrato;
-  H+='<div class="dir-grid">'
-    +K('Solicitações abertas',N0(osAb),'chamados aguardando atendimento','#/posvenda',osAb>10?'warn':'ok')
-    +K('Fila crítica',fila==null?'—':N0(fila),'UniFi offline · Savant offline · falha de energia','#/posfila',fila==null?'mute':fila>0?'warn':'ok')
-    +K('Garantia custou',g?R0(g.custo):'—',g?g.n+' OS em garantia · custo cai na obra original':'','#/posresultado',g&&g.custo>0?'warn':'ok')
-    +K('Pós-venda cobrável',cb?R0(cb.receita):'—',cb?cb.n+' OS · custo '+R0(cb.custo)+' · resultado '+R0(cb.receita-cb.custo):'','#/posresultado',!cb?'mute':cb.receita-cb.custo>=0?'ok':'bad')
-    +K('Contratos de manutenção',ct?N0(ct.n)+' OS':'—',ct?'custo '+R0(ct.custo)+' coberto por plano':'','#/posresultado','mute')
-    +'</div>';
-
-  /* ── Pessoas ── */
-  H+=sec('Pessoas','A equipe se paga?','#/rh','Financeiro › RH');
-  var folha=S.db.folha||[];var enc=p.encargos||{};var encPct=((+enc.inss||0)+(+enc.fgts||0)+(+enc.terc||0))/100;var custoPessoa=function(f){return r2((+f.salario||0)*(f.regime==='CLT'?1+encPct:1))};
-  var totFolha=r2(folha.reduce(function(a,f){return a+custoPessoa(f)},0));var rate=(typeof RATE==='object'&&RATE)?RATE:{};var aps=(S.db.apontamentos||[]).filter(function(a){return ymOf(a.data)===ym});
-  var tecs=folha.filter(function(f){return f.classe==='cmv'||/t[eé]cnic|instala|program|projetista/i.test(String(f.cargo||''))});
-  var tecRows=tecs.map(function(f){var mine=aps.filter(function(a){return a.tecnico===f.nome});var dias=r2(mine.reduce(function(a,x){return a+(+x.dias||0)},0));var prod=r2(mine.reduce(function(a,x){var rt=rate[x.disc]||rate.instalacao||{venda:0};return a+(+x.dias||0)*(+rt.venda||0)},0));return {f:f,dias:dias,prod:prod,custo:custoPessoa(f),ok:prod>=custoPessoa(f)}});
-  H+='<div class="dir-grid">'
-    +K('Pessoas na folha',N0(folha.length),folha.filter(function(f){return f.regime==='CLT'}).length+' CLT · '+folha.filter(function(f){return f.regime!=='CLT'}).length+' PJ','#/rh','mute')
-    +K('Custo mensal da equipe',R0(totFolha),'salários + encargos ('+P1(encPct)+' sobre CLT)','#/rh','mute')
-    +K('Diárias apontadas em '+ymLb(ym),N0(r2(aps.reduce(function(a,x){return a+(+x.dias||0)},0))),aps.length+' apontamentos em obra','#/fobras',aps.length?'ok':'warn')
-    +K('Folha ÷ margem de contribuição',d0&&d0.mc>0?P1(totFolha/d0.mc):'—',d0?'margem do mês '+R0(d0.mc):'','#/dre',!d0||d0.mc<=0?'bad':totFolha/d0.mc<=0.6?'ok':'warn')
-    +'</div>';
-  if(tecRows.length)H+='<div class="card"><div class="tblwrap"><table class="tbl dir-tbl"><thead><tr><th>Técnico / projetista</th><th>Cargo</th><th class="text-end">Custo no mês</th><th class="text-end">Diárias apontadas</th><th class="text-end">Produção (diária × preço vendido)</th><th class="text-end">Cobre o próprio custo?</th></tr></thead><tbody>'
-    +tecRows.sort(function(a,b){return b.prod-a.prod}).map(function(r){return '<tr><td class="l"><b>'+E(r.f.nome)+'</b></td><td class="sub">'+E(r.f.cargo||'')+'</td><td class="text-end">'+R$(r.custo)+'</td><td class="text-end">'+N0(r.dias)+'</td><td class="text-end">'+R$(r.prod)+'</td><td class="text-end"><span class="dir-chip '+(r.dias?(r.ok?'ok':'bad'):'warn')+'">'+(r.dias?(r.ok?'sim · '+P1(r.prod/r.custo):'não · '+P1(r.prod/r.custo)):'sem apontamento no mês')+'</span></td></tr>'}).join('')
-    +'</tbody></table></div><div class="sub p-2">Produção = diárias apontadas na obra × preço de venda da diária da disciplina (Base › Serviços & diárias). Sem apontamento, não há como dizer — é achado, não veredito.</div></div>';
-
-  /* ── metas + quem vê ── */
-  H+=sec('Controle','Metas que pintam as luzes deste painel','#/parametros','Financeiro › Parâmetros');
-  H+='<div class="row g-3"><div class="col-lg-6"><div class="card p-3 dir-meta"><table class="tbl" style="font-size:13px">'
-    +'<tr><td>Caixa mínimo (R$)</td><td class="text-end"><input class="form-control form-control-sm d-inline-block" value="'+E(cxMin)+'" onchange="DIRX.setMeta(\'caixaMinimo\',this.value)"></td></tr>'
-    +'<tr><td>Margem mínima por venda (%)</td><td class="text-end"><input class="form-control form-control-sm d-inline-block" value="'+E(+p.margemMinima||30)+'" onchange="DIRX.setMeta(\'margemMinima\',this.value)"></td></tr>'
-    +'<tr><td>Meta de vendas do ano '+E(ano)+' (R$)</td><td class="text-end"><input class="form-control form-control-sm d-inline-block" style="width:150px" value="'+E(+mt.empresa||0)+'" onchange="DIRX.setMeta(\'metaEmpresa\',this.value)"></td></tr>'
-    +'</table><div class="sub">Verde / amarelo / vermelho em cada cartão vêm destes três números e das regras de cada departamento. Metas por consultor ficam em Comercial › Gestão.</div></div></div>';
+function tabEstoque(m){var e=m.est;var H=hd('O que temos, o que devemos, o que está parado','#/epainel','Estoque › Painel Geral');
+  H+='<div class="dir-grid">'+K('Estoque ao custo',e.custo==null?'—':R$(e.custo),'unidades à venda · entra no balanço','#/balanco','mute')+K('Capital parado',R$(m.capital),N0(m.nInv)+' unidades no inventário','#/epainel','mute')+K('Devemos aos clientes',e.dev?E(e.dev.v):'—',e.dev?E(e.dev.s):'','#/obrascompras',e.dev&&/a comprar/.test(e.dev.s)?'warn':'ok')+K('Estoque vendável',e.vdv?E(e.vdv.v):'—',e.vdv?E(e.vdv.s):'','#/estoque','mute')+K('Sem propósito',e.spp?E(e.spp.v):'—',e.spp?E(e.spp.s):'','#/semproposito',e.spp&&/^0 /.test(e.spp.v)?'ok':'warn')+K('Não está à venda',e.nav?E(e.nav.v):'—',e.nav?E(e.nav.s):'','#/celula/terceiro','mute')+'</div>';
+  return H}
+function tabOperacao(m){var o=m.ope;var isZ=function(k){return !k||/^0\b/.test(k.v)};var V=function(k){return k?E(k.v):'—'},Sx=function(k){return k?E(k.s):''};var H=hd('Obras em execução','#/copainel','Operação › Painel');
+  H+='<div class="dir-grid">'+K('Em andamento',V(o.and),Sx(o.and),'#/obras','mute')+K('On hold',V(o.hold),Sx(o.hold),'#/obras',isZ(o.hold)?'ok':'warn')+K('Concluídas',V(o.conc),Sx(o.conc),'#/obras','mute')+K('Pendências abertas',V(o.pend),Sx(o.pend),'#/pendencias',isZ(o.pend)?'ok':/[1-9]\d* urgente/.test(o.pend.s)?'bad':'warn')+K('Atividades atrasadas',V(o.atr),Sx(o.atr),'#/cronogramas',isZ(o.atr)?'ok':'bad')+K('Próximos 7 dias',V(o.px),Sx(o.px),'#/agendaobras','mute')+'</div>';
+  return H}
+function tabPos(m){var g=m.pv.g,cb=m.pv.cb,ct=m.pv.ct;var H=hd('Chamados, garantia e o que ela custa','#/posvisao','Pós-venda › Visão geral');
+  H+='<div class="dir-grid">'+K('Solicitações abertas',N0(m.osAb),'chamados aguardando atendimento','#/posvenda',m.osAb>10?'warn':'ok')+K('Fila crítica',m.fila==null?'—':N0(m.fila),'UniFi · Savant · energia','#/posfila',m.fila==null?'mute':m.fila>0?'warn':'ok')+K('Garantia custou',g?R$(g.custo):'—',g?g.n+' OS · custo cai na obra original':'','#/posresultado',g&&g.custo>0?'warn':'ok')+K('Cobrável',cb?R$(cb.receita):'—',cb?cb.n+' OS · custo '+Rk(cb.custo)+' · resultado '+Rk(cb.receita-cb.custo):'','#/posresultado',!cb?'mute':cb.receita-cb.custo>=0?'ok':'bad')+K('Contratos de manutenção',ct?N0(ct.n)+' OS':'—',ct?'custo '+Rk(ct.custo)+' coberto por plano':'','#/posresultado','mute')+'</div>';
+  return H}
+function tabPessoas(m){var H=hd('A equipe se paga?','#/rh','Financeiro › RH');
+  H+='<div class="dir-grid">'+K('Pessoas na folha',N0(m.folha.length),m.folha.filter(function(f){return f.regime==='CLT'}).length+' CLT · '+m.folha.filter(function(f){return f.regime!=='CLT'}).length+' PJ','#/rh','mute')+K('Custo mensal da equipe',R$(m.totFolha),'salários + encargos ('+P1(m.encPct)+' sobre CLT)','#/rh','mute')+K('Diárias apontadas em '+ymLb(m.ym),N0(r2(m.aps.reduce(function(a,x){return a+(+x.dias||0)},0))),m.aps.length+' apontamentos em obra','#/fobras',m.aps.length?'ok':'warn')+K('Folha ÷ margem de contribuição',m.d0&&m.d0.mc>0?P1(m.totFolha/m.d0.mc):'—',m.d0?'margem do mês '+Rk(m.d0.mc):'','#/dre',!m.d0||m.d0.mc<=0?'bad':m.totFolha/m.d0.mc<=0.6?'ok':'warn')+'</div>';
+  if(m.tecs.length)H+='<div class="card"><div class="tblwrap"><table class="tbl dir-tbl"><thead><tr><th>Técnico / projetista</th><th>Cargo</th><th class="text-end">Custo no mês</th><th class="text-end">Diárias</th><th class="text-end">Produção (diária × preço vendido)</th><th class="text-end">Cobre o próprio custo?</th></tr></thead><tbody>'
+    +m.tecs.slice().sort(function(a,b){return b.prod-a.prod}).map(function(r){return '<tr><td class="l"><b>'+E(r.f.nome)+'</b></td><td class="sub">'+E(r.f.cargo||'')+'</td><td class="text-end">'+R$(r.custo)+'</td><td class="text-end">'+N0(r.dias)+'</td><td class="text-end">'+R$(r.prod)+'</td><td class="text-end"><span class="dir-chip '+(r.dias?(r.ok?'ok':'bad'):'warn')+'">'+(r.dias?(r.ok?'sim · '+P1(r.prod/r.custo):'não · '+P1(r.prod/r.custo)):'sem apontamento')+'</span></td></tr>'}).join('')+'</tbody></table></div><div class="sub p-2">Produção = diárias apontadas × preço de venda da diária da disciplina (Base › Serviços & diárias). Sem apontamento não há veredito.</div></div>';
+  return H}
+function tabConfig(m){var p=m.p,mt=m.mt;var H=hd('Metas que pintam as luzes deste painel','#/parametros','Financeiro › Parâmetros');
+  H+='<div class="row g-3"><div class="col-lg-6"><div class="card p-3 dir-meta"><table class="tbl" style="font-size:13px"><tr><td>Caixa mínimo (R$)</td><td class="text-end"><input class="form-control form-control-sm d-inline-block" value="'+E(m.cxMin)+'" onchange="DIRX.setMeta(\'caixaMinimo\',this.value)"></td></tr><tr><td>Margem mínima por venda (%)</td><td class="text-end"><input class="form-control form-control-sm d-inline-block" value="'+E(+p.margemMinima||30)+'" onchange="DIRX.setMeta(\'margemMinima\',this.value)"></td></tr><tr><td>Meta de vendas do ano '+E(m.ano)+' (R$)</td><td class="text-end"><input class="form-control form-control-sm d-inline-block" style="width:150px" value="'+E(+mt.empresa||0)+'" onchange="DIRX.setMeta(\'metaEmpresa\',this.value)"></td></tr></table><div class="sub">Verde / amarelo / vermelho vêm destes números e das regras de cada departamento. Metas por consultor ficam em Comercial › Gestão.</div></div></div>';
   var qv=quemVe();var cand=(S.db.usuarios||[]).filter(function(u){return u.ativo!==false&&!qv.some(function(x){return x.u.login===u.login})});
-  H+='<div class="col-lg-6"><div class="card p-3"><b>Quem vê este painel</b><div class="sub mb-2">perfis Diretoria e TI, mais quem for autorizado pessoalmente</div>'
-    +(qv.length?'<div style="font-size:13px">'+qv.map(function(x){return '<div class="d-flex justify-content-between align-items-center py-1" style="border-top:1px solid var(--bd)"><span>'+E(x.u.nome)+' <span class="sub">· '+E((UQ.perfil(x.u.perfil)||{}).nome||x.u.perfil)+(x.exc?' · autorização individual':'')+'</span></span>'+(x.exc?'<button class="btn-soft" style="font-size:11px;padding:2px 8px" onclick="DIRX.revogar(\''+E(x.u.login)+'\')">remover</button>':'')+'</div>'}).join('')+'</div>':'<div class="sub">(modelo de permissões não carregado)</div>')
-    +(window.UQ&&cand.length?'<div class="d-flex gap-2 align-items-center mt-2"><select class="form-select form-select-sm" style="max-width:320px" onchange="DIRX.autorizar(this)"><option value="">Autorizar outra pessoa…</option>'+cand.map(function(u){return '<option value="'+E(u.login)+'">'+E(u.nome)+' — '+E((UQ.perfil(u.perfil)||{}).nome||u.perfil)+'</option>'}).join('')+'</select></div>':'')
-    +'</div></div></div>';
-  return '<div class="dir-wrap">'+warnCards()+H+'</div>'};
+  H+='<div class="col-lg-6"><div class="card p-3"><b>Quem vê este painel</b><div class="sub mb-2">perfis Diretoria e TI, mais quem for autorizado pessoalmente</div>'+(qv.length?'<div style="font-size:13px">'+qv.map(function(x){return '<div class="d-flex justify-content-between align-items-center py-1" style="border-top:1px solid var(--bd)"><span>'+E(x.u.nome)+' <span class="sub">· '+E((UQ.perfil(x.u.perfil)||{}).nome||x.u.perfil)+(x.exc?' · autorização individual':'')+'</span></span>'+(x.exc?'<button class="btn-soft" style="font-size:11px;padding:2px 8px" onclick="DIRX.revogar(\''+E(x.u.login)+'\')">remover</button>':'')+'</div>'}).join('')+'</div>':'<div class="sub">(modelo de permissões não carregado)</div>')+(window.UQ&&cand.length?'<div class="mt-2"><select class="form-select form-select-sm" style="max-width:320px" onchange="DIRX.autorizar(this)"><option value="">Autorizar outra pessoa…</option>'+cand.map(function(u){return '<option value="'+E(u.login)+'">'+E(u.nome)+' — '+E((UQ.perfil(u.perfil)||{}).nome||u.perfil)+'</option>'}).join('')+'</select></div>':'')+'</div></div></div>';
+  return H}
+
+SCREENS.diretoria=function(arg){
+  DIR.err=[];
+  if(!podeVer())return head('Painel da Diretoria','')+'<div class="card p-4" style="border-left:4px solid #f23d4f"><h5 class="mb-1">Acesso restrito à Diretoria</h5><div class="sub">Este painel é visto pelos perfis Diretoria e TI. Outra pessoa só entra com uma autorização individual, dada em <a href="#/equipe">Usuários e permissões</a> ou no próprio painel por quem já tem acesso.</div></div>';
+  var tab=TABS.some(function(t){return t[0]===arg})?arg:'geral';var m=model();
+  var monthPick='<select class="form-select form-select-sm" style="width:auto" onchange="DIRX.go(\'ym\',this.value)">'+m.ms.map(function(x){return '<option value="'+x+'"'+(x===m.ym?' selected':'')+'>'+ymLb(x)+'</option>'}).join('')+'</select>';
+  var H=head('Painel da Diretoria','Uma tela, todos os departamentos. Cada número vem da tela do departamento que o produz e abre nela.',monthPick);
+  H+='<div class="dir-tabs">'+TABS.map(function(t){return '<button class="'+(t[0]===tab?'on':'')+'" onclick="location.hash=\'#/diretoria/'+t[0]+'\'">'+E(t[1])+(t[0]==='geral'&&m.alerts.length?' <span class="dir-chip bad" style="font-size:10px;padding:0 6px">'+m.alerts.length+'</span>':'')+'</button>'}).join('')+'</div>';
+  var body={geral:tabGeral,caixa:tabCaixa,vendas:tabVendas,lucro:tabLucro,linhas:tabLinhas,estoque:tabEstoque,operacao:tabOperacao,posvenda:tabPos,pessoas:tabPessoas,config:tabConfig}[tab](m);
+  return '<div class="dir-wrap">'+warnCards()+H+body+'</div>'};
 
 try{renderNav()}catch(e){}
 try{if(/^#\/diretoria/.test(location.hash))render()}catch(e){}
