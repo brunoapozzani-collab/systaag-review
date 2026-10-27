@@ -27460,6 +27460,323 @@ try{renderNav()}catch(e){}
 
 <script>try{SEC_OF.produto='bd';if(window.OWNER)OWNER.produto='bd';LABEL.produto='Produto';}catch(e){}</script>
 
+
+
+<!-- DIRETORIA-LAYER:start -->
+<!-- ===================================================================================================
+  DIRETORIA layer (prototype v105) — additive, appended before </body>. Nothing above this line changes.
+  One tab for the owners: every number on it is READ from the department that owns it (same function,
+  same figure as the department screen) and every figure is a door into that screen.
+  Blocks: Saúde hoje · 1. Fluxo de caixa (dia + semana) · 2. Lucratividade por venda (fórmula do e-mail
+  a Rodolfo/Cesar) · 3. Centros de custo (TAAG · Acústica · Focal · Pós-venda; compartilhados no total)
+  · Comercial · Estoque · Operação · Pós-venda · Pessoas (quem se paga) · Metas · Quem vê este painel.
+  Access: perfil Diretoria (and TI, the system admin) only; anyone else needs a per-person authorization
+  (Usuários › exceções, the same mechanism the rest of the system uses). ids/classes prefixed dir- .
+=================================================================================================== -->
+<style>
+.dir-wrap .card{border-radius:16px}
+.dir-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:14px}
+.dir-k{padding:14px 16px;cursor:pointer;position:relative;min-height:96px}
+.dir-k .lb{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;opacity:.65;font-weight:700}
+.dir-k .v{font-size:clamp(15px,1.3vw,21px);font-weight:800;line-height:1.15;margin:4px 0 2px;white-space:nowrap;letter-spacing:-.01em}
+.dir-k .s{font-size:11.5px;opacity:.7}
+.dir-k .dot{position:absolute;top:12px;right:12px;width:10px;height:10px;border-radius:50%}
+.dir-ok{background:#198754}.dir-warn{background:#ffc107}.dir-bad{background:#dc3545}.dir-mute{background:#adb5bd}
+.dir-sec{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:8px;margin:22px 0 10px}
+.dir-sec h5{margin:0;font-weight:800;font-size:16px}
+.dir-sec .n{font-size:11px;letter-spacing:.08em;text-transform:uppercase;opacity:.6;font-weight:700;display:block;margin-bottom:2px}
+.dir-sec a{font-size:12.5px;text-decoration:none;white-space:nowrap}
+.dir-formula{font-family:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;background:rgba(127,127,127,.08);border:1px dashed var(--bd,#dee2e6);border-radius:10px;padding:8px 12px;margin-bottom:10px;line-height:1.5}
+.dir-formula b{color:#0d6efd}
+.dir-chart{width:100%;height:auto;display:block;overflow:visible}
+.dir-chart text{font-size:10.5px;fill:currentColor;opacity:.75}
+.dir-chart .ax{stroke:var(--bd,#dee2e6);stroke-width:1}
+.dir-chart .bar{cursor:pointer}
+.dir-tbl td,.dir-tbl th{white-space:nowrap}
+.dir-tbl td.l{white-space:normal;min-width:160px}
+.dir-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.dir-tabs button{border:1px solid var(--bd,#dee2e6);background:transparent;color:inherit;border-radius:999px;padding:4px 12px;font-size:12px;cursor:pointer}
+.dir-tabs button.on{background:#212529;color:#fff;border-color:#212529}
+[data-theme=dark] .dir-tabs button.on{background:#f8f9fa;color:#111;border-color:#f8f9fa}
+.dir-meta input{width:110px;text-align:right}
+.dir-err{border-left:4px solid #dc3545;background:rgba(220,53,69,.08);padding:10px 14px;border-radius:10px;font-size:12.5px;margin-bottom:12px}
+.dir-chip{display:inline-block;font-size:11px;padding:2px 8px;border-radius:999px;background:rgba(127,127,127,.12)}
+.dir-chip.ok{background:rgba(25,135,84,.15);color:#198754}.dir-chip.bad{background:rgba(220,53,69,.15);color:#dc3545}.dir-chip.warn{background:rgba(255,193,7,.2);color:#9a6b00}
+.dir-bullet{height:10px;border-radius:5px;background:rgba(127,127,127,.15);position:relative;overflow:hidden}
+.dir-bullet i{position:absolute;left:0;top:0;bottom:0;background:#0d6efd;border-radius:5px}
+.dir-bullet.ok i{background:#198754}.dir-bullet.bad i{background:#dc3545}
+@media (max-width:700px){.dir-grid{grid-template-columns:repeat(2,1fr)}.dir-k .v{font-size:15px}.dir-k{padding:12px 12px;min-height:88px}}
+</style>
+<script>
+(function(){ 'use strict';
+/* ───────────────── helpers (local; the host's BRL rounds to R$ integers — the directors see cents) ───────────────── */
+var E=function(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})};
+var r2=function(v){return Math.round((+v||0)*100)/100};
+var R$=function(v){v=+v||0;return (v<0?'−':'')+'R$ '+Math.abs(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})};
+var Rk=function(v){v=+v||0;return (v<0?'−':'')+'R$ '+Math.abs(Math.round(v)).toLocaleString('pt-BR')};var R0=R$;
+var P1=function(v){return (isFinite(v)?(v*100):0).toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})+'%'};
+var N0=function(v){return (+v||0).toLocaleString('pt-BR')};
+var dBR=function(d){return d?String(d).slice(8,10)+'/'+String(d).slice(5,7):'—'};
+var ymOf=function(d){return String(d||'').slice(0,7)};
+var hoje=function(){try{return today()}catch(e){return new Date().toISOString().slice(0,10)}};
+var MES=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+var ymLb=function(m){var y=m.slice(0,4),mm=+m.slice(5,7);return MES[mm-1]+'/'+y.slice(2)};
+var pf=function(){try{return PF()||{}}catch(e){return (S.db.params&&S.db.params.fin)||{}}};
+var LINHAS=['TAAG','Acústica','Focal','Pós-venda'];
+var DIR={ym:null,cx:'dia',obras:'andamento',err:[]};
+function safe(nome,fn){try{return fn()}catch(e){console.error('Diretoria ·',nome,e);DIR.err.push(nome+': '+(e&&e.message||e));return null}}
+function warnCards(){if(!DIR.err.length)return '';return '<div class="dir-err"><b>Blocos que não puderam ser lidos agora:</b> '+DIR.err.map(E).join(' · ')+'</div>'}
+
+/* ───────────────── 1. navigation: the section, the screen, the names ───────────────── */
+(function(){
+  var i0=NAV.findIndex(function(s){return s.id==='dir'});if(i0>=0)NAV.splice(i0,1);
+  var ih=NAV.findIndex(function(s){return s.id==='home'});
+  NAV.splice(ih+1,0,{id:'dir',icon:'bi-speedometer2',label:'Diretoria',items:[['diretoria','Painel da Diretoria']]});
+  try{SEC_OF.diretoria='dir';LABEL.diretoria='Painel da Diretoria';if(window.OWNER)OWNER.diretoria='dir'}catch(e){}
+  try{if(window.DEPTNOME)DEPTNOME.dir='Diretoria';if(window.DEPTCOR)DEPTCOR.dir='warn';if(typeof RAILNOME!=='undefined')RAILNOME.dir='Diretoria'}catch(e){}
+  try{if(window.SCREEN_DEPS)SCREEN_DEPS.diretoria=['lancamentos','obras','propostas','unidades','negociacoes','folha','os']}catch(e){}
+})();
+
+/* ───────────────── 2. access: Diretoria (and TI) see it; everyone else needs a per-person authorization ───────────────── */
+function perfis(){return (S.db.perfisAcesso||[])}
+function sealAccess(){var ch=false;perfis().forEach(function(p){p.regra=p.regra||{dep:{},tela:{}};p.regra.dep=p.regra.dep||{};
+  if(p.regra.dep.dir==null){p.regra.dep.dir=(p.id==='diretoria'||p.id==='ti')?3:0;ch=true}});
+  if(ch){try{save()}catch(e){}}}
+sealAccess();
+function podeVer(){try{if(!window.UQ||!UQ.nivel)return true;return UQ.nivel('diretoria')>=1}catch(e){return true}}
+function quemVe(){var out=[];try{(S.db.usuarios||[]).forEach(function(u){if(u.ativo===false)return;var n=UQ.nivel('diretoria',u.login);if(n>=1)out.push({u:u,n:n,exc:!!(u.excecoes&&u.excecoes.diretoria!=null)})})}catch(e){}return out}
+
+/* ───────────────── 3. engines — every number read from the department that owns it ───────────────── */
+function caixaHoje(){try{if(window.FS&&FS.caixa)return r2(FS.caixa())}catch(e){}return r2(S.db.caixa&&S.db.caixa.saldo||0)}
+function fixosMes(){try{return r2(FN.fixosMes())}catch(e){return 0}}
+function aReceber(){try{return r2(FN.aReceber())}catch(e){return r2(S.db.lancamentos.filter(function(l){return l.tipo==='receber'&&!l.pago_em}).reduce(function(a,l){return a+l.valor},0))}}
+function aPagar(){try{return r2(FN.aPagar())}catch(e){return r2(S.db.lancamentos.filter(function(l){return l.tipo==='pagar'&&!l.pago_em}).reduce(function(a,l){return a+l.valor},0))}}
+function folego(){try{var f=FS.folego();return f==null?null:f}catch(e){var b=fixosMes();return b>0?caixaHoje()/b:null}}
+/* 1. fluxo de caixa — DIA: the same recipe as FN.semanas13 (Financeiro › Fluxo de caixa), in 1-day buckets.
+   overdue titles fall on day 1; fixed costs + payroll are spread per day (FN.fixosMes × 12 / 365). */
+function fluxoDiario(n){
+  var T=hoje();var start=new Date(T+'T12:00:00');var iso=function(d){return d.toISOString().slice(0,10)};
+  var min=+pf().caixaMinimo||0;var fixoDia=fixosMes()*12/365;
+  var rec=S.db.lancamentos.filter(function(l){return l.tipo==='receber'&&!l.pago_em});
+  var pag=S.db.lancamentos.filter(function(l){return l.tipo==='pagar'&&!l.pago_em&&['fixo','folha'].indexOf(l.origem)<0});
+  var saldo=caixaHoje(),out=[];
+  for(var i=0;i<n;i++){var d=new Date(start);d.setDate(d.getDate()+i);var k=iso(d);
+    var dentro=function(v){return i===0?String(v||'')<=k:String(v||'')===k};
+    var ent=r2(rec.filter(function(l){return dentro(l.vencimento)}).reduce(function(a,l){return a+(+l.valor||0)},0));
+    var sai=r2(pag.filter(function(l){return dentro(l.vencimento)}).reduce(function(a,l){return a+(+l.valor||0)},0)+fixoDia);
+    saldo=r2(saldo+ent-sai);out.push({d:k,entradas:ent,saidas:sai,saldo:saldo,abaixo:saldo<min,vencido:i===0?rec.filter(function(l){return String(l.vencimento||'')<k}).length:0})}
+  return out}
+function semanas(){try{return FN.semanas13()}catch(e){return []}}
+/* 2. lucratividade por venda — FN.obra / FS.obraRow are the engines of Financeiro › Obras. We only regroup the
+   same cents into the lines of the e-mail: receita − custo do produto − garantia − despesas da obra. */
+function obraRows(){
+  var rows=[];(S.db.obras||[]).forEach(function(o){var x=null,r=null;try{x=FS.obraRow(o)}catch(e){}try{r=FN.obra(o)}catch(e){}
+    if(!x||!r||!(x.contratado>0))return;
+    var av=+r.av||0;var gar=r2(+r.fpvLiq||0);var despesas=r2((+r.moR||0)+(+r.extrasR||0)+(+r.planilha||0)+(+r.frete||0)*av);
+    var impCom=r2((+r.imp||0)*av+(+r.comR||0));var produto=r2(+r.equipR||0);var receita=r2(+r.receitaR||0);
+    var lucro=r2(receita-produto-gar-despesas-impCom);
+    var nome='';try{nome=C.obraNome?C.obraNome(o):(o.nome||o.id)}catch(e){nome=o.nome||o.id}
+    rows.push({o:o,x:x,r:r,nome:nome,status:x.status,uni:x.unidade||'',contratado:r2(x.contratado),receita:receita,produto:produto,gar:gar,despesas:despesas,impCom:impCom,lucro:lucro,lucroFin:r2(x.lucroReal),margemPlano:x.margem,margem:receita?lucro/receita:0,av:av,planoLucro:r2(x.lucroPrev)})});
+  return rows}
+/* 3. centros de custo — FS.dre(mês, unidade) is the DRE engine (Financeiro › DRE). */
+function unidades(){try{if(window.FD1&&Array.isArray(FD1.UNIDADES)&&FD1.UNIDADES.length)return FD1.UNIDADES.slice()}catch(e){}return LINHAS.concat(['Corporativo'])}
+function dre(m,u){try{return FS.dre(m,u||'')}catch(e){return null}}
+function meses(){try{var m=FS.dreMeses();if(m&&m.length)return m}catch(e){}return [ymOf(hoje())]}
+/* comercial */
+function Mtot(p){try{return +M.total(p)||0}catch(e){try{return +D.propTotal(p.id)||0}catch(_){return 0}}}
+function vendidasNoMes(m){return (S.db.propostas||[]).filter(function(p){return ['vendida','em_obra','concluida'].indexOf(p.estado)>=0&&ymOf(p.vendida_em)===m})}
+function vendidasNoAno(y){return (S.db.propostas||[]).filter(function(p){return ['vendida','em_obra','concluida'].indexOf(p.estado)>=0&&String(p.vendida_em||'').slice(0,4)===y})}
+function metas(){return S.db.metas||{ano:new Date().getFullYear(),empresa:0,consultores:{}}}
+/* scrapes: a screen that keeps its engine private is rendered to a string and its KPI cards are read — the
+   same string the department sees. Nothing is recomputed here. */
+function scrape(k){try{var fn=SCREENS[k];if(typeof fn!=='function')return null;var h=fn();if(typeof h!=='string')return null;return new DOMParser().parseFromString(h,'text/html')}catch(e){console.error('scrape',k,e);return null}}
+function kpiFrom(doc,label){if(!doc)return null;var cards=doc.querySelectorAll('.card');for(var i=0;i<cards.length;i++){var c=cards[i];var kids=c.children;if(kids.length<2)continue;var t=(kids[0].textContent||'').trim();if(t.toUpperCase().indexOf(label.toUpperCase())===0)return {v:(kids[1].textContent||'').trim(),s:(kids[2]?kids[2].textContent:'').trim().replace(/\s+/g,' ')}}return null}
+
+/* ───────────────── 4. tiny SVG charts (no library; theme-aware via currentColor / --bd) ───────────────── */
+function svgLine(pts,opts){ /* pts: [{x:label,y:number,bad:bool}] */
+  opts=opts||{};var W=opts.w||720,H=opts.h||170,L=46,Rr=10,T=12,B=26;var ys=pts.map(function(p){return p.y});var lo=Math.min.apply(null,ys.concat([opts.min!=null?opts.min:0])),hi=Math.max.apply(null,ys.concat([opts.min!=null?opts.min:0]));if(hi===lo){hi=lo+1}
+  var sx=function(i){return L+(W-L-Rr)*(pts.length>1?i/(pts.length-1):0)},sy=function(v){return T+(H-T-B)*(1-(v-lo)/(hi-lo))};
+  var d=pts.map(function(p,i){return (i?'L':'M')+sx(i).toFixed(1)+' '+sy(p.y).toFixed(1)}).join(' ');
+  var area=d+' L'+sx(pts.length-1).toFixed(1)+' '+sy(lo).toFixed(1)+' L'+sx(0).toFixed(1)+' '+sy(lo).toFixed(1)+' Z';
+  var ticks=[lo,(lo+hi)/2,hi].map(function(v){return '<text x="'+(L-6)+'" y="'+(sy(v)+3.5).toFixed(1)+'" text-anchor="end">'+E(Rk(v).replace('R$ ',''))+'</text><line class="ax" x1="'+L+'" x2="'+(W-Rr)+'" y1="'+sy(v).toFixed(1)+'" y2="'+sy(v).toFixed(1)+'"/>'}).join('');
+  var step=Math.max(1,Math.round(pts.length/8));var xl=pts.map(function(p,i){return (i%step===0||i===pts.length-1)?'<text x="'+sx(i).toFixed(1)+'" y="'+(H-8)+'" text-anchor="middle">'+E(p.x)+'</text>':''}).join('');
+  var minLine=opts.min!=null&&opts.min>0?'<line x1="'+L+'" x2="'+(W-Rr)+'" y1="'+sy(opts.min).toFixed(1)+'" y2="'+sy(opts.min).toFixed(1)+'" stroke="#dc3545" stroke-dasharray="4 3"/>':'';
+  var zero=lo<0?'<line x1="'+L+'" x2="'+(W-Rr)+'" y1="'+sy(0).toFixed(1)+'" y2="'+sy(0).toFixed(1)+'" stroke="#dc3545" stroke-width="1.2"/>':'';
+  var dots=pts.map(function(p,i){return p.bad?'<circle cx="'+sx(i).toFixed(1)+'" cy="'+sy(p.y).toFixed(1)+'" r="3" fill="#dc3545"><title>'+E(p.x+' · '+R$(p.y))+'</title></circle>':''}).join('');
+  return '<svg class="dir-chart" viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none" style="aspect-ratio:'+W+'/'+H+'">'+ticks+'<path d="'+area+'" fill="#0d6efd" opacity=".12"/><path d="'+d+'" fill="none" stroke="#0d6efd" stroke-width="2"/>'+minLine+zero+dots+xl+'</svg>'}
+function svgBarsV(items,opts){ /* items: [{x,y,color,href,title}] */
+  opts=opts||{};var W=opts.w||720,H=opts.h||170,L=46,Rr=10,T=12,B=26;var ys=items.map(function(p){return p.y});var lo=Math.min.apply(null,ys.concat([0])),hi=Math.max.apply(null,ys.concat([0]));if(hi===lo)hi=lo+1;
+  var n=items.length,gw=(W-L-Rr)/n,bw=Math.min(54,gw*.62);var sy=function(v){return T+(H-T-B)*(1-(v-lo)/(hi-lo))};
+  var ticks=[lo,(lo+hi)/2,hi].map(function(v){return '<text x="'+(L-6)+'" y="'+(sy(v)+3.5).toFixed(1)+'" text-anchor="end">'+E(Rk(v).replace('R$ ',''))+'</text><line class="ax" x1="'+L+'" x2="'+(W-Rr)+'" y1="'+sy(v).toFixed(1)+'" y2="'+sy(v).toFixed(1)+'"/>'}).join('');
+  var bars=items.map(function(p,i){var x=L+gw*i+(gw-bw)/2,y0=sy(0),y1=sy(p.y);var top=Math.min(y0,y1),h=Math.abs(y0-y1);
+    return '<g class="bar"'+(p.href?' onclick="location.hash=\''+E(p.href)+'\'"':'')+'><title>'+E(p.title||(p.x+' · '+R$(p.y)))+'</title><rect x="'+x.toFixed(1)+'" y="'+top.toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+Math.max(1,h).toFixed(1)+'" rx="4" fill="'+(p.color||'#0d6efd')+'"/><text x="'+(x+bw/2).toFixed(1)+'" y="'+(H-8)+'" text-anchor="middle">'+E(p.x)+'</text><text x="'+(x+bw/2).toFixed(1)+'" y="'+(p.y>=0?top-4:top+h+11).toFixed(1)+'" text-anchor="middle" style="font-weight:700;opacity:.9">'+E(Rk(p.y).replace('R$ ',''))+'</text></g>'}).join('');
+  return '<svg class="dir-chart" viewBox="0 0 '+W+' '+H+'" style="aspect-ratio:'+W+'/'+H+'">'+ticks+bars+'</svg>'}
+function svgBarsH(items,opts){ /* items: [{x,y(pct 0..1),color,href,title,txt}] — horizontal, one row each */
+  opts=opts||{};var W=720,rowH=22,L=200,Rr=70,H=items.length*rowH+8;var hi=Math.max.apply(null,items.map(function(p){return p.y}).concat([opts.max||0.5]));if(!(hi>0))hi=1;
+  var sx=function(v){return L+(W-L-Rr)*Math.max(0,v)/hi};var ref=opts.ref!=null?'<line x1="'+sx(opts.ref).toFixed(1)+'" x2="'+sx(opts.ref).toFixed(1)+'" y1="2" y2="'+(H-2)+'" stroke="#dc3545" stroke-dasharray="4 3"/><text x="'+sx(opts.ref).toFixed(1)+'" y="'+(H-0)+'" text-anchor="middle" style="fill:#dc3545;opacity:1">mín. '+E(P1(opts.ref))+'</text>':'';
+  var bars=items.map(function(p,i){var y=4+i*rowH;var w=Math.max(0,sx(p.y)-L);return '<g class="bar"'+(p.href?' onclick="location.hash=\''+E(p.href)+'\'"':'')+'><title>'+E(p.title||p.x)+'</title><text x="'+(L-8)+'" y="'+(y+14)+'" text-anchor="end">'+E(p.x.length>30?p.x.slice(0,29)+'…':p.x)+'</text><rect x="'+L+'" y="'+y+'" width="'+w.toFixed(1)+'" height="'+(rowH-6)+'" rx="4" fill="'+(p.color||'#0d6efd')+'"/><text x="'+(L+w+6).toFixed(1)+'" y="'+(y+14)+'" style="font-weight:700;opacity:.9">'+E(p.txt||P1(p.y))+'</text></g>'}).join('');
+  return '<svg class="dir-chart" viewBox="0 0 '+W+' '+(H+10)+'" style="aspect-ratio:'+W+'/'+(H+10)+'">'+bars+ref+'</svg>'}
+
+/* ───────────────── 5. the screen ───────────────── */
+function K(lb,v,s,href,light){return '<a class="card dir-k text-decoration-none d-block" href="'+E(href||'#')+'" style="color:inherit"><span class="dot dir-'+(light||'mute')+'"></span><div class="lb">'+lb+'</div><div class="v">'+v+'</div><div class="s">'+(s||'')+'</div></a>'}
+function sec(n,t,href,lb){return '<div class="dir-sec"><div><span class="n">'+E(n)+'</span><h5>'+t+'</h5></div>'+(href?'<a href="'+E(href)+'">'+E(lb||'abrir no departamento')+' →</a>':'')+'</div>'}
+function go(k,v){DIR[k]=v;try{renderMain()}catch(e){render()}}
+window.DIRX={go:go,setMeta:function(k,v){v=+String(v).replace(',','.');var p=pf();if(k==='caixaMinimo')p.caixaMinimo=v;else if(k==='margemMinima')p.margemMinima=v;else if(k==='metaEmpresa'){S.db.metas=S.db.metas||{};S.db.metas.empresa=v}
+    try{save()}catch(e){}try{log('params',k,'meta da Diretoria',null,String(v))}catch(e){}try{toast('Meta atualizada: '+k)}catch(e){}go('_',0)},
+  autorizar:function(sel){var login=sel.value;if(!login)return;try{UQ.setExc(login,'diretoria',1);toast('Autorizado: '+login+' passa a ver o Painel da Diretoria.')}catch(e){toast('Não foi possível autorizar: '+(e&&e.message||e),true)}go('_',0)},
+  revogar:function(login){try{UQ.setExc(login,'diretoria',null);toast('Autorização removida: '+login)}catch(e){toast(String(e&&e.message||e),true)}go('_',0)}};
+
+SCREENS.diretoria=function(arg){
+  DIR.err=[];
+  if(!podeVer())return head('Painel da Diretoria','')+'<div class="card p-4" style="border-left:4px solid #dc3545"><h5 class="mb-1">Acesso restrito à Diretoria</h5><div class="sub">Este painel é visto pelos perfis Diretoria e TI. Outra pessoa só entra com uma autorização individual, dada em <a href="#/equipe">Usuários e permissões</a> ou no próprio painel por quem já tem acesso.</div></div>';
+  var ms=meses();if(!DIR.ym||ms.indexOf(DIR.ym)<0)DIR.ym=ms[0];var ym=DIR.ym;var p=pf();var margMin=(+p.margemMinima||30)/100;var cxMin=+p.caixaMinimo||0;
+  var H='';
+  /* ── saúde hoje ── */
+  var cx=caixaHoje(),fo=folego(),rec=aReceber(),pag=aPagar();var d0=safe('DRE do mês',function(){return dre(ym,'')});var vend=safe('Vendido no mês',function(){return vendidasNoMes(ym).reduce(function(a,p){return a+Mtot(p)},0)})||0;var nV=vendidasNoMes(ym).length;
+  var mt=metas();var metaMes=(+mt.empresa||0)/12;var capital=safe('Capital parado',function(){return D.capitalParado()})||0;var nInv=safe('Inventário',function(){return D.emInventario().length})||0;
+  var sem=safe('13 semanas',semanas)||[];var menor=sem.length?sem.reduce(function(m,w){return w.saldoFinal<m.saldoFinal?w:m},sem[0]):null;
+  H+=head('Painel da Diretoria','Uma tela, todos os departamentos. Cada número vem da tela do departamento que o produz e abre nela. '+E(dBR(hoje()))+'/'+hoje().slice(0,4),
+    '<div class="dir-tabs mb-0">'+ms.map(function(m){return '<button class="'+(m===ym?'on':'')+'" onclick="DIRX.go(\'ym\',\''+m+'\')">'+ymLb(m)+'</button>'}).join('')+'</div>');
+  H+='<div class="dir-grid">'
+    +K('Caixa hoje',R0(cx),(cxMin?'mínimo '+R0(cxMin)+' · ':'')+'bancos somados','#/fluxo',cx<cxMin?'bad':cx<cxMin*1.5&&cxMin?'warn':'ok')
+    +K('Autonomia de caixa',fo==null?'—':fo.toFixed(1).replace('.',',')+' meses','caixa ÷ saídas fixas ('+R0(fixosMes())+'/mês)','#/fhoje',fo==null?'mute':fo<3?'bad':fo<6?'warn':'ok')
+    +K('Menor saldo em 13 semanas',menor?R0(menor.saldoFinal):'—',menor?'semana '+menor.n+' · '+dBR(menor.inicio):'','#/fluxo',!menor?'mute':menor.saldoFinal<cxMin?'bad':'ok')
+    +K('Resultado do mês ('+ymLb(ym)+')',d0?R0(d0.res):'—',d0?'margem de contribuição '+P1(d0.mcPct)+' · EBITDA '+R0(d0.ebitda):'','#/dre',!d0?'mute':d0.res<0?'bad':'ok')
+    +K('Vendido no mês',R0(vend),nV+' proposta(s)'+(metaMes?' · meta '+R0(metaMes)+' ('+P1(metaMes?vend/metaMes:0)+')':''),'#/gestao',!metaMes?'mute':vend>=metaMes?'ok':vend>=metaMes*.7?'warn':'bad')
+    +K('A receber − a pagar',R0(rec-pag),R0(rec)+' − '+R0(pag),'#/receber',rec-pag<0?'bad':'ok')
+    +K('Capital parado em estoque',R0(capital),N0(nInv)+' unidades no inventário','#/epainel','mute')
+    +'</div>';
+
+  /* ── 1. fluxo de caixa ── */
+  H+=sec('Relatório 1','Fluxo de caixa — diário e futuro','#/fluxo','Financeiro › Fluxo de caixa');
+  H+='<div class="dir-formula">entradas = títulos a <b>receber</b> por vencimento · saídas = títulos a <b>pagar</b> + fixos e folha rateados por dia · o que já venceu cai no dia 1 · mesma receita da tela de 13 semanas, só muda o balde (dia × semana)</div>';
+  var dias=safe('Fluxo diário',function(){return fluxoDiario(30)})||[];
+  H+='<div class="dir-tabs"><button class="'+(DIR.cx==='dia'?'on':'')+'" onclick="DIRX.go(\'cx\',\'dia\')">Próximos 30 dias</button><button class="'+(DIR.cx==='sem'?'on':'')+'" onclick="DIRX.go(\'cx\',\'sem\')">13 semanas</button></div>';
+  if(DIR.cx==='dia'&&dias.length){var pts=dias.map(function(d){return {x:dBR(d.d),y:d.saldo,bad:d.abaixo}});var tE=r2(dias.reduce(function(a,d){return a+d.entradas},0)),tS=r2(dias.reduce(function(a,d){return a+d.saidas},0));
+    H+='<div class="card p-3 mb-3"><div class="d-flex justify-content-between flex-wrap gap-2 mb-2"><div><b>Saldo projetado, dia a dia</b><div class="sub">'+R$(cx)+' hoje + '+R$(tE)+' entradas − '+R$(tS)+' saídas = <b>'+R$(dias[dias.length-1].saldo)+'</b> em '+dBR(dias[dias.length-1].d)+(dias[0].vencido?' · <span class="dir-chip warn">'+dias[0].vencido+' título(s) vencido(s) cobrando no dia 1</span>':'')+'</div></div>'+(dias.some(function(d){return d.abaixo})?'<span class="dir-chip bad">fica abaixo do mínimo em '+dias.filter(function(d){return d.abaixo}).length+' dia(s)</span>':'<span class="dir-chip ok">acima do mínimo nos 30 dias</span>')+'</div>'+svgLine(pts,{min:cxMin})+'</div>';
+    H+='<div class="card"><div class="tblwrap"><table class="tbl dir-tbl"><thead><tr><th>Dia</th><th class="text-end">Entradas</th><th class="text-end">Saídas</th><th class="text-end">Saldo</th><th></th></tr></thead><tbody>'+dias.filter(function(d,i){return i<14||d.entradas>0||d.saidas>fixosMes()*12/365+0.01}).slice(0,30).map(function(d){return '<tr><td>'+dBR(d.d)+'</td><td class="text-end" style="color:#198754">'+(d.entradas?R$(d.entradas):'—')+'</td><td class="text-end" style="color:#dc3545">'+R$(d.saidas)+'</td><td class="text-end"><b>'+R$(d.saldo)+'</b></td><td>'+(d.abaixo?'<span class="dir-chip bad">abaixo do mínimo</span>':'')+'</td></tr>'}).join('')+'</tbody></table></div></div>'}
+  else if(sem.length){var ptsS=sem.map(function(w){return {x:'S'+w.n,y:w.saldoFinal,color:w.abaixoDoMinimo?'#dc3545':'#0d6efd',title:'Semana '+w.n+' ('+dBR(w.inicio)+'–'+dBR(w.fim)+') · entradas '+R$(w.entradas)+' · saídas '+R$(w.saidas)+' · saldo '+R$(w.saldoFinal),href:'#/fluxo'}});
+    H+='<div class="card p-3 mb-3"><b>Saldo ao fim de cada semana</b><div class="sub mb-2">a mesma tabela da tela Fluxo de caixa (13 semanas)</div>'+svgBarsV(ptsS,{h:190})+'</div>'}
+
+  /* ── 2. lucratividade por venda ── */
+  var rows=safe('Lucratividade por venda',obraRows)||[];var rowsF=rows.filter(function(r){return DIR.obras==='todas'||r.status===DIR.obras});rowsF.sort(function(a,b){return b.contratado-a.contratado});
+  var cnt={andamento:0,concluida:0};rows.forEach(function(r){if(cnt[r.status]!=null)cnt[r.status]++});
+  H+=sec('Relatório 2','Lucratividade por pedido de venda','#/fobras','Financeiro › Obras');
+  H+='<div class="dir-formula">(produtos + serviços) − <b>custo do produto</b> − <b>serviços de garantia</b> − <b>despesas da obra</b> = lucro da venda &nbsp;·&nbsp; depois: − impostos e comissões/RT = lucro real &nbsp;<span class="dir-chip warn">fórmula a confirmar · Rodolfo / Cesar</span><br><span class="sub">receita = o contratado reconhecido pelo avanço físico · custo do produto = unidades entregues ao custo de compra · garantia = OS do Pós-venda fechadas como Garantia nesta obra · despesas da obra = diárias dos técnicos + viagem (uber, hotel, alimentação, terceiros, frete) + extras lançados na obra</span></div>';
+  H+='<div class="dir-tabs"><button class="'+(DIR.obras==='andamento'?'on':'')+'" onclick="DIRX.go(\'obras\',\'andamento\')">Em andamento ('+cnt.andamento+')</button><button class="'+(DIR.obras==='concluida'?'on':'')+'" onclick="DIRX.go(\'obras\',\'concluida\')">Concluídas ('+cnt.concluida+')</button><button class="'+(DIR.obras==='todas'?'on':'')+'" onclick="DIRX.go(\'obras\',\'todas\')">Todas ('+rows.length+')</button></div>';
+  if(rowsF.length){var T=function(k){return r2(rowsF.reduce(function(a,r){return a+r[k]},0))};var tR=T('receita'),tL=T('lucro');
+    var top=rowsF.slice(0,12).map(function(r){return {x:r.nome,y:Math.max(0,r.margem),color:!r.receita?'#adb5bd':r.margem<0?'#dc3545':r.margem<margMin?'#ffc107':'#198754',href:'#/fobras/'+r.o.id,title:r.nome+' · margem '+P1(r.margem)+' · lucro '+R$(r.lucro),txt:r.receita?P1(r.margem)+(r.margem<0?' (prejuízo)':''):'sem avanço ainda'}});
+    H+='<div class="row g-3 mb-3"><div class="col-lg-7"><div class="card p-3 h-100"><b>Margem por venda</b> <span class="sub">· as '+top.length+' maiores · vermelho = prejuízo · amarelo = abaixo da margem mínima ('+P1(margMin)+')</span>'+svgBarsH(top,{ref:margMin,max:0.5})+'</div></div>'
+      +'<div class="col-lg-5"><div class="card p-3 h-100"><b>Somatório deste recorte</b><table class="tbl mt-2" style="font-size:13px"><tr><td>Receita reconhecida</td><td class="text-end"><b>'+R$(tR)+'</b></td></tr><tr><td>− Custo do produto</td><td class="text-end">'+R$(T('produto'))+'</td></tr><tr><td>− Serviços de garantia</td><td class="text-end">'+R$(T('gar'))+'</td></tr><tr><td>− Despesas da obra</td><td class="text-end">'+R$(T('despesas'))+'</td></tr><tr><td>− Impostos e comissões/RT</td><td class="text-end">'+R$(T('impCom'))+'</td></tr><tr style="font-weight:800;border-top:2px solid var(--bd)"><td>= Lucro</td><td class="text-end" style="color:'+(tL<0?'#dc3545':'#198754')+'">'+R$(tL)+' <span class="sub">('+P1(tR?tL/tR:0)+')</span></td></tr></table><div class="sub mt-2">'+rowsF.filter(function(r){return r.lucro<0}).length+' venda(s) dando prejuízo · '+rowsF.filter(function(r){return r.margem>=0&&r.margem<margMin}).length+' abaixo da margem mínima</div></div></div></div>';
+    H+='<div class="card"><div class="tblwrap"><table class="tbl dir-tbl"><thead><tr><th>Venda · obra</th><th>Linha</th><th class="text-end">Contratado</th><th class="text-end">Avanço</th><th class="text-end">Receita</th><th class="text-end">Custo produto</th><th class="text-end">Garantia</th><th class="text-end">Despesas obra</th><th class="text-end">Impostos+com.</th><th class="text-end">Lucro</th><th class="text-end">Margem</th><th class="text-end">Plano</th></tr></thead><tbody>'
+      +rowsF.map(function(r){return '<tr class="rowlink" style="cursor:pointer" onclick="location.hash=\'#/fobras/'+E(r.o.id)+'\'"><td class="l"><b>'+E(r.nome)+'</b></td><td>'+E(r.uni)+'</td><td class="text-end">'+R$(r.contratado)+'</td><td class="text-end">'+P1(r.av)+'</td><td class="text-end">'+R$(r.receita)+'</td><td class="text-end">'+R$(r.produto)+'</td><td class="text-end">'+(r.gar?R$(r.gar):'—')+'</td><td class="text-end">'+R$(r.despesas)+'</td><td class="text-end">'+R$(r.impCom)+'</td><td class="text-end" style="font-weight:700;color:'+(r.lucro<0?'#dc3545':'inherit')+'">'+R$(r.lucro)+'</td><td class="text-end">'+(r.receita?'<span class="dir-chip '+(r.margem<0?'bad':r.margem<margMin?'warn':'ok')+'">'+P1(r.margem)+'</span>':'—')+'</td><td class="text-end sub">'+P1(r.margemPlano)+'</td></tr>'}).join('')
+      +'</tbody></table></div></div>'}
+  else H+='<div class="card place p-4">Nenhuma venda neste recorte.</div>';
+
+  /* ── 3. centros de custo ── */
+  H+=sec('Relatório 3','Lucratividade dos centros de custo — '+ymLb(ym),'#/dre','Financeiro › DRE');
+  H+='<div class="dir-formula">resultado da linha = receita − custos diretos dela (produto, técnicos, viagens, terceiros, comissões, RT) &nbsp;·&nbsp; <b>gastos compartilhados</b> (administrativo, aluguel, softwares, contabilidade…) ficam no total da empresa, não são rateados</div>';
+  var unis=unidades();var cons=d0;var linhas=unis.filter(function(u){return LINHAS.indexOf(u)>=0});var outras=unis.filter(function(u){return LINHAS.indexOf(u)<0});
+  var cc=linhas.map(function(u){var d=safe('DRE '+u,function(){return dre(ym,u)});return {u:u,d:d}});
+  if(cons){var somaMC=r2(cc.reduce(function(a,x){return a+(x.d?x.d.mc:0)},0));var outrasMC=r2(cons.mc-somaMC);var shared=r2((+cons.fixas||0)+(+cons.financeiro||0));
+    var itemsCC=cc.map(function(x){return {x:x.u,y:x.d?x.d.mc:0,color:(x.d&&x.d.mc<0)?'#dc3545':'#0d6efd',href:'#/dre/'+encodeURIComponent(x.u),title:x.u+' · receita '+R$(x.d?x.d.receita:0)+' · resultado da linha '+R$(x.d?x.d.mc:0)}});
+    H+='<div class="row g-3 mb-3"><div class="col-12"><div class="card p-3"><b>Resultado de cada linha</b> <span class="sub">· antes dos gastos compartilhados</span>'+svgBarsV(itemsCC,{h:150})+'</div></div><div class="col-12"><div class="card"><div class="tblwrap"><table class="tbl dir-tbl"><thead><tr><th>Centro de custo</th><th class="text-end">Receita</th><th class="text-end">Custos diretos</th><th class="text-end">Resultado</th><th class="text-end">%</th></tr></thead><tbody>'
+      +cc.map(function(x){var d=x.d||{};var direto=r2((+d.cmv||0)+(+d.diretos||0)+(+d.variaveis||0)+(+d.deducoes||0));return '<tr class="rowlink" style="cursor:pointer" onclick="location.hash=\'#/dre/'+E(encodeURIComponent(x.u))+'\'"><td><b>'+E(x.u)+'</b></td><td class="text-end">'+R$(d.receita||0)+'</td><td class="text-end">'+R$(direto)+'</td><td class="text-end" style="font-weight:700;color:'+((d.mc||0)<0?'#dc3545':'inherit')+'">'+R$(d.mc||0)+'</td><td class="text-end sub">'+(d.receita?P1(d.mc/d.receita):'—')+'</td></tr>'}).join('')
+      +(Math.abs(outrasMC)>=0.05?'<tr><td class="sub">'+E(outras.join(' / ')||'Outras')+' (linhas fora das quatro)</td><td></td><td></td><td class="text-end sub">'+R$(outrasMC)+'</td><td></td></tr>':'')
+      +'<tr style="border-top:2px solid var(--bd)"><td><b>Soma das linhas</b></td><td class="text-end">'+R$(cons.receita)+'</td><td></td><td class="text-end"><b>'+R$(cons.mc)+'</b></td><td class="text-end sub">'+P1(cons.mcPct)+'</td></tr>'
+      +'<tr><td>− Gastos compartilhados <span class="sub">(fixos '+R$(cons.fixas)+' + financeiro '+R$(cons.financeiro)+')</span></td><td></td><td></td><td class="text-end">'+R$(-shared)+'</td><td></td></tr>'
+      +'<tr style="font-weight:800"><td>= Resultado da empresa</td><td></td><td></td><td class="text-end" style="color:'+(cons.res<0?'#dc3545':'#198754')+'">'+R$(cons.res)+'</td><td class="text-end sub">'+(cons.receita?P1(cons.res/cons.receita):'—')+'</td></tr></tbody></table></div></div></div></div>'}
+  else H+='<div class="card place p-4">DRE indisponível para '+E(ymLb(ym))+'.</div>';
+
+  /* ── Comercial ── */
+  H+=sec('Comercial','Vendas, meta e funil','#/gestao','Comercial › Gestão');
+  var N=S.db.negociacoes||[];var jogo=N.filter(function(n){return !n.resultado}),fech=N.filter(function(n){return n.resultado==='fechada'}),perd=N.filter(function(n){return n.resultado==='perdida'});var dec=fech.length+perd.length;
+  var ano=String(mt.ano||hoje().slice(0,4));var vAno=vendidasNoAno(ano);var vendAno=vAno.reduce(function(a,p){return a+Mtot(p)},0);var pipeVal=r2(jogo.reduce(function(a,n){return a+(+n.valor||0)},0));var prev=(S.db.propostas||[]).filter(function(p){return p.estado==='em_prevendas'}).length;
+  H+='<div class="dir-grid">'
+    +K('Vendido no ano '+ano,R0(vendAno),vAno.length+' propostas'+(mt.empresa?' · meta '+R0(mt.empresa)+' ('+P1(vendAno/mt.empresa)+')':''),'#/gestao',!mt.empresa?'mute':vendAno/mt.empresa>=(new Date().getMonth()+1)/12?'ok':'warn')
+    +K('Negociações em jogo',N0(jogo.length),pipeVal?R0(pipeVal)+' em propostas abertas':'pipeline aberto','#/pipeline','mute')
+    +K('Conversão',dec?P1(fech.length/dec):'—',fech.length+' fechadas / '+dec+' decididas','#/gestao',!dec?'mute':fech.length/dec>=0.35?'ok':'warn')
+    +K('Aguardando pré-vendas',N0(prev),'propostas paradas na validação','#/prevendas',prev>3?'warn':'ok')
+    +'</div>';
+  var cons2=mt.consultores||{};var porC={};vAno.forEach(function(p){(p.consultores||['—']).forEach(function(c){porC[c]=(porC[c]||0)+Mtot(p)/((p.consultores||[1]).length||1)})});
+  var norm=function(x){return String(x||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim()};var metaDe=function(c){if(cons2[c]!=null)return {k:c,m:+cons2[c]};var f=norm(c).split(' ')[0];var k=Object.keys(cons2).find(function(k){return norm(k).split(' ')[0]===f||norm(k).split(' ').indexOf(f)>=0});return k?{k:k,m:+cons2[k]}:{k:c,m:0}};
+  var merged={};Object.keys(porC).forEach(function(c){var md=metaDe(c);merged[md.k]=merged[md.k]||{c:md.k,v:0,m:md.m};merged[md.k].v=r2(merged[md.k].v+porC[c])});Object.keys(cons2).forEach(function(k){merged[k]=merged[k]||{c:k,v:0,m:+cons2[k]}});
+  var consRows=Object.keys(merged).map(function(k){var r=merged[k];r.p=r.m?r.v/r.m:0;return r}).sort(function(a,b){return b.v-a.v});
+  if(consRows.length)H+='<div class="card p-3 mb-3"><b>Vendido por consultor</b> <span class="sub">· '+ano+' · divisão igual quando a proposta tem dois consultores · barra = % da meta</span><div class="mt-2">'+consRows.map(function(r){return '<div class="d-flex align-items-center gap-2 py-1" style="font-size:13px"><div style="width:150px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+E(r.c)+'</div><div class="flex-grow-1 dir-bullet '+(r.m?(r.p>=1?'ok':r.p<0.5?'bad':''):'')+'"><i style="width:'+Math.min(100,Math.round(r.p*100))+'%"></i></div><div style="width:200px;text-align:right">'+R0(r.v)+(r.m?' <span class="sub">de '+R0(r.m)+' · '+P1(r.p)+'</span>':' <span class="sub">sem meta</span>')+'</div></div>'}).join('')+'</div></div>';
+
+  /* ── Estoque ── */
+  H+=sec('Estoque','O que temos, o que devemos, o que está parado','#/epainel','Estoque › Painel Geral');
+  var ep=safe('Painel do Estoque',function(){return scrape('epainel')});var dev=kpiFrom(ep,'O QUE DEVEMOS'),vdv=kpiFrom(ep,'ESTOQUE VENDÁVEL'),spp=kpiFrom(ep,'SEM PROPÓSITO'),nav=kpiFrom(ep,'NÃO ESTÁ À VENDA');var estC=safe('Estoque ao custo',function(){return FS.estoqueCusto()});
+  H+='<div class="dir-grid">'
+    +K('Estoque ao custo',estC==null?'—':R0(estC),'unidades à venda no inventário · entra no balanço','#/balanco','mute')
+    +K('Devemos aos clientes',dev?E(dev.v):'—',dev?E(dev.s):'','#/obrascompras',dev&&/a comprar/.test(dev.s)?'warn':'ok')
+    +K('Estoque vendável',vdv?E(vdv.v):'—',vdv?E(vdv.s):'','#/estoque','mute')
+    +K('Sem propósito',spp?E(spp.v):'—',spp?E(spp.s):'','#/semproposito',spp&&/^0 /.test(spp.v)?'ok':'warn')
+    +K('Não está à venda',nav?E(nav.v):'—',nav?E(nav.s):'','#/celula/terceiro','mute')
+    +'</div>';
+
+  /* ── Operação ── */
+  H+=sec('Operação','Obras em execução','#/copainel','Operação › Painel');
+  var cp=safe('Painel da Operação',function(){return scrape('copainel')});var k1=kpiFrom(cp,'EM ANDAMENTO'),k2=kpiFrom(cp,'ON HOLD'),k3=kpiFrom(cp,'CONCLUÍDAS'),k4=kpiFrom(cp,'PENDÊNCIAS ABERTAS'),k5=kpiFrom(cp,'ATIVIDADES ATRASADAS'),k6=kpiFrom(cp,'PRÓXIMOS 7 DIAS');
+  var isZ=function(k){return !k||/^0\b/.test(k.v)};
+  H+='<div class="dir-grid">'
+    +K('Obras em andamento',k1?E(k1.v):'—',k1?E(k1.s):'','#/obras','mute')
+    +K('On hold',k2?E(k2.v):'—',k2?E(k2.s):'','#/obras',isZ(k2)?'ok':'warn')
+    +K('Concluídas',k3?E(k3.v):'—',k3?E(k3.s):'','#/obras','mute')
+    +K('Pendências abertas',k4?E(k4.v):'—',k4?E(k4.s):'','#/pendencias',isZ(k4)?'ok':/[1-9]\d* urgente/.test(k4.s)?'bad':'warn')
+    +K('Atividades atrasadas',k5?E(k5.v):'—',k5?E(k5.s):'','#/cronogramas',isZ(k5)?'ok':'bad')
+    +K('Próximos 7 dias',k6?E(k6.v):'—',k6?E(k6.s):'','#/agendaobras','mute')
+    +'</div>';
+
+  /* ── Pós-venda ── */
+  H+=sec('Pós-venda','Chamados, garantia e o que ela custa','#/posvisao','Pós-venda › Visão geral');
+  var osAb=(S.db.os||[]).filter(function(x){return x.estado==='aberta'}).length;var fila=safe('Fila crítica',function(){var d=scrape('posfila');if(!d)return null;var b=Array.prototype.find.call(d.querySelectorAll('button'),function(x){return /^Todos \(/.test(x.textContent||'')});var m=b&&/\((\d+)\)/.exec(b.textContent);return m?+m[1]:null});
+  var tot=safe('Totais do Pós-venda',function(){return FPV.totais()});var g=tot&&tot.por&&tot.por.garantia,cb=tot&&tot.por&&tot.por.cobravel,ct=tot&&tot.por&&tot.por.contrato;
+  H+='<div class="dir-grid">'
+    +K('Solicitações abertas',N0(osAb),'chamados aguardando atendimento','#/posvenda',osAb>10?'warn':'ok')
+    +K('Fila crítica',fila==null?'—':N0(fila),'UniFi offline · Savant offline · falha de energia','#/posfila',fila==null?'mute':fila>0?'warn':'ok')
+    +K('Garantia custou',g?R0(g.custo):'—',g?g.n+' OS em garantia · custo cai na obra original':'','#/posresultado',g&&g.custo>0?'warn':'ok')
+    +K('Pós-venda cobrável',cb?R0(cb.receita):'—',cb?cb.n+' OS · custo '+R0(cb.custo)+' · resultado '+R0(cb.receita-cb.custo):'','#/posresultado',!cb?'mute':cb.receita-cb.custo>=0?'ok':'bad')
+    +K('Contratos de manutenção',ct?N0(ct.n)+' OS':'—',ct?'custo '+R0(ct.custo)+' coberto por plano':'','#/posresultado','mute')
+    +'</div>';
+
+  /* ── Pessoas ── */
+  H+=sec('Pessoas','A equipe se paga?','#/rh','Financeiro › RH');
+  var folha=S.db.folha||[];var enc=p.encargos||{};var encPct=((+enc.inss||0)+(+enc.fgts||0)+(+enc.terc||0))/100;var custoPessoa=function(f){return r2((+f.salario||0)*(f.regime==='CLT'?1+encPct:1))};
+  var totFolha=r2(folha.reduce(function(a,f){return a+custoPessoa(f)},0));var rate=(typeof RATE==='object'&&RATE)?RATE:{};var aps=(S.db.apontamentos||[]).filter(function(a){return ymOf(a.data)===ym});
+  var tecs=folha.filter(function(f){return f.classe==='cmv'||/t[eé]cnic|instala|program|projetista/i.test(String(f.cargo||''))});
+  var tecRows=tecs.map(function(f){var mine=aps.filter(function(a){return a.tecnico===f.nome});var dias=r2(mine.reduce(function(a,x){return a+(+x.dias||0)},0));var prod=r2(mine.reduce(function(a,x){var rt=rate[x.disc]||rate.instalacao||{venda:0};return a+(+x.dias||0)*(+rt.venda||0)},0));return {f:f,dias:dias,prod:prod,custo:custoPessoa(f),ok:prod>=custoPessoa(f)}});
+  H+='<div class="dir-grid">'
+    +K('Pessoas na folha',N0(folha.length),folha.filter(function(f){return f.regime==='CLT'}).length+' CLT · '+folha.filter(function(f){return f.regime!=='CLT'}).length+' PJ','#/rh','mute')
+    +K('Custo mensal da equipe',R0(totFolha),'salários + encargos ('+P1(encPct)+' sobre CLT)','#/rh','mute')
+    +K('Diárias apontadas em '+ymLb(ym),N0(r2(aps.reduce(function(a,x){return a+(+x.dias||0)},0))),aps.length+' apontamentos em obra','#/fobras',aps.length?'ok':'warn')
+    +K('Folha ÷ margem de contribuição',d0&&d0.mc>0?P1(totFolha/d0.mc):'—',d0?'margem do mês '+R0(d0.mc):'','#/dre',!d0||d0.mc<=0?'bad':totFolha/d0.mc<=0.6?'ok':'warn')
+    +'</div>';
+  if(tecRows.length)H+='<div class="card"><div class="tblwrap"><table class="tbl dir-tbl"><thead><tr><th>Técnico / projetista</th><th>Cargo</th><th class="text-end">Custo no mês</th><th class="text-end">Diárias apontadas</th><th class="text-end">Produção (diária × preço vendido)</th><th class="text-end">Cobre o próprio custo?</th></tr></thead><tbody>'
+    +tecRows.sort(function(a,b){return b.prod-a.prod}).map(function(r){return '<tr><td class="l"><b>'+E(r.f.nome)+'</b></td><td class="sub">'+E(r.f.cargo||'')+'</td><td class="text-end">'+R$(r.custo)+'</td><td class="text-end">'+N0(r.dias)+'</td><td class="text-end">'+R$(r.prod)+'</td><td class="text-end"><span class="dir-chip '+(r.dias?(r.ok?'ok':'bad'):'warn')+'">'+(r.dias?(r.ok?'sim · '+P1(r.prod/r.custo):'não · '+P1(r.prod/r.custo)):'sem apontamento no mês')+'</span></td></tr>'}).join('')
+    +'</tbody></table></div><div class="sub p-2">Produção = diárias apontadas na obra × preço de venda da diária da disciplina (Base › Serviços & diárias). Sem apontamento, não há como dizer — é achado, não veredito.</div></div>';
+
+  /* ── metas + quem vê ── */
+  H+=sec('Controle','Metas que pintam as luzes deste painel','#/parametros','Financeiro › Parâmetros');
+  H+='<div class="row g-3"><div class="col-lg-6"><div class="card p-3 dir-meta"><table class="tbl" style="font-size:13px">'
+    +'<tr><td>Caixa mínimo (R$)</td><td class="text-end"><input class="form-control form-control-sm d-inline-block" value="'+E(cxMin)+'" onchange="DIRX.setMeta(\'caixaMinimo\',this.value)"></td></tr>'
+    +'<tr><td>Margem mínima por venda (%)</td><td class="text-end"><input class="form-control form-control-sm d-inline-block" value="'+E(+p.margemMinima||30)+'" onchange="DIRX.setMeta(\'margemMinima\',this.value)"></td></tr>'
+    +'<tr><td>Meta de vendas do ano '+E(ano)+' (R$)</td><td class="text-end"><input class="form-control form-control-sm d-inline-block" style="width:150px" value="'+E(+mt.empresa||0)+'" onchange="DIRX.setMeta(\'metaEmpresa\',this.value)"></td></tr>'
+    +'</table><div class="sub">Verde / amarelo / vermelho em cada cartão vêm destes três números e das regras de cada departamento. Metas por consultor ficam em Comercial › Gestão.</div></div></div>';
+  var qv=quemVe();var cand=(S.db.usuarios||[]).filter(function(u){return u.ativo!==false&&!qv.some(function(x){return x.u.login===u.login})});
+  H+='<div class="col-lg-6"><div class="card p-3"><b>Quem vê este painel</b><div class="sub mb-2">perfis Diretoria e TI, mais quem for autorizado pessoalmente</div>'
+    +(qv.length?'<div style="font-size:13px">'+qv.map(function(x){return '<div class="d-flex justify-content-between align-items-center py-1" style="border-top:1px solid var(--bd)"><span>'+E(x.u.nome)+' <span class="sub">· '+E((UQ.perfil(x.u.perfil)||{}).nome||x.u.perfil)+(x.exc?' · autorização individual':'')+'</span></span>'+(x.exc?'<button class="btn-soft" style="font-size:11px;padding:2px 8px" onclick="DIRX.revogar(\''+E(x.u.login)+'\')">remover</button>':'')+'</div>'}).join('')+'</div>':'<div class="sub">(modelo de permissões não carregado)</div>')
+    +(window.UQ&&cand.length?'<div class="d-flex gap-2 align-items-center mt-2"><select class="form-select form-select-sm" style="max-width:320px" onchange="DIRX.autorizar(this)"><option value="">Autorizar outra pessoa…</option>'+cand.map(function(u){return '<option value="'+E(u.login)+'">'+E(u.nome)+' — '+E((UQ.perfil(u.perfil)||{}).nome||u.perfil)+'</option>'}).join('')+'</select></div>':'')
+    +'</div></div></div>';
+  return '<div class="dir-wrap">'+warnCards()+H+'</div>'};
+
+try{renderNav()}catch(e){}
+try{if(/^#\/diretoria/.test(location.hash))render()}catch(e){}
+})();
+</script>
+
+<!-- DIRETORIA-LAYER:end -->
+
 <!-- SYSTAAG review layer · self-contained · injected before </body> · every id/class is prefixed staag-rev- -->
 <style id="staag-rev-style">
 #staag-rev-root{--sr-blue:#2563eb;--sr-bg:#fff;--sr-fg:#111827;--sr-mut:#6b7280;--sr-line:#e5e7eb;--sr-soft:#f3f4f6;font-family:"Plus Jakarta Sans",system-ui,-apple-system,sans-serif;font-size:14px;line-height:1.4;color:var(--sr-fg)}
