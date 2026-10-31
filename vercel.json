@@ -1,8 +1,4 @@
 {
-  "rewrites": [
-    { "source": "/revisao", "destination": "/revisao.html" },
-    { "source": "/proof", "destination": "/proof/index.html" }
-  ],
   "headers": [
     { "source": "/(.*)", "headers": [ { "key": "x-content-type-options", "value": "nosniff" } ] },
     { "source": "/index.html", "headers": [ { "key": "cache-control", "value": "public, max-age=0, must-revalidate" } ] }

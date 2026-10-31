@@ -1,5 +1,1 @@
-node_modules
-dev/.blob
 .vercel
-dev/.admin_token
-.tut/
