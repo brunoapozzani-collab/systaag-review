@@ -530,10 +530,12 @@ function pedidos(){return C('ped',()=>{
 /* 3 · estoque, o que devemos aos clientes e cada lugar */
 function estoq(){return C('estq',()=>{
   const us=T(()=>nodeUnits(null),null)||[];const canon=T(()=>FX2.estoqueCanon(),null)||{total:us.length,nossas:us.length,custo:sum(us,custoU)};
-  const lugarDe=u=>{const p=T(()=>L.path(u.loc_id),[])||[];const n=p.map(x=>x&&x.nome).filter(Boolean);return n.length>1?n[1]:(n[0]||'Sem lugar')};
-  const terrDe=u=>{const p=T(()=>L.path(u.loc_id),[])||[];return (p[0]&&p[0].nome)||''};
-  const g={};us.forEach(u=>{const k=lugarDe(u);(g[k]=g[k]||{nome:k,terr:terrDe(u),us:[],nossas:[],cons:[]});g[k].us.push(u);(u.natureza==='consignado'?g[k].cons:g[k].nossas).push(u)});
-  const lugares=Object.values(g).map(x=>Object.assign(x,{v:sum(x.nossas,custoU)})).sort((a,b)=>b.v-a.v||b.us.length-a.us.length);
+  /* os lugares vêm da Base › Locais (todo N2 ativo, com ou sem unidade); as unidades só preenchem a contagem */
+  const LOC=S.db.locais||[];const n1s=LOC.filter(l=>l.nivel===1&&!l.inativo),n2s=LOC.filter(l=>l.nivel===2&&!l.inativo);
+  const g={};const mk=(id,nome,terr)=>(g[id]=g[id]||{id,nome,terr,us:[],nossas:[],cons:[]});
+  n1s.forEach(a=>n2s.filter(b=>b.pai===a.id).forEach(b=>mk(b.id,b.nome,a.nome)));
+  us.forEach(u=>{const p=T(()=>L.path(u.loc_id),[])||[];const b=p[1]||p[0];const grp=b?mk(b.id,b.nome,(p[0]||{}).nome||''):mk('_sem','Sem lugar','');grp.us.push(u);(u.natureza==='consignado'?grp.cons:grp.nossas).push(u)});
+  const lugares=Object.values(g).map(x=>Object.assign(x,{v:sum(x.nossas,custoU)}));
   /* o que devemos aos clientes — o MESMO motor do Estoque › Painel Geral (CANON / prodInv): por produto e por inventário,
      ninguém reserva unidade; separado = unidades com dono (separação, montagem, kit) */
   const cu=pid=>+((getRow('produtos',pid)||{}).custo)||0;const QR=T(()=>Q.compute().rows,[])||[];const invs=T(()=>INVS(),[])||[];
@@ -549,10 +551,11 @@ function estoq(){return C('estq',()=>{
     req:cn?+cn.req||0:null,cli:cn?+cn.cliente||0:null,cnDev:cn?(+cn.alocado||0)+(+cn.pedido||0):null}})}
 
 /* 4 · lucro por linha — o motor da DRE (V124DIR.dre = FS.dre do Financeiro) */
-const LIN=['TAAG','Acústica','Focal','Pós-venda'];
+/* as linhas de negócio vêm da Base › Listas & regras › frentes (as que vendem); Corporativo é o compartilhado */
+const LIN_=()=>{const f=(S.db.listas&&S.db.listas.frentes)||[];const xs=f.filter(x=>x&&x.venda!==false&&x.k!=='corporativo').map(x=>x.v).filter(Boolean);return xs.length?xs:['TAAG','Acústica','Focal','Pós-venda']};
 function linhas(){return C('lin',()=>{
   const d=u=>T(()=>window.V124DIR.dre(VD.ym,u,''),null)||{receita:0,deducoes:0,cmv:0,diretos:0,variaveis:0,fixas:0,ebitda:0,tecnicos:0,viagens:0,terceiros:0,comissao:0,rt:0};
-  const ls=LIN.map(u=>{const x=d(u);const cust=r2((+x.deducoes||0)+(+x.cmv||0)+(+x.diretos||0)+(+x.variaveis||0));return {u,x,rec:r2(x.receita),cust,desp:r2(x.fixas),res:r2(x.ebitda)}});
+  const ls=LIN_().map(u=>{const x=d(u);const cust=r2((+x.deducoes||0)+(+x.cmv||0)+(+x.diretos||0)+(+x.variaveis||0));return {u,x,rec:r2(x.receita),cust,desp:r2(x.fixas),res:r2(x.ebitda)}});
   const adm=d('Corporativo');const tot=d('');
   const soma=r2(sum(ls,l=>l.res)+r2(adm.ebitda));
   return {ls,adm:{x:adm,desp:r2(-adm.ebitda)},tot:r2(tot.ebitda),totX:tot,soma,dif:r2(r2(tot.ebitda)-soma)}})}
@@ -609,7 +612,7 @@ function bloco3(){if(!AC.est())return '';const e=estoq();if(!e)return '';const c
    </div></section>`}
 
 function bloco4(){if(!AC.fin())return '';const l=linhas();if(!l)return '';
-  const cor={'TAAG':'var(--u-taag)','Acústica':'var(--u-acu)','Focal':'var(--u-foc)','Pós-venda':'var(--u-pos)'};
+  const cor0={'TAAG':'var(--u-taag)','Acústica':'var(--u-acu)','Focal':'var(--u-foc)','Pós-venda':'var(--u-pos)'};const cor=new Proxy(cor0,{get:(t,k)=>t[k]||'#8a8984'});
   const mx=Math.max(1,...l.ls.map(x=>Math.abs(x.res)));
   const rows=l.ls.map(x=>`<tr class="click" onclick="V130_open('linha','${J(x.u)}')"><td><b><i class="vx-dot" style="background:${cor[x.u]}"></i>${E(x.u)}</b></td><td>${R$(x.rec)}</td><td>${R$(-x.cust)}</td><td>${R$(-x.desp)}</td><td class="${x.res<0?'neg':'pos'}"><b>${R$(x.res)}</b></td><td style="width:22%"><div class="vx-bar"><i style="width:${(Math.abs(x.res)/mx*100).toFixed(1)}%;background:${x.res<0?'#d03b3b':cor[x.u]}"></i></div></td></tr>`).join('');
   const soma=sum(l.ls,x=>x.res);
