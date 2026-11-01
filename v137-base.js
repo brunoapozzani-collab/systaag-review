@@ -56,4 +56,12 @@
           (em.folha||[]).forEach(r=>{if(r[k]!==v){r[k]=v;n++}});(em.usuarios||[]).forEach(r=>{if(r[ku]!==v){r[ku]=v;n++}});(em.pessoas||[]).forEach(r=>{if(r[k]!==v){r[k]=v;n++}})})});
       S.db._v137_cargo={em:new Date().toISOString().slice(0,10),n};if(n){try{save()}catch(e){}}}
   }catch(e){console.error('v137 cargo',e)}
+
+  /* 5 · dois custos, cada um com o seu nome (Bruno, 01/11): estoque = custo de compra; equipamento vendido = custo de catálogo */
+  try{
+    const ROT=[[/Custo unitário/g,'Custo de compra (un.)'],[/Custo total/g,'Custo de compra (total)'],[/Inventário ao custo /g,'Inventário ao custo de compra '],[/\(87 un\. nossas · Financeiro › Hoje\)/g,'(87 un. nossas · Financeiro › Hoje)']];
+    ['estoque','epainel','lugar','produto'].forEach(k=>{if(typeof SCREENS[k]!=='function')return;const _f=SCREENS[k];SCREENS[k]=function(){let h=_f.apply(this,arguments);if(typeof h!=='string')return h;ROT.forEach(([re,to])=>{h=h.replace(re,to)});return h}});
+    const dom=()=>{try{if(!/^#\/(estoque|lugar|produto|epainel)/.test(location.hash||''))return;document.querySelectorAll('#main th').forEach(th=>{const t=th.textContent.trim();if(/^custo unitário$/i.test(t))th.textContent='Custo de compra (un.)';else if(/^custo total$/i.test(t))th.textContent='Custo de compra (total)'})}catch(e){}};
+    const _rm5=window.renderMain;window.renderMain=function(){const r=_rm5.apply(this,arguments);dom();setTimeout(dom,50);return r};
+  }catch(e){console.error('v137 custos',e)}
 })();
