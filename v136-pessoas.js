@@ -41,7 +41,7 @@
       if(q!=null)topo=topo.replace(/<span class="chip info">\d+ membros<\/span>/,'<span class="chip info">'+q+' pessoas</span>');
       return topo+corpo}}
   /* o renderMain da camada de permissões desenha a Equipe direto (telaEquipe), sem passar por SCREENS.equipe */
-  try{const _rm=window.renderMain;window.renderMain=function(){const r=_rm.apply(this,arguments);try{if((location.hash||'').indexOf('#/equipe')===0){const m=document.getElementById('main');if(m&&m.innerHTML.indexOf('data-v136h')<0){const h=SCREENS.equipe();if(typeof h==='string'&&h.indexOf('data-v136h')>=0)m.innerHTML=h}}}catch(e){console.error('v136 equipe',e)}return r}}catch(e){}
+  try{const _rm=window.renderMain;window.renderMain=function(){const r=_rm.apply(this,arguments);try{if(/^#\/equipe(\/|$)/.test(location.hash||'')){const m=document.getElementById('main');if(m&&m.innerHTML.indexOf('data-v136h')<0){const h=SCREENS.equipe();if(typeof h==='string'&&h.indexOf('data-v136h')>=0)m.innerHTML=h}}}catch(e){console.error('v136 equipe',e)}return r}}catch(e){}
   try{if(window.UQ&&typeof UQ.novo==='function'){UQ.novo=function(){novoColabOpen=true;if(location.hash.indexOf('#/equipe')!==0&&location.hash.indexOf('#/dbpessoas')!==0)location.hash='#/dbpessoas';else render()}}}catch(e){}
 
   /* ───────── 3. CRM › Configurações → Base › Relacionamento (CRM) ───────── */

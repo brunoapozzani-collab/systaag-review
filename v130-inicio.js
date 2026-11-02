@@ -355,7 +355,8 @@ function gaveta(k,a){
 /* ─────────────────────────────── BLOCOS ─────────────────────────────── */
 const kp=(lb,v,s,on,cls,id)=>`<div class="card k"${id?` id="${id}"`:''} onclick="${on}" role="button" tabindex="0"><span class="go">Ver detalhes ›</span><div class="lb">${lb}</div><div class="v ${cls||''}">${v}</div><div class="s">${s||''}</div></div>`;
 const tile=(lb,v,on,cls,sub)=>`<div class="vx-tile" onclick="${on}" role="button" tabindex="0"><b class="${cls||''}">${v}</b><span>${lb}</span>${sub?`<em>${sub}</em>`:''}</div>`;
-const secHead=(n,t,q,link)=>`<div class="vx-sh"><div><div class="vx-n">${n}</div><h2>${t}</h2><div class="q">${q}</div></div>${link?`<a class="vx-lk" href="javascript:void 0" onclick="V130_go('${J(link[1])}')">${E(link[0])} ›</a>`:''}</div>`;
+const D=(lb,oc)=>`<a class="vx-door" href="javascript:void 0" onclick="${oc}">${lb}</a>`;
+const secHead=(n,t,q,link)=>`<div class="vx-sh"><div><a class="vx-n" href="javascript:void 0" onclick="this.closest('section').scrollIntoView({behavior:'smooth',block:'start'})" title="Ir para esta seção">${n}</a><h2>${t}</h2><div class="q">${q}</div></div>${link?`<a class="vx-lk" href="javascript:void 0" onclick="V130_go('${J(link[1])}')">${E(link[0])} ›</a>`:''}</div>`;
 
 function barra(){
   const ms=MESES();const cur=ymOf(hoje());
@@ -506,11 +507,16 @@ function fluxo(){return C('flx',()=>{
   const d30=dias.slice(0,31);const menor=linhas.reduce((a,x)=>x.saldo<a.saldo?x:a,linhas[0]||{saldo:c0});
   return {c0,dias,linhas,fim,fimSem,ent30:sum(d30,x=>x.ent),sai30:sum(d30,x=>x.sai),s30:d30.length?d30[d30.length-1].saldo:c0,menor,neg:linhas.find(x=>x.saldo<0)}})}
 
+/* o plano de uma proposta do Pós-venda (AT / plano de serviços) vem do motor do Pós-venda (COP.pos.calc), não do plano de itens do Comercial */
+try{if(typeof FN!=='undefined'&&FN&&typeof FN.propPlano==='function'&&!FN.propPlano.__v137){const _pp=FN.propPlano;const pv=p=>p&&p.linha==='posvenda'&&p.at;
+  FN.propPlano=function(p){if(pv(p)){const tot=T(()=>+M.total(p)||0,0);const c=T(()=>COP.pos.calc(p.at),null);const disp=c?((+c.disp||0)+(+c.tc||0))/100:0;const liq=c?(+c.total||0)/100:tot;const imp=Math.max(0,r2(tot-disp-liq));
+      const dias={};try{(typeof DISC!=='undefined'?DISC:[]).forEach(k=>dias[k]=0)}catch(e){}const moC=Math.round(disp*100)/100;return {tot,equipV:0,equipC:0,equipR:0,servV:tot,imp,com:0,rt:0,moC,moR:0,dias,frete:0,extras:0,custo:Math.round((moC+imp)*100)/100,liq,posvenda:true}}return _pp.apply(this,arguments)};FN.propPlano.__v137=true}}catch(e){console.error('v130 pv plano',e)}
+
 /* 2 · lucro por pedido — os números do motor da obra (FX1/FN.obra, os mesmos do Resultado por obra) */
 function pedidos(){return C('ped',()=>{
   const P=(S.db.propostas||[]).filter(p=>VEND.includes(p.estado)&&ymOf(p.vendida_em)===VD.ym);
   const out=[];const obras={};
-  P.forEach(p=>{const o=p.obra_id?getRow('obras',p.obra_id):null;
+  P.forEach(p=>{const o=(p.linha==='posvenda'&&p.at)?null:(p.obra_id?getRow('obras',p.obra_id):null); /* Pós-venda: o plano vem do motor do Pós-venda (FN.propPlano), não da obra */
     if(o){if(!obras[o.id]){const r=T(()=>FN.obra(o),null);const xs=r&&r.porProposta||[];const g=T(()=>FPV.garantiaDaObra(o.id),{novo:0,total:0});obras[o.id]={r,xs,vT:sum(xs,x=>x.v),g}}
       const ob=obras[o.id];const x=(ob.xs||[]).find(y=>y.p&&y.p.id===p.id);if(!x||!ob.r){out.push({p,o,falta:true,venda:Mtot(p)});return}
       const sh=ob.vT>0?x.v/ob.vT:1;const so=ob.xs.length===1;
@@ -521,7 +527,7 @@ function pedidos(){return C('ped',()=>{
       const L={p,o,venda:r2(x.v),imp:r2(x.imp),prod:r2(prod),com:r2((+x.com||0)+(+x.rt||0)),obra:r2(mo+(+x.frete||0)+extras),gar,mo:r2(mo),frete:r2(x.frete),extras,comV:r2(x.com),rtV:r2(x.rt),av:x.av};
       L.lucro=r2(L.venda-L.imp-L.prod-L.com-L.obra-L.gar);L.marg=L.venda?L.lucro/L.venda:0;out.push(L);return}
     const pl=T(()=>FN.propPlano(p),null);if(!pl){out.push({p,o:null,falta:true,venda:Mtot(p)});return}
-    const L={p,o:null,venda:r2(pl.tot),imp:r2(pl.imp),prod:r2(pl.equipC),com:r2((+pl.com||0)+(+pl.rt||0)),obra:r2((+pl.moC||0)+(+pl.frete||0)),gar:0,mo:r2(pl.moC),frete:r2(pl.frete),extras:0,comV:r2(pl.com),rtV:r2(pl.rt),av:null};
+    const L={p,o:(p.obra_id?getRow('obras',p.obra_id):null)||null,venda:r2(pl.tot),imp:r2(pl.imp),prod:r2(pl.equipC),com:r2((+pl.com||0)+(+pl.rt||0)),obra:r2((+pl.moC||0)+(+pl.frete||0)),gar:0,mo:r2(pl.moC),frete:r2(pl.frete),extras:0,comV:r2(pl.com),rtV:r2(pl.rt),av:null,pv:!!pl.posvenda};
     L.lucro=r2(L.venda-L.imp-L.prod-L.com-L.obra-L.gar);L.marg=L.venda?L.lucro/L.venda:0;out.push(L)});
   const ok=out.filter(x=>!x.falta);out.sort((a,b)=>(b.lucro||0)-(a.lucro||0));
   const tot={};['venda','imp','prod','com','obra','gar','lucro'].forEach(k=>tot[k]=sum(ok,x=>x[k]));tot.marg=tot.venda?tot.lucro/tot.venda:0;
@@ -560,29 +566,45 @@ function linhas(){return C('lin',()=>{
   const soma=r2(sum(ls,l=>l.res)+r2(adm.ebitda));
   return {ls,adm:{x:adm,desp:r2(-adm.ebitda)},tot:r2(tot.ebitda),totX:tot,soma,dif:r2(r2(tot.ebitda)-soma)}})}
 
+/* meta do ano por linha — a meta mora na Base (Listas & regras › Regras & metas); vendido no ano = o mesmo KPI().vendido_ano de Comercial › Propostas */
+function metas(){return C('meta',()=>{
+  const M_=S.db.metas||{};const ano=String((S.db.meta&&S.db.meta.ano)||M_.ano||new Date().getFullYear());
+  const fr=((S.db.listas&&S.db.listas.frentes)||[]).filter(x=>x&&x.venda!==false&&x.k!=='corporativo');
+  const vend=(S.db.propostas||[]).filter(p=>VEND.includes(p.estado)&&String(p.vendida_em||'').startsWith(ano));
+  const tot=p=>T(()=>M.total(p),0)||0;
+  const hoje_=new Date();const mesesRest=Math.max(1,12-hoje_.getMonth());const fracAno=(hoje_.getMonth()+hoje_.getDate()/30)/12;
+  const ls=fr.map(f=>{const meta=+M_[f.k]||0;const ps=vend.filter(p=>p.linha===f.k);const real=r2(sum(ps,tot));const falta=r2(Math.max(0,meta-real));
+    return {k:f.k,u:f.v,meta,real,n:ps.length,pct:meta?real/meta:0,falta,ritmo:r2(falta/mesesRest),esperado:r2(meta*fracAno)}});
+  const metaEmp=+M_.empresa||(S.db.meta&&+S.db.meta.valor)||sum(ls,x=>x.meta);const realEmp=r2(sum(vend,tot));
+  const kpi=T(()=>KPI().vendido_ano,null);
+  return {ano,ls,metaEmp,realEmp,nEmp:vend.length,pctEmp:metaEmp?realEmp/metaEmp:0,faltaEmp:r2(Math.max(0,metaEmp-realEmp)),ritmoEmp:r2(Math.max(0,metaEmp-realEmp)/mesesRest),mesesRest,fracAno,kpi,okKpi:kpi==null||Math.abs(Math.round(realEmp)-kpi)<=1,okSoma:Math.abs(sum(ls,x=>x.meta)-metaEmp)<0.01}})}
+
 /* ─────────── os blocos ─────────── */
 /* a ponte com o Financeiro › Hoje: os mesmos 30 dias (hoje até hoje+30), os mesmos títulos */
 function ponteFin(f){const r=T(()=>FS.rec('30d'),null),p=T(()=>FS.pag('30d'),null);if(!r||!p)return '';const d30=f.dias.slice(0,31);
   const tit=r2(sum(d30,x=>x.pagV)),fixo=r2(sum(d30,x=>x.fixo)),part=r2(sum(d30,x=>x.part));
   const fl=(p.rows||[]).filter(l=>['fixo','folha'].includes(l.origem));const tf=r2(sum(fl,l=>+l.valor||0));
   const okE=Math.abs(r2(f.ent30)-r2(r.total))<0.01,okS=Math.abs(r2(r2(p.total)-tf+fixo+part)-r2(f.sai30))<0.01&&Math.abs(r2(p.total-tf)-tit)<0.01;
-  return `<div class="vx-ponte">Entra em 30 dias ${R$(f.ent30)} ${okE?'<span class="ok">✓ o mesmo “A receber 30 dias” do Financeiro › Hoje</span>':'<span class="bad">≠ '+R$(r.total)+' no Financeiro › Hoje</span>'}<br>Sai em 30 dias ${R$(f.sai30)} = ${R$(p.total)} “A pagar 30 dias” do Financeiro › Hoje − ${R$(tf)} contas fixas e folha já lançadas + ${R$(fixo)} fixos e folha do período, dia a dia${part?' + '+R$(part)+' comissões e RT previstas':''} ${okS?'<span class="ok">✓</span>':'<span class="bad">não fecha</span>'}</div>`}
+  return `<div class="vx-ponte">Entra em 30 dias ${D(R$(f.ent30),"V130_open('flx30','ent')")} ${okE?'<span class="ok">✓ o mesmo “A receber 30 dias” do Financeiro › Hoje</span>':'<span class="bad">≠ '+R$(r.total)+' no Financeiro › Hoje</span>'}<br>Sai em 30 dias ${D(R$(f.sai30),"V130_open('flx30','sai')")} = ${D(R$(p.total),"V130_go('#/pagar/30d')")} “A pagar 30 dias” do Financeiro › Hoje − ${D(R$(tf),"V130_go('#/pagar/30d')")} contas fixas e folha já lançadas + ${D(R$(fixo),"V130_open('flx30','sai')")} fixos e folha do período, dia a dia${part?' + '+D(R$(part),"V130_go('#/comissoes')")+' comissões e RT previstas':''} ${okS?'<span class="ok">✓</span>':'<span class="bad">não fecha</span>'}</div>`}
 function bloco1(){if(!AC.fin())return '';const f=fluxo();if(!f)return '';
   const W=1000,H=200,L_=70,R_=16,Tp=16,B=26;const pts=[{lb:'hoje',s:f.c0}].concat(f.linhas.map(x=>({lb:x.curto,s:x.saldo,x})));
   const ys=pts.map(p=>p.s).concat([0]);let lo=Math.min(...ys),hi=Math.max(...ys);if(hi===lo)hi=lo+1;const pad=(hi-lo)*.1;hi+=pad;lo=lo<0?lo-pad:0;
   const sx=i=>L_+(W-L_-R_)*i/(pts.length-1||1),sy=v=>Tp+(H-Tp-B)*(1-(v-lo)/(hi-lo));
   const path=pts.map((p,i)=>(i?'L':'M')+sx(i).toFixed(1)+' '+sy(p.s).toFixed(1)).join(' ');
   const xd=sx(31);
-  const svg=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Saldo de caixa: 30 dias e depois semanas">${[lo,(lo+hi)/2,hi].map(v=>`<line class="gl" x1="${L_}" x2="${W-R_}" y1="${sy(v).toFixed(1)}" y2="${sy(v).toFixed(1)}"/><text x="${L_-8}" y="${(sy(v)+4).toFixed(1)}" text-anchor="end">${E(Rk(v))}</text>`).join('')}${lo<0?`<line x1="${L_}" x2="${W-R_}" y1="${sy(0)}" y2="${sy(0)}" stroke="#d03b3b" stroke-dasharray="5 4"/>`:''}<line x1="${xd}" x2="${xd}" y1="${Tp}" y2="${H-B}" stroke="var(--rx-sub)" stroke-dasharray="3 4" opacity=".5"/><text x="${xd-6}" y="${Tp+10}" text-anchor="end">dia a dia</text><text x="${xd+6}" y="${Tp+10}">semana a semana</text><path d="${path}" fill="none" stroke="#2a78d6" stroke-width="2.5"/>${pts.map((p,i)=>`<circle cx="${sx(i).toFixed(1)}" cy="${sy(p.s).toFixed(1)}" r="${p.x&&!p.x.dia?4:2.5}" fill="${p.s<0?'#d03b3b':'#2a78d6'}"/>`).join('')}${pts.map((p,i)=>(i<=31&&i%5===0&&i<31)||(p.x&&!p.x.dia&&(i-32)%2===0)?`<text x="${sx(i).toFixed(1)}" y="${H-8}" text-anchor="middle">${E(p.lb)}</text>`:'').join('')}${pts.map((p,i)=>{if(!p.x)return '';const x0=i===0?sx(0):(sx(i-1)+sx(i))/2,x1=i===pts.length-1?sx(i):(sx(i)+sx(i+1))/2;return `<rect x="${x0.toFixed(1)}" y="${Tp}" width="${Math.max(1,x1-x0).toFixed(1)}" height="${H-Tp-B}" fill="transparent" data-tip="${E('<b>'+p.x.lb+'</b><br>entra '+R$(p.x.ent)+'<br>sai '+R$(p.x.sai)+'<br>saldo '+R$(p.x.saldo))}" onclick="V130_open('flx',${i-1})"/>`}).join('')}</svg>`;
+  const svg=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Saldo de caixa: 30 dias e depois semanas">${[lo,(lo+hi)/2,hi].map(v=>`<line class="gl" x1="${L_}" x2="${W-R_}" y1="${sy(v).toFixed(1)}" y2="${sy(v).toFixed(1)}"/><text x="${L_-8}" y="${(sy(v)+4).toFixed(1)}" text-anchor="end">${E(Rk(v))}</text>`).join('')}${lo<0?`<line x1="${L_}" x2="${W-R_}" y1="${sy(0)}" y2="${sy(0)}" stroke="#d03b3b" stroke-dasharray="5 4"/>`:''}<line x1="${xd}" x2="${xd}" y1="${Tp}" y2="${H-B}" stroke="var(--rx-sub)" stroke-dasharray="3 4" opacity=".5"/><text x="${xd-6}" y="${Tp+10}" text-anchor="end">dia a dia</text><text x="${xd+6}" y="${Tp+10}">semana a semana</text><path d="${path}" fill="none" stroke="#2a78d6" stroke-width="2.5"/>${pts.map((p,i)=>`<circle cx="${sx(i).toFixed(1)}" cy="${sy(p.s).toFixed(1)}" r="${p.x&&!p.x.dia?4:2.5}" fill="${p.s<0?'#d03b3b':'#2a78d6'}"/>`).join('')}${pts.map((p,i)=>(i<=31&&i%5===0&&i<31)||(p.x&&!p.x.dia&&(i-32)%2===0)?`<text x="${sx(i).toFixed(1)}" y="${H-8}" text-anchor="middle">${E(p.lb)}</text>`:'').join('')}</svg>`;
+  /* as áreas clicáveis do gráfico são botões de verdade (HTML) por cima do SVG — não <rect> com onclick */
+  const hits=pts.map((p,i)=>{if(!p.x)return '';const x0=i===0?sx(0):(sx(i-1)+sx(i))/2,x1=i===pts.length-1?sx(i):(sx(i)+sx(i+1))/2;return `<button type="button" class="vx-hit" style="left:${(x0/W*100).toFixed(2)}%;width:${(Math.max(1,x1-x0)/W*100).toFixed(2)}%" title="${E(p.x.lb)}" aria-label="${E('Caixa em '+p.x.lb)}" data-tip="${E('<b>'+p.x.lb+'</b><br>entra '+R$(p.x.ent)+'<br>sai '+R$(p.x.sai)+'<br>saldo '+R$(p.x.saldo))}" onclick="event.stopPropagation();V130_open('flx',${i-1})"></button>`}).join('');
+  const grafico=`<div class="vx-chart" role="button" title="Abrir o fluxo de caixa" onclick="V130_go('#/fluxo')">${svg}<div class="vx-hits">${hits}</div></div>`;
   const rows=f.linhas.map((x,i)=>`<tr class="click${x.dia?'':' wk'}" onclick="V130_open('flx',${i})"><td>${x.dia?E(x.lb):'<b>Semana '+E(x.lb)+'</b>'}</td><td class="pos">${x.ent?R$(x.ent):'—'}</td><td class="neg">${x.sai?R$(-x.sai):'—'}</td><td class="${x.saldo<0?'neg':''}"><b>${R$(x.saldo)}</b></td></tr>`).join('');
   const fecha=Math.abs(f.fim-f.fimSem)<0.01;
   return `<section class="sec vx-s" id="v130_s_b1">${secHead('1','Fluxo de caixa','Contas a receber × contas a pagar: dia a dia nos próximos 30 dias, depois semana a semana até 13 semanas.',['Fluxo de caixa','#/fluxo'])}
    <div class="rx"><div class="card wide"><div class="vx-tiles">${tile('Caixa hoje',R$(f.c0),EXEC()?"VD_open('caixa')":"V130_go('#/fincontas')")}${tile('Entra em 30 dias',R$(f.ent30),"V130_open('flx30','ent')",'pos')}${tile('Sai em 30 dias',R$(-f.sai30),"V130_open('flx30','sai')",'neg')}${tile('Saldo em 30 dias',R$(f.s30),"V130_open('flx',30)",f.s30<0?'neg':'')}${tile('Saldo em 13 semanas',R$(f.fim),"V130_go('#/fluxo')",f.fim<0?'neg':'')}</div>
     ${ponteFin(f)}
     ${f.neg?`<div class="vx-warn">⚠ O caixa fica negativo em <b>${E(f.neg.lb)}</b> (${R$(f.neg.saldo)}).</div>`:''}
-    <div onclick="" style="margin-top:4px">${svg}</div>
+    <div style="margin-top:4px">${grafico}</div>
     <div class="vx-flx"><table class="no-filter"><thead><tr><th>Quando</th><th>Entra</th><th>Sai</th><th>Saldo</th></tr></thead><tbody>${rows}</tbody></table></div>
-    <div class="vx-ponte">Ponte: ${R$(f.c0)} + entradas − saídas = <b>${R$(f.fim)}</b> em 13 semanas ${fecha?'<span class="ok">✓ o mesmo do Financeiro › Fluxo de caixa</span>':'<span class="bad">≠ '+R$(f.fimSem)+' no Fluxo de caixa</span>'}. Clique num dia ou semana para ver os títulos.</div>
+    <div class="vx-ponte">Ponte: ${D(R$(f.c0),EXEC()?"VD_open('caixa')":"V130_go('#/fincontas')")} + entradas − saídas = <b>${D(R$(f.fim),"V130_go('#/fluxo')")}</b> em 13 semanas ${fecha?'<span class="ok">✓ o mesmo do Financeiro › Fluxo de caixa</span>':'<span class="bad">≠ '+R$(f.fimSem)+' no Fluxo de caixa</span>'}. Clique num dia ou semana para ver os títulos.</div>
    </div></div></section>`}
 
 function bloco2(){if(!AC.custo())return '';const d=pedidos();if(!d)return '';const t=d.tot;
@@ -592,8 +614,8 @@ function bloco2(){if(!AC.custo())return '';const d=pedidos();if(!d)return '';con
   return `<section class="sec vx-s" id="v130_s_b2">${secHead('3','Lucro por pedido de venda','Venda − impostos − custo do produto − comissão/RT − despesas da obra − garantia = lucro.')}
    <div class="rx"><div class="card wide"><div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2"><div class="pt" style="margin:0">Pedidos vendidos em <b>${ymLb(VD.ym)}</b> · valores previstos para a obra inteira (custo real quando já passou do planejado). Clique num pedido para ver a conta.</div>
     <select class="per" aria-label="Mês" onchange="VD.ym=this.value;V130.dr=null;V130_close()">${ms.map(m=>`<option value="${m}" ${m===VD.ym?'selected':''}>${ymLb(m)}${m===cur?' · este mês':''}</option>`).join('')}</select></div>
-    ${d.rows.length?`<div class="tw"><table class="no-filter vx-ped"><thead><tr><th>Pedido</th><th>Venda</th><th>Impostos</th><th>Custo do produto<div class="lead">catálogo</div></th><th>Comissão/RT</th><th>Despesas da obra</th><th>Garantia</th><th>Lucro</th></tr></thead><tbody>${rows}<tr class="tot"><td>Total · ${plural(d.ok.length,'pedido','pedidos')}</td><td>${R$(t.venda)}</td><td>${R$(-t.imp)}</td><td>${R$(-t.prod)}</td><td>${R$(-t.com)}</td><td>${R$(-t.obra)}</td><td>${t.gar?R$(-t.gar):'—'}</td><td class="${t.lucro<0?'neg':'pos'}"><b>${R$(t.lucro)}</b><div class="lead">${P1(t.marg)}</div></td></tr></tbody></table></div>
-    <div class="vx-ponte">${R$(t.venda)} − ${R$(t.imp)} − ${R$(t.prod)} − ${R$(t.com)} − ${R$(t.obra)} − ${R$(t.gar)} = <b>${R$(t.lucro)}</b> ${Math.abs(r2(t.venda-t.imp-t.prod-t.com-t.obra-t.gar)-t.lucro)<0.02?'<span class="ok">✓ fecha</span>':''}</div>`:'<div class="vazio">Nenhum pedido vendido neste mês.</div>'}
+    ${d.rows.length?`<div class="tw"><table class="no-filter vx-ped"><thead><tr><th>Pedido</th><th>Venda</th><th>Impostos</th><th>Custo do produto<div class="lead">catálogo</div></th><th>Comissão/RT</th><th>Despesas da obra</th><th>Garantia</th><th>Lucro</th></tr></thead><tbody>${rows}<tr class="tot click" onclick="V130_pedMes()"><td>Total · ${plural(d.ok.length,'pedido','pedidos')}</td><td>${R$(t.venda)}</td><td>${R$(-t.imp)}</td><td>${R$(-t.prod)}</td><td>${R$(-t.com)}</td><td>${R$(-t.obra)}</td><td>${t.gar?R$(-t.gar):'—'}</td><td class="${t.lucro<0?'neg':'pos'}"><b>${R$(t.lucro)}</b><div class="lead">${P1(t.marg)}</div></td></tr></tbody></table></div>
+    <div class="vx-ponte">${D(R$(t.venda),'V130_pedMes()')} − ${D(R$(t.imp),'V130_pedMes()')} − ${D(R$(t.prod),'V130_pedMes()')} − ${D(R$(t.com),"V130_go('#/comissoes')")} − ${D(R$(t.obra),"V130_go('#/fobras')")} − ${D(R$(t.gar),"V130_go('#/fpvgar')")} = <b>${D(R$(t.lucro),'V130_pedMes()')}</b> ${Math.abs(r2(t.venda-t.imp-t.prod-t.com-t.obra-t.gar)-t.lucro)<0.02?'<span class="ok">✓ fecha</span>':''}</div>`:'<div class="vazio">Nenhum pedido vendido neste mês.</div>'}
    </div></div></section>`}
 
 function bloco3(){if(!AC.est())return '';const e=estoq();if(!e)return '';const cus=AC.custo();
@@ -605,9 +627,9 @@ function bloco3(){if(!AC.est())return '';const e=estoq();if(!e)return '';const c
      <div class="vx-big" onclick="V130_open('lugar','*')" role="button"><b>${N0(e.canon.nossas)} un.</b>${cus?`<span>${R$(e.canon.custo)}</span>`:''}${nC?`<em>+ ${N0(nC)} consignado (não é nosso)</em>`:''}</div></div>
     <div class="card"><h3>O que devemos aos clientes</h3><div class="pt">Vendido e ainda não entregue${cus?' · dois custos, cada um com o seu nome':''}.</div>
      <div class="vx-big" onclick="V130_open('devido')" role="button"><b>${N0(e.qDev)} un.</b>${cus?`<span>${R$(e.vDev)} <em>custo de catálogo (o que a venda considerou)</em></span><span>${R$(e.vDevC)} <em>custo de compra (o que pagamos ou vamos pagar)</em></span>`:''}</div>
-     <div class="vx-ponte">${e.req!=null?`${N0(e.req)} vendidas − ${N0(e.cli)} já no cliente = `:''}<b>${N0(e.qDev)}</b> = ${N0(e.qSep)} separado + ${N0(e.qEst)} no estoque + ${N0(e.qCam)} a caminho + <b class="${e.qFalta?'neg':''}">${N0(e.qFalta)} a comprar</b> ${e.qSep+e.qEst+e.qCam+e.qFalta===e.qDev&&(e.cnDev==null||(e.cnDev===e.qDev&&e.req-e.cli===e.qDev))?'<span class="ok">✓ o mesmo do Estoque › Painel Geral</span>':'<span class="bad">não fecha com o Estoque › Painel Geral ('+N0(e.cnDev)+')</span>'}</div></div>
+     <div class="vx-ponte">${e.req!=null?`${D(N0(e.req)+' vendidas',"V130_go('#/cep')")} − ${D(N0(e.cli)+' já no cliente',"V130_go('#/saidas')")} = `:''}<b>${D(N0(e.qDev),"V130_open('devido')")}</b> = ${D(N0(e.qSep)+' separado',"V130_go('#/separacao')")} + ${D(N0(e.qEst)+' no estoque',"V130_open('devido')")} + ${D(N0(e.qCam)+' a caminho',"V130_go('#/areceber')")} + <b class="${e.qFalta?'neg':''}">${D(N0(e.qFalta)+' a comprar',"V130_go('#/obrascompras')")}</b> ${e.qSep+e.qEst+e.qCam+e.qFalta===e.qDev&&(e.cnDev==null||(e.cnDev===e.qDev&&e.req-e.cli===e.qDev))?'<span class="ok">✓ o mesmo do Estoque › Painel Geral</span>':'<span class="bad">não fecha com o Estoque › Painel Geral ('+N0(e.cnDev)+')</span>'}</div></div>
     <div class="card wide"><h3>Onde está</h3><div class="pt">Cada lugar do estoque${cus?' · custo de compra':''}. Clique para ver os produtos.</div>
-     <div class="tw"><table class="no-filter"><thead><tr><th>Lugar</th><th>Unidades</th>${cus?'<th>Custo de compra</th>':''}</tr></thead><tbody>${rows}<tr class="tot"><td>Total</td><td>${N0(nN)}${nC?` <span class="lead">+ ${N0(nC)} consignado</span>`:''}</td>${cus?`<td>${R$(sum(e.lugares,x=>x.v))}</td>`:''}</tr></tbody></table></div>
+     <div class="tw"><table class="no-filter"><thead><tr><th>Lugar</th><th>Unidades</th>${cus?'<th>Custo de compra</th>':''}</tr></thead><tbody>${rows}<tr class="tot click" onclick="V130_open('lugar','*')"><td>Total</td><td>${N0(nN)}${nC?` <span class="lead">+ ${N0(nC)} consignado</span>`:''}</td>${cus?`<td>${R$(sum(e.lugares,x=>x.v))}</td>`:''}</tr></tbody></table></div>
      <div class="vx-ponte">${okU&&okV?'<span class="ok">✓ a soma dos lugares é o total do estoque</span>':'<span class="bad">A soma dos lugares não fecha com o total</span>'}</div></div>
    </div></section>`}
 
@@ -620,11 +642,21 @@ function bloco4(){if(!AC.fin())return '';const l=linhas();if(!l)return '';
    <div class="rx"><div class="card wide"><div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2"><div class="pt" style="margin:0">${ymLb(VD.ym)} · receita conforme o avanço das obras (o mesmo da DRE).</div>
     <select class="per" aria-label="Mês" onchange="VD.ym=this.value;V130.dr=null;V130_close()">${MESES().map(m=>`<option value="${m}" ${m===VD.ym?'selected':''}>${ymLb(m)}</option>`).join('')}</select></div>
     <div class="tw"><table class="no-filter"><thead><tr><th>Linha</th><th>Receita</th><th>Custos da linha</th><th>Gastos diretos</th><th>Resultado</th><th></th></tr></thead><tbody>${rows}
-     <tr class="sub2"><td colspan="4"><b>Soma das linhas</b></td><td class="${soma<0?'neg':'pos'}"><b>${R$(soma)}</b></td><td></td></tr>
+     <tr class="sub2 click" onclick="V130_go('#/dre')"><td colspan="4"><b>Soma das linhas</b></td><td class="${soma<0?'neg':'pos'}"><b>${R$(soma)}</b></td><td></td></tr>
      <tr class="click" onclick="V130_open('linha','Corporativo')"><td colspan="4">− Gastos compartilhados (Administrativo, aluguel, estrutura)</td><td class="neg">${R$(-l.adm.desp)}</td><td></td></tr>
-     <tr class="tot"><td colspan="4">Resultado da empresa</td><td class="${l.tot<0?'neg':'pos'}">${R$(l.tot)}</td><td></td></tr></tbody></table></div>
-    <div class="vx-ponte">${R$(soma)} − ${R$(l.adm.desp)} = <b>${R$(l.tot)}</b> ${Math.abs(l.dif)<0.05?'<span class="ok">✓ igual ao resultado da DRE</span>':'<span class="bad">difere da DRE em '+R$(l.dif)+'</span>'}</div>
-   </div></div></section>`}
+     <tr class="tot click" onclick="V130_go('#/dre')"><td colspan="4">Resultado da empresa</td><td class="${l.tot<0?'neg':'pos'}">${R$(l.tot)}</td><td></td></tr></tbody></table></div>
+    <div class="vx-ponte">${D(R$(soma),"V130_go('#/dre')")} − ${D(R$(l.adm.desp),"V130_open('linha','Corporativo')")} = <b>${D(R$(l.tot),"V130_go('#/dre')")}</b> ${Math.abs(l.dif)<0.05?'<span class="ok">✓ igual ao resultado da DRE</span>':'<span class="bad">difere da DRE em '+R$(l.dif)+'</span>'}</div>
+   </div>${metaCard(cor)}</div></section>`}
+
+/* a meta do ano, por linha: meta (Base) · vendido no ano · % · falta · ritmo por mês até dezembro */
+function metaCard(cor){const m=T(metas,null);if(!m)return '';const barra=(pct,c)=>`<div class="vx-bar"><i style="width:${Math.min(100,pct*100).toFixed(1)}%;background:${c}"></i></div>`;
+  const rows=m.ls.map(x=>`<tr class="click" onclick="V130_metaGo('${J(x.k)}')"><td><b><i class="vx-dot" style="background:${cor[x.u]}"></i>${E(x.u)}</b></td><td>${R$(x.meta)}</td><td>${R$(x.real)}<div class="lead">${plural(x.n,'pedido','pedidos')}</div></td><td class="${x.pct>=m.fracAno?'pos':'neg'}"><b>${P1(x.pct)}</b></td><td>${x.falta?R$(x.falta):'<span class="ok">✓ batida</span>'}</td><td>${x.falta?R$(x.ritmo)+'/mês':'—'}</td><td style="width:18%">${barra(x.pct,x.pct>=m.fracAno?cor[x.u]:'#d03b3b')}</td></tr>`).join('');
+  return `<div class="card wide"><div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2"><div><h3 style="margin:0">Meta do ano · ${E(m.ano)}</h3><div class="pt" style="margin:0">Onde cada linha está em relação à meta anual. Hoje já passou ${P0(m.fracAno)} do ano — abaixo disso está atrasada.</div></div><a class="vx-lk" href="javascript:void 0" onclick="V130_go('#/dblistas/regras')">Mudar a meta (Base › Listas & regras) ›</a></div>
+    <div class="tw"><table class="no-filter"><thead><tr><th>Linha</th><th>Meta do ano</th><th>Vendido no ano</th><th>% da meta</th><th>Falta</th><th>Ritmo até dez.</th><th></th></tr></thead><tbody>${rows}
+     <tr class="tot click" onclick="V130_metaGo('')"><td>Empresa</td><td>${R$(m.metaEmp)}</td><td>${R$(m.realEmp)}<div class="lead">${plural(m.nEmp,'pedido','pedidos')}</div></td><td class="${m.pctEmp>=m.fracAno?'pos':'neg'}">${P1(m.pctEmp)}</td><td>${m.faltaEmp?R$(m.faltaEmp):'<span class="ok">✓ batida</span>'}</td><td>${m.faltaEmp?R$(m.ritmoEmp)+'/mês':'—'}</td><td>${barra(m.pctEmp,m.pctEmp>=m.fracAno?'#2a78d6':'#d03b3b')}</td></tr></tbody></table></div>
+    <div class="vx-ponte">Vendido no ano ${D(R$(m.realEmp),"V130_metaGo('')")} ${m.okKpi?'<span class="ok">✓ o mesmo de Comercial › Propostas</span>':'<span class="bad">≠ '+R$(m.kpi)+' em Comercial › Propostas</span>'} · soma das metas das linhas ${m.okSoma?'<span class="ok">✓ = meta da empresa</span>':'<span class="bad">≠ meta da empresa</span>'} · faltam ${D(N0(m.mesesRest)+(m.mesesRest===1?' mês':' meses'),"V130_go('#/fluxo')")} no ano. Clique na linha para ver os pedidos vendidos.</div></div>`}
+window.V130_pedMes=function(){try{S.propF={st:'',fr:'',q:'',cons:'',ym:VD.ym}}catch(e){}location.hash='#/propostas'};
+window.V130_metaGo=function(k){try{S.propF={st:'',fr:k||'',q:'',cons:'',ym:''}}catch(e){}location.hash='#/propostas'};
 
 /* ─────────── as gavetas dos 4 blocos ─────────── */
 function gaveta4(k,a){const t=hoje();
@@ -696,6 +728,10 @@ const CSS=`<style id="v130-css">
 .vx h1{font-size:34px;font-weight:800;letter-spacing:-.025em;margin:2px 0 0;line-height:1.1}
 .vx .acts{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .vx .acts .inicio-more-btn{margin:0!important}
+.vx .vx-door{color:inherit;text-decoration:underline dotted;text-underline-offset:3px;cursor:pointer}.vx .vx-door:hover{color:#2a78d6}.vx a.vx-n{display:inline-block;text-decoration:none}
+.vx .vx-chart{position:relative}.vx .vx-chart svg{display:block;width:100%;height:auto}.vx .vx-hits{position:absolute;inset:0}.vx .vx-hit{position:absolute;top:8%;height:79%;background:transparent;border:0;padding:0;margin:0;cursor:pointer;border-radius:4px}.vx .vx-hit:hover,.vx .vx-hit:focus-visible{background:rgba(42,120,214,.08);outline:none}
+/* a entrada ocupa a tela inteira: a visão executiva só aparece ao rolar (Bruno, 01/11) */
+html[data-inicio] #main .inicio-hero{min-height:calc(100vh - var(--v130-top,76px))!important;box-sizing:border-box}
 .vx .vx-nav{position:relative;z-index:20;border-radius:14px;display:flex;gap:6px;overflow-x:auto;padding:10px 2px;margin:10px 0 0;background:transparent;scrollbar-width:none}
 #v130_navfix{background:rgba(246,246,248,.86);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);border-radius:0}
 :root[data-theme="dark"] #v130_navfix{background:rgba(18,18,20,.86)}
@@ -804,7 +840,8 @@ const saud=()=>{const h=new Date().getHours();return h<12?'Bom dia':h<18?'Boa ta
 const primeiroNome=()=>T(()=>String(me().nome||'').split(' ')[0],'')||'';
 const NAVL=[['geral','Visão geral'],['fin','Financeiro'],['com','Comercial'],['est','Estoque e compras'],['obr','Projetos e obras'],['dep','Departamentos'],['rel','Relacionamento e pós-venda'],['ale','Alertas']];
 
-function build(){
+function topVar(){try{const t=document.querySelector('header,.topbar,#topbar,.appbar,nav.navbar');const h=t?t.getBoundingClientRect().height:76;document.documentElement.style.setProperty('--v130-top',Math.round(h)+'px')}catch(e){}}
+function build(){topVar();
   MEMO={};
   if(!VD.ym||MESES().indexOf(VD.ym)<0)VD.ym=ymOf(hoje());
   if(VD.drawer&&V.dr)V.dr=null;
@@ -818,7 +855,7 @@ function build(){
   return `${P?P.css:''}${CSS}<div class="vd vx fx2-wrapped" id="v130_root">
    <div class="vx-top"><div><div class="hello">${exec?'Visão executiva':'O seu painel'}</div><h1>A empresa hoje</h1><div class="lead">Cada número abre os registros que o formam.</div></div></div>
    ${b.join('')}
-   <div class="vx-foot"><span>Atualizado às ${hh} · recalcula a cada ação no sistema</span></div>
+   <div class="vx-foot"><a href="javascript:void 0" onclick="render()" title="Recalcular agora">Atualizado às ${hh} · recalcula a cada ação no sistema · recalcular</a></div>
   </div>${dr?`<div class="vd vd-ov fx2-wrapped" style="background:rgba(0,0,0,.38)" onclick="if(event.target===this)V130_close()"><div class="vd-dr" id="v130_drawer">${dr}</div></div>`:''}`}
 
 /* O Início: a entrada de sempre (logo em movimento, saudação, Começar do zero, Aprender fazendo, Escamas/Partículas)
