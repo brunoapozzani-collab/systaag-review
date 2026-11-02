@@ -4,7 +4,7 @@
 <script>/* v135: a base como estava gravada, antes de qualquer camada mexer nela */try{window.__v135_raw=localStorage.getItem("systaag_erp1z")||localStorage.getItem("systaag_erp1")||null;window.__v135_zero=localStorage.getItem("systaag_zero")}catch(e){}</script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>SYSTAAG — protótipo v138 (a Base manda · todo número é porta)</title>
+<title>SYSTAAG — protótipo v139 (a Base manda · governança)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -4013,7 +4013,7 @@ SCREENS.lugar=(arg)=>{const raw=location.hash.replace(/^#\/?lugar\/?/,'');const 
  else{const kids=L.kids(node.id);body=table([NIVEL[node.nivel+1],...TUPLE_COLS],kids.map(k=>{const x=tLugarId(k.id);return `<tr class="rowlink" onclick="location.hash='${href(chain.length-1)}/${encodeURIComponent(k.nome)}'"><td><b><i class="bi bi-${k.nivel===4?'bookshelf':'geo-alt'} me-1"></i>${k.nome}</b> ${k.tipo==='showroom'?'<span class="chip warn" style="font-size:10px">showroom · para aqui</span>':k.tipo==='hold'?'<span class="chip" style="font-size:10px">área de processo</span>':''}</td>${tupleCells(x)}</tr>`}),{empty:'sem filhos — adicione na Base de dados'})}
  return crumb+head(`${node.nome} <span class="chip info">${t.total}</span> <span class="sub" style="font-size:13px;font-weight:400">${NIVEL[node.nivel]}</span>`,'')+`<div class="card p-3 mb-3"><div class="d-flex gap-2 flex-wrap">${tupleRow(t)}</div></div>`+body};
 /* Estoque tab + Painel: lugar chips from the table */
-const _est17=SCREENS.estoque;SCREENS.estoque=()=>_est17().replace(/<div class="d-flex gap-2 mt-2 flex-wrap">(?:<span class="chip">[^<]*<b>\d+<\/b><\/span>)+<\/div>/,`<div class="d-flex gap-2 mt-2 flex-wrap">${L.kids(L.byPath('Inventário SP').id).map(l=>`<a class="chip text-decoration-none" href="#/lugar/SP/${encodeURIComponent(l.nome)}">${l.nome} <b>${tLugarId(l.id).total}</b></a>`).join('')}</div>`);
+const _est17=SCREENS.estoque;SCREENS.estoque=()=>_est17().replace(/<div class="d-flex gap-2 mt-2 flex-wrap">(?:<span class="chip">[^<]*<b>\d+<\/b><\/span>)+<\/div>/,`<div class="d-flex gap-2 mt-2 flex-wrap">${N2().map(l=>{const n1=L.n1(l.id);const sg=n1?(n1.sigla||siglaDe(n1.nome)):'SP';return `<a class="chip text-decoration-none" href="#/lugar/${sg}/${encodeURIComponent(l.nome)}">${l.nome} <b>${tLugarId(l.id).total}</b></a>`}).join('')}</div>`);
 
 /* ---- CENTRO DE DADOS — the tables behind everything, editable ---- */
 estSec.items.push(['dados','Base de dados']);SEC_OF.dados='est';LABEL.dados='Base de dados';
@@ -4137,7 +4137,8 @@ const dividasAbertas=()=>S.db.dividas.filter(d=>d.estado==='aberta');
 /* the four kinds of ownership */
 const DONO={nosso:'Nosso, à venda',obra:'Da obra (com dono: alocado)',terceiro:'De terceiro (consignado)',empresa:'Da empresa (patrimônio, showroom, backup)'};
 const donoOf=u=>{const b=bucketOf(u);if(b==='cliente')return null;if(u.natureza==='consignado')return 'terceiro';if(b==='alocado')return 'obra';if(u.natureza==='patrimonio'||b==='travado')return 'empresa';return 'nosso'};
-const N2=()=>[...L.kids(L.byPath('Inventário SP').id),...L.kids(L.byPath('Inventário RJ').id)];
+/* every active inventário (Base › Locais, N1) contributes its lugares — not only SP and RJ (Bruno 02-Nov: Bahia showed "(sem lugar ainda)" with a lugar cadastrado) */
+const N2=()=>S.db.locais.filter(l=>l.nivel===1&&!l.inativo).flatMap(n1=>L.kids(n1.id));
 const lugarN2=u=>L.path(u.loc_id)[1]?.id||null;
 /* ---- Tab 1 — Painel Geral: the strip ---- */
 const _ep22=SCREENS.epainel;SCREENS.epainel=()=>{const t=T8();const inv=t.total-t.cliente;const dv=dividasAbertas();const box=(n,l,href,cls)=>`<a class="card p-2 text-center text-decoration-none" style="min-width:86px;flex:1" href="${href}"><div style="font-size:26px;font-weight:800" class="${cls||''}">${n}</div><div class="sub" style="font-size:11px;letter-spacing:.04em">${l}</div></a>`;const arrow='<i class="bi bi-arrow-right sub" style="font-size:18px"></i>';
@@ -30785,5 +30786,6 @@ try{if(/^#\/(dbfiliais|finlanc)/.test(location.hash))render()}catch(e){}
 <script src="v136-pessoas.js"></script>
 <script src="v137-base.js"></script>
 <script src="v138-portas.js"></script>
+<script src="v139-governanca.js"></script>
 <script src="v127-boot.js"></script>
 </body></html>
