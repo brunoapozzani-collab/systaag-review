@@ -21,7 +21,7 @@ const KEEP=new Set(['id','rt_pct','exclusivo','pr','whatsapp','escritorio','tipo
 function consCanon(t){if(!t)return t;try{const v=window.V123&&typeof V123.consMapGet==='function'&&V123.consMapGet(t);if(v)return v}catch(e){}
   try{const eq=(S.db.equipe||[]).filter(e=>e.papel==='Consultor'&&e.ativo!==false);const K=nz(t);const ex=eq.find(e=>nz(e.nome)===K);if(ex)return ex.nome;const fn=eq.filter(e=>nz(e.nome).split(' ')[0]===K);if(fn.length===1)return fn[0].nome}catch(e){}return t}
 /* ───── §1 CRM refresh ───── */
-function crmRefresh(){try{const db=S.db;if(!db||!db.crm||!window.CRM_SEED||!window.CRM_RAW||!FONTE)return false;if(db.af113_zero)return false;if(db.crm.fonte===FONTE)return false;
+function crmRefresh(){try{const db=S.db;if(!db||!db.crm||!window.CRM_SEED||!window.CRM_RAW||!FONTE)return false;if(db.af113_zero)return false;if(db.crm.fonte===FONTE&&db.parceiros.some(p=>p.crm_id!=null&&!p.crm_fora_planilha))return false;/* a marca sem os dados (depois de um Começar do zero) não vale */
   const SEED=window.CRM_SEED,RAW=window.CRM_RAW;db.parceiros=db.parceiros||[];
   /* parceiros */
   const byCrm={},byNome={};db.parceiros.forEach(p=>{if(p.crm_id!==undefined&&p.crm_id!==null)byCrm[+p.crm_id]=p;byNome[nz(p.nome)]=byNome[nz(p.nome)]||p});
@@ -78,7 +78,7 @@ try{if(window.A&&typeof A.novaNegociacao==='function'&&!A.novaNegociacao.__v140)
    Inventário SP › Focal, Inventário SP › TAAG Showroom) com natureza (à venda · consignado · patrimônio), custo, NF e fornecedor
    quando o arquivo traz. As unidades de demonstração que estavam nesses três lugares saem: o inventário real toma o lugar delas.
    Séries que o Excel estragou ("1,2105E+11") ficam marcadas serie_ilegivel — o número verdadeiro tem de vir do arquivo original. */
-function inventarios(){try{const db=S.db;const INV=window.V140_INV;if(!db||!INV||db.af113_zero||(db._v140inv&&db._v140inv.fonte===INV.fonte))return false;
+function inventarios(){try{const db=S.db;const INV=window.V140_INV;if(!db||!INV||db.af113_zero)return false;if(db._v140inv&&db._v140inv.fonte===INV.fonte&&db.unidades.some(u=>u.origem&&u.origem.indexOf(INV.fonte)>=0))return false;
   const by=id=>db.produtos.find(p=>p.id===id);const pmap={};let pn=0;
   INV.produtos_novos.forEach(np=>{const ex=db.produtos.find(p=>p._v140origem&&nz(p.nome)===nz(np.nome)&&nz(p.marca)===nz(np.marca));if(ex){pmap[np.id]=ex.id;return}
     const id=uid('p');pmap[np.id]=id;db.produtos.push({id,nome:np.nome,marca:np.marca||'',categoria:np.categoria||'Outros',rastreio:np.rastreio||'serial',custo:+np.custo||0,preco:+np.preco||0,tipo:'pç',fase:'estrutural',ncm:'',origem:'Nacional',unidade:np.unidade||'un',garantia_meses:12,cst:'',cod_fornecedor:'',apelido:'',nome_comercial:np.nome,fornecedor:'',unidade_venda:'Unidade',desconto_max:0,descricao:'Cadastrado a partir do inventário de 02/11/2026 — conferir modelo, categoria e preço.',fotos:[],portas:[],aprovado:false,status:'Revisar',_v140origem:INV.fonte,revisar:true});pn++});
@@ -105,7 +105,23 @@ function inventarios(){try{const db=S.db;const INV=window.V140_INV;if(!db||!INV|
   save();return true}catch(e){console.error('v140 inventários',e);return false}}
 const T_=(f,d)=>{try{const v=f();return v===undefined?d:v}catch(e){return d}};
 
+/* ───── §4 modo zero × dados reais ─────
+   No "sistema do zero" a empresa está vazia de propósito (é o manual). Os dados reais (CRM da planilha, inventários, metas)
+   não entram ali — entram quando se sai do zero. A faixa abaixo diz isso onde o leitor procuraria os dados, com o botão certo. */
+window.V140_sairDoZero=function(){if(!(typeof can==='function'&&can('zerar'))){toast('Só um perfil com a permissão "Começar do zero / restaurar" sai do modo zero.',true);return}
+  if(!confirm('Sair do modo zero e carregar os dados reais (CRM da planilha de 02/11, inventários RJ e showrooms, metas 2026)?\n\nUma cópia da base atual fica guardada na Zona de risco.'))return;
+  try{if(window.V139&&typeof V139.guardar==='function')V139.guardar('antes de sair do modo zero')}catch(e){}
+  try{delete S.db.af113_zero;localStorage.removeItem('systaag_zero');
+    /* grava já, sem depender do debounce: a próxima abertura tem de ler a base SEM a marca de zero */
+    const txt=JSON.stringify(S.db);localStorage.setItem('systaag_erp1z',typeof LZString!=='undefined'?LZString.compressToUTF16(txt):txt);window.__semGravar=true}catch(e){console.error('v140 sair do zero',e)}location.reload()};
+function faixaZero(){try{if(!S.db||!S.db.af113_zero)return;const k=(location.hash||'#/home').slice(2).split('/')[0];if(!(/^crm/.test(k)||['dbmapa','dbcrm','estoque','epainel','basedados','dbparceiros'].includes(k)))return;const m=document.getElementById('main');if(!m||m.querySelector('#v140-zero'))return;
+  const inv=window.V140_INV?window.V140_INV.resumo:null;const d=document.createElement('div');d.id='v140-zero';d.className='card p-3 mb-3';d.style.cssText='border-left:4px solid #0d6efd';
+  d.innerHTML=`<div class="d-flex justify-content-between align-items-center flex-wrap gap-2"><div><b>Sistema do zero</b><div class="sub" style="font-size:12px">A empresa está vazia de propósito (manual). Os dados reais estão guardados e entram quando você sair do zero: CRM da planilha de ${E(FONTE||'02/11/2026')} (${(window.CRM_SEED&&CRM_SEED.parceiros||[]).length} parceiros · ${(window.CRM_RAW&&CRM_RAW.contatos||[]).length} contatos · ${(window.CRM_RAW&&CRM_RAW.interacoes||[]).length} interações · ${(window.CRM_SEED&&CRM_SEED.negociacoes||[]).length} oportunidades)${inv?' · inventários RJ + showrooms ('+(inv.rj_linhas+inv.showroom_linhas)+' linhas)':''} · metas 2026.</div></div><button class="btn-apple" onclick="V140_sairDoZero()"><i class="bi bi-database-up me-1"></i>Sair do zero e carregar os dados reais</button></div>`;
+  m.insertBefore(d,m.firstChild)}catch(e){}}
+const E=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+/* Começar do zero apaga os dados mas não as marcas de "já carreguei": tiramos as marcas junto, para a próxima base real recarregar */
+try{if(typeof window.aplicarZero==='function'&&!window.aplicarZero.__v140){const az=window.aplicarZero;window.aplicarZero=function(db){const r=az.apply(this,arguments);try{if(db){delete db._v140inv;if(db.crm)db.crm.fonte=''}}catch(e){}return r};window.aplicarZero.__v140=1}}catch(e){}
 function boot(){metas();crmRefresh();inventarios()}
 if(window.S&&S.db)boot();else document.addEventListener('DOMContentLoaded',boot);
-try{const _rm=window.renderMain;window.renderMain=function(){try{if(S.db&&S.db.metas&&!S.db.metas._v140)metas()}catch(e){}return _rm.apply(this,arguments)}}catch(e){}
+try{const _rm=window.renderMain;window.renderMain=function(){try{if(S.db&&S.db.metas&&!S.db.metas._v140)metas()}catch(e){}const r=_rm.apply(this,arguments);try{faixaZero();setTimeout(faixaZero,400)}catch(e){}return r}}catch(e){}
 })();

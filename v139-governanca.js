@@ -25,7 +25,7 @@ function guardar(label){try{if(window.save&&window.save.agora)window.save.agora(
     snaps().slice(3).forEach(s=>localStorage.removeItem(s.k));return true}catch(e){console.error('v139 snapshot',e);return false}}
 function resumo(){try{const d=S.db;return `${(d.clientes||[]).length} clientes · ${(d.propostas||[]).length} propostas · ${(d.unidades||[]).length} unidades · ${(d.lancamentos||[]).length} lançamentos`}catch(e){return ''}}
 const dBR=ts=>{const d=new Date(ts);return d.toLocaleDateString('pt-BR')+' '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})};
-window.V139={
+window.V139={guardar,
   zerar(){if(!podem('zerar')){toast('Seu perfil não tem a permissão "Começar do zero". Peça a um gestor (Usuários e permissões).',true);return}
     dialogo('Começar do zero','Apaga clientes, obras, propostas, unidades, pedidos, lançamentos, parceiros, fornecedores e pessoas. Mantém o catálogo, as listas, os locais, o seu usuário e a meta anual.<br><b>Uma cópia da base de hoje fica guardada</b> e pode ser restaurada aqui mesmo, na Zona de risco.','ZERAR',()=>{guardar('antes de Começar do zero');MG.zerar(1)})},
   resetar(){if(!podem('zerar')){toast('Seu perfil não tem a permissão "Começar do zero". Peça a um gestor.',true);return}
