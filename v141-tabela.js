@@ -16,7 +16,7 @@ const ALIAS=[['BLACKFPBN','FOCAL','NAIM','FOCALNAIM'],['ABSOLUTECONTROL','TGCUST
 const grp=b=>{const k=K(b);const g=ALIAS.find(a=>a.includes(k));return g?g[0]:k};
 const brandOK=(a,b)=>{const x=K(a),y=K(b);return !x||!y||x===y||grp(x)===grp(y)||x.includes(y)||y.includes(x)};
 const T=()=>today();
-function sync(){try{const db=S.db,TB=window.V141_TABELA;if(!db||!TB||db.af113_zero)return false;if(db._v141&&db._v141.fonte===TB.fonte&&db.produtos.some(p=>p._v141===TB.fonte))return false;
+function sync(){try{const db=S.db,TB=window.V141_TABELA;if(!db||!TB)return false; /* o catálogo fica mesmo no modo zero, então a tabela também entra no modo zero */if(db._v141&&db._v141.fonte===TB.fonte&&db.produtos.some(p=>p._v141===TB.fonte))return false;
   const byKey={},byModel={};db.produtos.forEach(p=>{const k1=grp(p.marca)+'|'+M(head(p.nome)),k2=grp(p.marca)+'|'+M(p.nome);byKey[k1]=byKey[k1]||p;byKey[k2]=byKey[k2]||p;const m=M(head(p.nome));(byModel[m]=byModel[m]||[]).push(p)});
   const seen=new Set();let upd=0,precoMud=0,novos=0,statusMud=0,fundidos=0;const mudados=[];const diff=[];
   const inv=db.produtos.filter(p=>p._v140origem);
