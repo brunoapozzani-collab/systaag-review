@@ -17,6 +17,7 @@ function dentro(){try{const f=document.getElementById('crmFrame');const d=f&&f.c
     if(d.body.classList.contains('v136-embed')&&!d.getElementById('v145-css')){const s=d.createElement('style');s.id='v145-css';
       s.textContent='body.v136-embed main{grid-column:1/-1!important;width:100%!important;max-width:none!important}';d.head.appendChild(s)}
     return {f,d}}catch(e){return null}}
-(function loop(){if(naBase())dentro();setTimeout(loop,700)})();
+(function loop(){if(naBase()){semTelaCheia();dentro()}setTimeout(loop,500)})();
+semTelaCheia();
 try{const _rm=window.renderMain;window.renderMain=function(){const r=_rm.apply(this,arguments);semTelaCheia();setTimeout(semTelaCheia,0);setTimeout(()=>{semTelaCheia();dentro()},300);return r}}catch(e){}
 })();
