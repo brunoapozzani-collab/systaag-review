@@ -24,7 +24,7 @@ if(typeof SCREENS==='object'&&typeof SCREENS.estoque==='function'&&!SCREENS.esto
   seg=seg.replace(/<tr(?![^>]*no-door)/g,'<tr class="no-door"').replace(/<tr class="no-door" class="/g,'<tr class="no-door ');
   h=h.slice(0,i)+seg+h.slice(j)}catch(e){console.error('v141 links',e)}return h};SCREENS.estoque.__v141d=1}
 /* o filtro da página do lugar entende também as situações da tabela do Estoque (terceiro / empresa = a mesma conta da tabela) */
-T_(()=>{if(typeof window.__fMatch==='function'&&!window.__fMatch.__v141){const _f=window.__fMatch;window.__fMatch=function(u,f){if(f==='terceiro'||f==='empresa'||f==='alocado'){const s=T_(()=>situacao(u),null);return s===f}return _f.apply(this,arguments)};window.__fMatch.__v141=1}});
+T_(()=>{if(typeof window.__fMatch==='function'&&!window.__fMatch.__v141){const _f=window.__fMatch;window.__fMatch=function(u,f){if(f==='terceiro'||f==='empresa'||f==='alocado'||f==='livre'){const s=T_(()=>situacao(u),null);return f==='livre'?['livre','reservado','sem_proposito'].includes(s):s===f}return _f.apply(this,arguments)};window.__fMatch.__v141=1}});
 
 /* v141.5 — 14 séries da planilha "Inventário Showroom Taag e Focal.xlsx" ficaram de fora na importação de 02/11
    (6 AQL-SENSOR2, 1 BATHYS, 3 CONNECT PRO BASESTATION, 3 CONNECT PRO CASE, 1 HDW380). A unidade existia com série
