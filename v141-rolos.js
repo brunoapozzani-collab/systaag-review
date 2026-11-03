@@ -25,9 +25,15 @@ if(typeof SCREENS==='object'&&typeof SCREENS.estoque==='function'&&!SCREENS.esto
   h=h.slice(0,i)+seg+h.slice(j)}catch(e){console.error('v141 links',e)}return h};SCREENS.estoque.__v141d=1}
 /* o filtro da página do lugar entende também as situações da tabela do Estoque (terceiro / empresa = a mesma conta da tabela) */
 T_(()=>{if(typeof window.__fMatch==='function'&&!window.__fMatch.__v141){const _f=window.__fMatch;window.__fMatch=function(u,f){if(f==='terceiro'||f==='empresa'||f==='alocado'){const s=T_(()=>situacao(u),null);return s===f}return _f.apply(this,arguments)};window.__fMatch.__v141=1}});
+
+/* v141.5 — 14 séries da planilha "Inventário Showroom Taag e Focal.xlsx" ficaram de fora na importação de 02/11
+   (6 AQL-SENSOR2, 1 BATHYS, 3 CONNECT PRO BASESTATION, 3 CONNECT PRO CASE, 1 HDW380). A unidade existia com série
+   gerada (…-INV0xx); aqui ela recebe a série verdadeira, casada pelo Inflow ID da planilha. */
+const SER141={"28002": "427294", "28003": "887928", "28004": "614004", "28007": "765851", "28006": "677209", "28005": "791663", "28150": "CSCIQA02031063", "28112": "723522502WS1563", "28111": "723522502WS1562", "28113": "723522502WS1564", "28114": "72340511WS2263E0360", "28116": "72340504WS1285E0360", "28115": "72340511WS2264E0360", "33917": "EDAF19C1"};
+function poeSeries(){try{let n=0;(S.db.unidades||[]).forEach(u=>{const s=SER141[String(u.inflow_id||'')];if(!s||u.serie===s)return;if(!/Showroom Taag e Focal/i.test(u.origem||''))return;if((S.db.unidades||[]).some(x=>x!==u&&x.serie===s))return;const antes=u.serie;u.serie=s;(u.hist=u.hist||[]).push({em:T_(()=>today(),''),por:'v141',tipo:'ajuste',titulo:'Série da planilha recolocada: '+antes+' → '+s+' (Inflow '+u.inflow_id+')'});n++});if(n){T_(()=>log('unidades','v141','Séries recolocadas da planilha Showroom/Focal: '+n));T_(()=>save())}}catch(e){console.error('v141 series',e)}}
 function corrigeMetros(){try{let n=0;
   (S.db.unidades||[]).forEach(u=>{if(!med(u.produto_id))return;if(!/02\/11\/2026/.test(u.origem||''))return;const p=T_(()=>get('produtos',u.produto_id),null)||{};const m=String(p.nome||'').match(/(\d{2,4})\s*(m|mts|metros)\b/i);if(!m)return;const real=+m[1];
     if(+u.metros_ini===1&&+u.metros<=1&&real>1){u.metros=real;u.metros_ini=real;(u.hist=u.hist||[]).push({em:T_(()=>today(),''),por:'v141',tipo:'ajuste',titulo:'Metragem corrigida: 1 m → '+real+' m (o arquivo trazia "1 cx" sem metros; a metragem vem do nome do produto)'});n++}});
   if(n){S.db._v141_cat6={em:T_(()=>today(),''),corrigidos:((S.db._v141_cat6||{}).corrigidos||0)+n};T_(()=>log('unidades','v141','Rolos do inventário de 02/11 com metragem corrigida: '+n));T_(()=>save())}}catch(e){console.error('v141 metros',e)}}
-corrigeMetros();document.addEventListener('DOMContentLoaded',()=>setTimeout(corrigeMetros,0));setTimeout(corrigeMetros,1500);
+const boot141=()=>{corrigeMetros();poeSeries()};boot141();document.addEventListener('DOMContentLoaded',()=>setTimeout(boot141,0));setTimeout(boot141,1500);
 })();
