@@ -45,7 +45,7 @@ if(ON){try{
   if(localStorage.getItem(FRESH)==='1'){localStorage.removeItem(FRESH);
     if(typeof window.aplicarZero==='function'&&typeof S!=='undefined'&&S&&S.db){window.aplicarZero(S.db);delete S.db.af107_cons;delete S.db.af107_usr;salvaAgora()}
     var auto=localStorage.getItem(AUTO)==='1';localStorage.removeItem(AUTO);
-    if(auto){try{if(window.GUIA&&GUIA.iniciar)GUIA.iniciar(0)}catch(e){}}
+    if(auto){try{if(window.GUIA&&GUIA.iniciar){GUIA.iniciar(0);const cap=+(localStorage.getItem('systaag_treino_cap')||0);localStorage.removeItem('systaag_treino_cap');if(cap>0)GUIA.cap(cap)}}catch(e){}}
     location.reload()}
 }catch(e){console.error('v148 fresh',e)}}
 
@@ -53,10 +53,10 @@ if(ON){try{
 var COR='#ff7a00';
 function faixa(){if(!ON||document.getElementById('v148-pill'))return;
   var st=document.createElement('style');st.textContent='#v148-frame{position:fixed;inset:0;pointer-events:none;z-index:99990;box-shadow:inset 0 0 0 5px '+COR+'}'+
-   '#v148-pill{position:fixed;left:calc(50% + 110px);bottom:14px;transform:translateX(-50%);z-index:99995;display:flex;align-items:center;gap:10px;background:'+COR+';color:#fff;padding:9px 12px 9px 16px;border-radius:999px;box-shadow:0 8px 28px rgba(0,0,0,.28);font:700 13px/1 "Plus Jakarta Sans",system-ui,sans-serif;letter-spacing:.02em;white-space:nowrap}'+
+   '#v148-pill{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:99995;display:flex;align-items:center;gap:10px;background:'+COR+';color:#fff;padding:9px 12px 9px 16px;border-radius:999px;box-shadow:0 8px 28px rgba(0,0,0,.28);font:700 13px/1 "Plus Jakarta Sans",system-ui,sans-serif;letter-spacing:.02em;white-space:nowrap}'+
    '#v148-pill button{border:0;border-radius:999px;padding:7px 12px;font:600 12px/1 inherit;cursor:pointer;background:rgba(255,255,255,.22);color:#fff}#v148-pill button:hover{background:rgba(255,255,255,.36)}#v148-pill button.sair{background:#fff;color:'+COR+'}'+
    '#mg-zero,#v140-zero{display:none!important}.toast-wrap{bottom:76px!important}'+
-   '@media (max-width:640px){#v148-pill{font-size:11px;gap:6px;padding:7px 8px 7px 12px}#v148-pill .t2{display:none}}';
+   '@media (max-width:1500px){#v148-pill .t2{display:none}}@media (max-width:640px){#v148-pill{font-size:11px;gap:6px;padding:7px 8px 7px 12px}}';
   document.head.appendChild(st);
   var fr=document.createElement('div');fr.id='v148-frame';document.body.appendChild(fr);
   var p=document.createElement('div');p.id='v148-pill';
@@ -83,7 +83,8 @@ function engancha(){try{if(!window.GUIA||!GUIA.iniciar||GUIA.iniciar.__v148)retu
 engancha();
 
 /* ───── capítulo 1 do guia no treino: "Começar do zero" já foi feito ao entrar ───── */
-function capitulo(){try{if(!ON||!Array.isArray(window.GUIA_CAPS)||!GUIA_CAPS.length||GUIA_CAPS[0].__v148)return;
+function capitulo(){try{if(ON&&Array.isArray(window.GUIA_CAPS)){const u=GUIA_CAPS[GUIA_CAPS.length-1];if(u&&u.passos){const k=u.passos.findIndex(p=>p.id==='c11p99');if(k>=0)u.passos.splice(k,1)}}}catch(e){}
+  try{if(!ON||!Array.isArray(window.GUIA_CAPS)||!GUIA_CAPS.length||GUIA_CAPS[0].__v148)return;
   GUIA_CAPS[0]={__v148:true,titulo:'Modo treino',depto:'Base de dados',
    objetivo:'A história começa numa empresa vazia — e aqui ela é vazia de propósito: você está num cofre de treino separado. Tudo o que fizer fica só aqui; a base real não muda.',
    aprendeu:['A faixa laranja no rodapé diz que você está no treino: nada aqui é real.','O catálogo de produtos, as listas e os locais do estoque vieram da base real; os registros (clientes, propostas, estoque…) nascem com você, capítulo a capítulo.','Sair do treino devolve a base real na hora; Recomeçar apaga o treino e abre outro, vazio.'],
@@ -101,7 +102,9 @@ envolve();
 function varre(){try{if(location.hash==='#/dbmapa'&&!document.getElementById('v148-card')){var z=document.getElementById('v139-risco');if(z)z.insertAdjacentHTML('beforebegin',cartao());else{var m=document.getElementById('main');if(m)m.insertAdjacentHTML('beforeend',cartao())}}}catch(e){}
   faixa();engancha();capitulo()}
 
-window.V148={entrar:entrar,sair:sair,recomecar:recomecar,ligado:function(){return ON},
+function zeroCom(cap){/* v149: treino novo (base real zerada) já com o guia no capítulo pedido */
+  congela();try{RAW.set(F,'0');copiaRealParaTreino();RAW.set(P+AUTO,'1');RAW.set(P+'systaag_treino_cap',String(cap||0));RAW.set(F,'1')}catch(e){}location.reload()}
+window.V148={entrar:entrar,sair:sair,recomecar:recomecar,ligado:function(){return ON},_pergunta:pergunta,_congela:congela,_zeroCom:zeroCom,
   entendi:function(){window.__v148_ok=true;try{document.getElementById('v148-ok').style.display='none'}catch(e){}tst('Certo. Agora o guia segue para o capítulo 2.')}};
 setInterval(varre,600);
 if(document.readyState==='complete')varre();else window.addEventListener('load',varre);
