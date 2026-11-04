@@ -501,11 +501,11 @@ function fluxo(){return C('flx',()=>{
   sem.forEach((w,i)=>{const xs=dias.slice(i*7,i*7+7);if(!xs.length)return;const s0=sum(xs,x=>r2(x.pagV+x.fixo+x.part));const dif=r2((+w.saidas||0)-s0);xs[xs.length-1].fixo=r2(xs[xs.length-1].fixo+dif)});
   dias.forEach(x=>{x.sai=r2(x.pagV+x.fixo+x.part)});
   let s=c0;dias.forEach(x=>{s=r2(s+x.ent-x.sai);x.saldo=s});
-  const linhas=[];dias.slice(0,31).forEach(x=>linhas.push({lb:dBR(x.dt),curto:dCurto(x.dt),ini:x.dt,fim:x.dt,xs:[x],ent:x.ent,sai:x.sai,saldo:x.saldo,dia:true}));
-  for(let i=31;i<dias.length;i+=7){const xs=dias.slice(i,Math.min(i+7,dias.length));const a=xs[0],b=xs[xs.length-1];linhas.push({lb:dCurto(a.dt)+' a '+dCurto(b.dt),curto:dCurto(a.dt),ini:a.dt,fim:b.dt,xs,ent:sum(xs,x=>x.ent),sai:sum(xs,x=>x.sai),saldo:b.saldo,dia:false})}
+  const linhas=[]; /* v146: só 13 semanas (Bruno, 03/11) — sem o trecho dia a dia */
+  for(let i=0;i<dias.length;i+=7){const xs=dias.slice(i,Math.min(i+7,dias.length));const a=xs[0],b=xs[xs.length-1];linhas.push({lb:dCurto(a.dt)+' a '+dCurto(b.dt),curto:dCurto(a.dt),ini:a.dt,fim:b.dt,xs,ent:sum(xs,x=>x.ent),sai:sum(xs,x=>x.sai),saldo:b.saldo,dia:false})}
   const fim=dias.length?dias[dias.length-1].saldo:c0;const fimSem=sem.length?r2(sem[sem.length-1].saldoFinal):c0;
   const d30=dias.slice(0,31);const menor=linhas.reduce((a,x)=>x.saldo<a.saldo?x:a,linhas[0]||{saldo:c0});
-  return {c0,dias,linhas,fim,fimSem,ent30:sum(d30,x=>x.ent),sai30:sum(d30,x=>x.sai),s30:d30.length?d30[d30.length-1].saldo:c0,menor,neg:linhas.find(x=>x.saldo<0)}})}
+  return {c0,dias,linhas,fim,fimSem,ent13:sum(dias,x=>x.ent),sai13:sum(dias,x=>x.sai),ent30:sum(d30,x=>x.ent),sai30:sum(d30,x=>x.sai),s30:d30.length?d30[d30.length-1].saldo:c0,menor,neg:linhas.find(x=>x.saldo<0)}})}
 
 /* o plano de uma proposta do Pós-venda (AT / plano de serviços) vem do motor do Pós-venda (COP.pos.calc), não do plano de itens do Comercial */
 try{if(typeof FN!=='undefined'&&FN&&typeof FN.propPlano==='function'&&!FN.propPlano.__v137){const _pp=FN.propPlano;const pv=p=>p&&p.linha==='posvenda'&&p.at;
@@ -592,23 +592,21 @@ function ponteFin(f){const r=T(()=>FS.rec('30d'),null),p=T(()=>FS.pag('30d'),nul
   return `<div class="vx-ponte">Entra em 30 dias ${D(R$(f.ent30),"V130_open('flx30','ent')")} ${okE?'<span class="ok">✓ o mesmo “A receber 30 dias” do Financeiro › Hoje</span>':'<span class="bad">≠ '+R$(r.total)+' no Financeiro › Hoje</span>'}<br>Sai em 30 dias ${D(R$(f.sai30),"V130_open('flx30','sai')")} = ${D(R$(p.total),"V130_go('#/pagar/30d')")} “A pagar 30 dias” do Financeiro › Hoje − ${D(R$(tf),"V130_go('#/pagar/30d')")} contas fixas e folha já lançadas + ${D(R$(fixo),"V130_open('flx30','sai')")} fixos e folha do período, dia a dia${part?' + '+D(R$(part),"V130_go('#/comissoes')")+' comissões e RT previstas':''} ${okS?'<span class="ok">✓</span>':'<span class="bad">não fecha</span>'}</div>`}
 function bloco1(){if(!AC.fin())return '';const f=fluxo();if(!f)return '';
   const W=1000,H=200,L_=70,R_=16,Tp=16,B=26;const pts=[{lb:'hoje',s:f.c0}].concat(f.linhas.map(x=>({lb:x.curto,s:x.saldo,x})));
-  const ys=pts.map(p=>p.s).concat([0]);let lo=Math.min(...ys),hi=Math.max(...ys);if(hi===lo)hi=lo+1;const pad=(hi-lo)*.1;hi+=pad;lo=lo<0?lo-pad:0;
+  const ys=pts.map(p=>p.s).concat([0]).concat(f.linhas.map(x=>x.ent),f.linhas.map(x=>x.sai));let lo=Math.min(...ys),hi=Math.max(...ys);if(hi===lo)hi=lo+1;const pad=(hi-lo)*.1;hi+=pad;lo=lo<0?lo-pad:0;
   const sx=i=>L_+(W-L_-R_)*i/(pts.length-1||1),sy=v=>Tp+(H-Tp-B)*(1-(v-lo)/(hi-lo));
   const path=pts.map((p,i)=>(i?'L':'M')+sx(i).toFixed(1)+' '+sy(p.s).toFixed(1)).join(' ');
-  const xd=sx(31);
-  const svg=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Saldo de caixa: 30 dias e depois semanas">${[lo,(lo+hi)/2,hi].map(v=>`<line class="gl" x1="${L_}" x2="${W-R_}" y1="${sy(v).toFixed(1)}" y2="${sy(v).toFixed(1)}"/><text x="${L_-8}" y="${(sy(v)+4).toFixed(1)}" text-anchor="end">${E(Rk(v))}</text>`).join('')}${lo<0?`<line x1="${L_}" x2="${W-R_}" y1="${sy(0)}" y2="${sy(0)}" stroke="#d03b3b" stroke-dasharray="5 4"/>`:''}<line x1="${xd}" x2="${xd}" y1="${Tp}" y2="${H-B}" stroke="var(--rx-sub)" stroke-dasharray="3 4" opacity=".5"/><text x="${xd-6}" y="${Tp+10}" text-anchor="end">dia a dia</text><text x="${xd+6}" y="${Tp+10}">semana a semana</text><path d="${path}" fill="none" stroke="#2a78d6" stroke-width="2.5"/>${pts.map((p,i)=>`<circle cx="${sx(i).toFixed(1)}" cy="${sy(p.s).toFixed(1)}" r="${p.x&&!p.x.dia?4:2.5}" fill="${p.s<0?'#d03b3b':'#2a78d6'}"/>`).join('')}${pts.map((p,i)=>(i<=31&&i%5===0&&i<31)||(p.x&&!p.x.dia&&(i-32)%2===0)?`<text x="${sx(i).toFixed(1)}" y="${H-8}" text-anchor="middle">${E(p.lb)}</text>`:'').join('')}</svg>`;
+    const svg=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Saldo de caixa nas próximas 13 semanas">${[lo,(lo+hi)/2,hi].map(v=>`<line class="gl" x1="${L_}" x2="${W-R_}" y1="${sy(v).toFixed(1)}" y2="${sy(v).toFixed(1)}"/><text x="${L_-8}" y="${(sy(v)+4).toFixed(1)}" text-anchor="end">${E(Rk(v))}</text>`).join('')}${lo<0?`<line x1="${L_}" x2="${W-R_}" y1="${sy(0)}" y2="${sy(0)}" stroke="#d03b3b" stroke-dasharray="5 4"/>`:''}${pts.map((p,i)=>{if(!p.x)return '';const bw=Math.max(4,(W-L_-R_)/(pts.length-1||1)*.16);const z=sy(Math.max(lo,0));const e=p.x.ent>0?`<rect x="${(sx(i)-bw-1).toFixed(1)}" y="${Math.min(z,sy(p.x.ent)).toFixed(1)}" width="${bw.toFixed(1)}" height="${Math.abs(z-sy(p.x.ent)).toFixed(1)}" rx="2" fill="#12a150" opacity=".45"/>`:'';const o=p.x.sai>0?`<rect x="${(sx(i)+1).toFixed(1)}" y="${Math.min(z,sy(p.x.sai)).toFixed(1)}" width="${bw.toFixed(1)}" height="${Math.abs(z-sy(p.x.sai)).toFixed(1)}" rx="2" fill="#e5484d" opacity=".45"/>`:'';return e+o}).join('')}<path d="${path}" fill="none" stroke="#2a78d6" stroke-width="2.5"/>${pts.map((p,i)=>`<circle cx="${sx(i).toFixed(1)}" cy="${sy(p.s).toFixed(1)}" r="4" fill="${p.s<0?'#d03b3b':'#2a78d6'}"/>`).join('')}${pts.map((p,i)=>i===0||p.x?`<text x="${sx(i).toFixed(1)}" y="${H-8}" text-anchor="middle">${E(p.lb)}</text>`:'').join('')}</svg>`;
   /* as áreas clicáveis do gráfico são botões de verdade (HTML) por cima do SVG — não <rect> com onclick */
   const hits=pts.map((p,i)=>{if(!p.x)return '';const x0=i===0?sx(0):(sx(i-1)+sx(i))/2,x1=i===pts.length-1?sx(i):(sx(i)+sx(i+1))/2;return `<button type="button" class="vx-hit" style="left:${(x0/W*100).toFixed(2)}%;width:${(Math.max(1,x1-x0)/W*100).toFixed(2)}%" title="${E(p.x.lb)}" aria-label="${E('Caixa em '+p.x.lb)}" data-tip="${E('<b>'+p.x.lb+'</b><br>entra '+R$(p.x.ent)+'<br>sai '+R$(p.x.sai)+'<br>saldo '+R$(p.x.saldo))}" onclick="event.stopPropagation();V130_open('flx',${i-1})"></button>`}).join('');
   const grafico=`<div class="vx-chart" role="button" title="Abrir o fluxo de caixa" onclick="V130_go('#/fluxo')">${svg}<div class="vx-hits">${hits}</div></div>`;
-  const rows=f.linhas.map((x,i)=>`<tr class="click${x.dia?'':' wk'}" onclick="V130_open('flx',${i})"><td>${x.dia?E(x.lb):'<b>Semana '+E(x.lb)+'</b>'}</td><td class="pos">${x.ent?R$(x.ent):'—'}</td><td class="neg">${x.sai?R$(-x.sai):'—'}</td><td class="${x.saldo<0?'neg':''}"><b>${R$(x.saldo)}</b></td></tr>`).join('');
+  const rows=f.linhas.map((x,i)=>`<tr class="click${x.dia?'':' wk'}" onclick="V130_open('flx',${i})"><td><b>Semana ${i+1}</b> <span class="lead" style="display:inline">· ${E(x.lb)}</span></td><td class="pos">${x.ent?R$(x.ent):'—'}</td><td class="neg">${x.sai?R$(-x.sai):'—'}</td><td class="${x.saldo<0?'neg':''}"><b>${R$(x.saldo)}</b></td></tr>`).join('');
   const fecha=Math.abs(f.fim-f.fimSem)<0.01;
-  return `<section class="sec vx-s" id="v130_s_b1">${secHead('1','Fluxo de caixa','Contas a receber × contas a pagar: dia a dia nos próximos 30 dias, depois semana a semana até 13 semanas.',['Fluxo de caixa','#/fluxo'])}
-   <div class="rx"><div class="card wide"><div class="vx-tiles">${tile('Caixa hoje',R$(f.c0),EXEC()?"VD_open('caixa')":"V130_go('#/fincontas')")}${tile('Entra em 30 dias',R$(f.ent30),"V130_open('flx30','ent')",'pos')}${tile('Sai em 30 dias',R$(-f.sai30),"V130_open('flx30','sai')",'neg')}${tile('Saldo em 30 dias',R$(f.s30),"V130_open('flx',30)",f.s30<0?'neg':'')}${tile('Saldo em 13 semanas',R$(f.fim),"V130_go('#/fluxo')",f.fim<0?'neg':'')}</div>
-    ${ponteFin(f)}
+  return `<section class="sec vx-s" id="v130_s_b1">${secHead('1','Fluxo de caixa','Contas a receber × contas a pagar: semana a semana nas próximas 13 semanas.',['Fluxo de caixa','#/fluxo'])}
+   <div class="rx"><div class="card wide"><div class="vx-tiles vx-c4">${tile('Caixa hoje',R$(f.c0),EXEC()?"VD_open('caixa')":"V130_go('#/fincontas')")}${tile('Entra em 13 semanas',R$(f.ent13),"V130_open('flx30','ent13')",'pos')}${tile('Sai em 13 semanas',R$(-f.sai13),"V130_open('flx30','sai13')",'neg')}<div class="vx-hi">${tile('Saldo em 13 semanas',R$(f.fim),"V130_go('#/fluxo')",f.fim<0?'neg':'')}</div></div>
     ${f.neg?`<div class="vx-warn">⚠ O caixa fica negativo em <b>${E(f.neg.lb)}</b> (${R$(f.neg.saldo)}).</div>`:''}
     <div style="margin-top:4px">${grafico}</div>
-    <div class="vx-flx"><table class="no-filter"><thead><tr><th>Quando</th><th>Entra</th><th>Sai</th><th>Saldo</th></tr></thead><tbody>${rows}</tbody></table></div>
-    <div class="vx-ponte">Ponte: ${D(R$(f.c0),EXEC()?"VD_open('caixa')":"V130_go('#/fincontas')")} + entradas − saídas = <b>${D(R$(f.fim),"V130_go('#/fluxo')")}</b> em 13 semanas ${fecha?'<span class="ok">✓ o mesmo do Financeiro › Fluxo de caixa</span>':'<span class="bad">≠ '+R$(f.fimSem)+' no Fluxo de caixa</span>'}. Clique num dia ou semana para ver os títulos.</div>
+    <div class="vx-flx"><table class="no-filter"><thead><tr><th>Semana</th><th>Entra</th><th>Sai</th><th>Saldo</th></tr></thead><tbody>${rows}</tbody></table></div>
+    <div class="vx-ponte">Ponte: ${D(R$(f.c0),EXEC()?"VD_open('caixa')":"V130_go('#/fincontas')")} + entradas − saídas = <b>${D(R$(f.fim),"V130_go('#/fluxo')")}</b> em 13 semanas ${fecha?'<span class="ok">✓ o mesmo do Financeiro › Fluxo de caixa</span>':'<span class="bad">≠ '+R$(f.fimSem)+' no Fluxo de caixa</span>'}. Clique numa semana para ver os títulos.</div>
    </div></div></section>`}
 
 function bloco2(){if(!AC.custo())return '';const d=pedidos();if(!d)return '';const t=d.tot;
@@ -659,7 +657,7 @@ function metaCard(cor){const m=T(metas,null);if(!m)return '';const barra=(pct,c)
   return `<div class="card wide" id="vx-meta-ano"><div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2"><div><h3 style="margin:0">Meta do ano · ${E(m.ano)}</h3><div class="pt" style="margin:0">Onde cada linha está em relação à meta anual. Hoje já passou ${P0(m.fracAno)} do ano — abaixo disso está atrasada.</div></div><a class="vx-lk" href="javascript:void 0" onclick="V130_go('#/dblistas/regras')">Mudar a meta (Base › Listas & regras) ›</a></div>
     <div class="tw"><table class="no-filter"><thead><tr><th>Linha</th><th>Meta do ano</th><th>Vendido no sistema</th>${m.temFora?'<th>Fora do sistema</th>':''}<th>% da meta</th><th>Falta</th><th>Ritmo até dez.</th><th></th></tr></thead><tbody>${rows}
      <tr class="tot click" onclick="V130_metaGo('')"><td>Empresa</td><td>${R$(m.metaEmp)}</td><td>${R$(m.sisEmp)}<div class="lead">${plural(m.nEmp,'pedido','pedidos')}</div></td>${m.temFora?`<td>${R$(m.foraEmp)}</td>`:''}<td class="${m.pctEmp>=m.fracAno?'pos':'neg'}">${P1(m.pctEmp)}</td><td>${m.faltaEmp?R$(m.faltaEmp):'<span class="ok">✓ batida</span>'}</td><td>${m.faltaEmp?R$(m.ritmoEmp)+'/mês':'—'}</td><td>${barra(m.pctEmp,m.pctEmp>=m.fracAno?'#2a78d6':'#d03b3b')}</td></tr></tbody></table></div>
-    <div class="vx-ponte">${m.temFora?`Realizado no ano ${R$(m.realEmp)} = ${D(R$(m.sisEmp),"V130_metaGo('')")} vendido no sistema + ${D(R$(m.foraEmp),"V130_go('#/dblistas/regras')")} fora do sistema (${E(m.fonteFora)}) · `:''}Vendido no sistema ${D(R$(m.sisEmp),"V130_metaGo('')")} ${m.okKpi?'<span class="ok">✓ o mesmo de Comercial › Propostas</span>':'<span class="bad">≠ '+R$(m.kpi)+' em Comercial › Propostas</span>'} · soma das metas das linhas ${m.okSoma?'<span class="ok">✓ = meta da empresa</span>':'<span class="bad">≠ meta da empresa</span>'} · faltam ${D(N0(m.mesesRest)+(m.mesesRest===1?' mês':' meses'),"V130_go('#/fluxo')")} no ano. Clique na linha para ver os pedidos vendidos.</div>${(()=>{const cf=window.V142?(T(()=>V142.conferir(),[])||[]):[];if(!cf.length)return '';return `<div class="vx-ponte" style="border-left:3px solid #d97706;padding-left:10px"><b>⚠ ${cf.length} vendas para conferir</b> — ${cf.map(p=>`<a href="#/editor/${E(p.id)}">${E(p.numero)} · ${E(p.cliente_nome||'')} · ${R$(+p.valor_venda||0)} · ${E(p.fonte_linha||'')}</a> <span class="sub">(${E(p.verificar)})</span>`).join(' · ')}</div>`})()}${(()=>{const sd=(m.ls||[]).length?T(()=>(S.db.propostas||[]).filter(p=>p.fonte==='METAS 2026'&&p.data_desconhecida),[]):[];if(!sd.length)return '';return `<div class="vx-ponte"><span class="sub">${sd.length} vendas da planilha METAS não têm data (${R$(sd.reduce((a,p)=>a+(+p.valor_venda||0),0))}): contam no ano, em nenhum mês.</span></div>`})()}</div>`}
+    <div class="vx-ponte">${m.temFora?`Realizado no ano ${R$(m.realEmp)} = ${D(R$(m.sisEmp),"V130_metaGo('')")} vendido no sistema + ${D(R$(m.foraEmp),"V130_go('#/dblistas/regras')")} fora do sistema (${E(m.fonteFora)}) · `:''}Vendido no sistema ${D(R$(m.sisEmp),"V130_metaGo('')")} ${m.okKpi?'<span class="ok">✓ o mesmo de Comercial › Propostas</span>':'<span class="bad">≠ '+R$(m.kpi)+' em Comercial › Propostas</span>'} · soma das metas das linhas ${m.okSoma?'<span class="ok">✓ = meta da empresa</span>':'<span class="bad">≠ meta da empresa</span>'} · faltam ${D(N0(m.mesesRest)+(m.mesesRest===1?' mês':' meses'),"V130_go('#/fluxo')")} no ano. Clique na linha para ver os pedidos vendidos.</div>${(()=>{const cf=window.V142?(T(()=>V142.conferir(),[])||[]):[];if(!cf.length)return '';return `<details class="vx-conf"><summary>⚠ ${cf.length} vendas para conferir</summary><div class="vx-conf-l">${cf.map(p=>`<a href="#/editor/${E(p.id)}"><b>${E(p.numero)}</b> <span>${E(p.cliente_nome||'')}</span> <span>${R$(+p.valor_venda||0)}</span> <em>${E(p.fonte_linha||'')} · ${E(p.verificar)}</em></a>`).join('')}</div></details>`})()}${(()=>{const sd=(m.ls||[]).length?T(()=>(S.db.propostas||[]).filter(p=>p.fonte==='METAS 2026'&&p.data_desconhecida),[]):[];if(!sd.length)return '';return `<div class="vx-ponte"><span class="sub">${sd.length} vendas da planilha METAS não têm data (${R$(sd.reduce((a,p)=>a+(+p.valor_venda||0),0))}): contam no ano, em nenhum mês.</span></div>`})()}</div>`}
 window.V130_pedMes=function(){try{S.propF={st:'',fr:'',q:'',cons:'',ym:VD.ym}}catch(e){}location.hash='#/propostas'};
 window.V130_metaGo=function(k,fil){try{S.propF={st:'',fr:k||'',q:'',cons:'',ym:'',fil:fil||'',vano:String((S.db.meta&&S.db.meta.ano)||new Date().getFullYear())}}catch(e){}location.hash='#/propostas'};
 
@@ -669,8 +667,8 @@ function gaveta4(k,a){const t=hoje();
     return gHead(x.dia?'Caixa em '+x.lb:'Caixa na semana '+x.lb,R$(x.saldo),'saldo no fim '+(x.dia?'do dia':'da semana')+' · entra '+R$(x.ent)+' · sai '+R$(x.sai))+
      `<h4 class="vx-h4">Entra · ${R$(x.ent)}</h4>`+(rec.length?tabela(['Cliente','Vencimento','Valor'],rec.map(l=>tr([E(cx().cliDe(l)),dBR(l.vencimento)+(String(l.vencimento)<t?' <span class="bad">vencido</span>':''),R$(l.valor)],'#/receber/todos'))):vazio('Nada a receber.'))+
      `<h4 class="vx-h4">Sai · ${R$(x.sai)}</h4>`+tabela(['O quê','Vencimento','Valor'],pag.map(l=>tr([E(l.categoria||l.origem||'Título')+(l.nf?' · NF '+E(l.nf):''),dBR(l.vencimento),R$(l.valor)],'#/pagar/todos')).concat([tr(['Despesas fixas e folha (média por dia)','',R$(fixo)],null)]).concat(part?[tr(['Comissões e RT previstas','',R$(part)],null)]:[]),trTot('Total',['',R$(r2(sum(pag,l=>l.valor)+fixo+part))]))+conf(x.sai,r2(sum(pag,l=>l.valor)+fixo+part))+abrir('Abrir Financeiro › Fluxo de caixa','#/fluxo')}
-  if(k==='flx30'){const f=fluxo();const d=f.dias.slice(0,31);if(a==='ent'){const ls=d.flatMap(y=>y.rec);return gHead('Entra em 30 dias',R$(f.ent30),'títulos a receber até '+dBR(d[d.length-1].dt))+(ls.length?tabela(['Cliente','Vencimento','Valor'],ls.map(l=>tr([E(cx().cliDe(l)),dBR(l.vencimento)+(String(l.vencimento)<t?' <span class="bad">vencido</span>':''),R$(l.valor)],'#/receber/todos')),trTot('Total',['',R$(sum(ls,l=>l.valor))])):vazio('Nada a receber em 30 dias.'))+conf(f.ent30,sum(ls,l=>l.valor))}
-    const ls=d.flatMap(y=>y.pag);const fixo=sum(d,y=>y.fixo),part=sum(d,y=>y.part);return gHead('Sai em 30 dias',R$(f.sai30),'títulos a pagar + fixos e folha + comissões/RT')+tabela(['O quê','Vencimento','Valor'],ls.map(l=>tr([E(l.categoria||l.origem||'Título'),dBR(l.vencimento),R$(l.valor)],'#/pagar/todos')).concat([tr(['Despesas fixas e folha (30 dias)','',R$(fixo)],null)]).concat(part?[tr(['Comissões e RT previstas','',R$(part)],null)]:[]),trTot('Total',['',R$(r2(sum(ls,l=>l.valor)+fixo+part))]))+conf(f.sai30,r2(sum(ls,l=>l.valor)+fixo+part))}
+  if(k==='flx30'){const f=fluxo();const w13=String(a).endsWith('13');const d=w13?f.dias:f.dias.slice(0,31);const per=w13?'13 semanas':'30 dias';const eV=w13?f.ent13:f.ent30,sV=w13?f.sai13:f.sai30;if(String(a).startsWith('ent')){const ls=d.flatMap(y=>y.rec);return gHead('Entra em '+per,R$(eV),'títulos a receber até '+dBR(d[d.length-1].dt))+(ls.length?tabela(['Cliente','Vencimento','Valor'],ls.map(l=>tr([E(cx().cliDe(l)),dBR(l.vencimento)+(String(l.vencimento)<t?' <span class="bad">vencido</span>':''),R$(l.valor)],'#/receber/todos')),trTot('Total',['',R$(sum(ls,l=>l.valor))])):vazio('Nada a receber em '+per+'.'))+conf(eV,sum(ls,l=>l.valor))}
+    const ls=d.flatMap(y=>y.pag);const fixo=sum(d,y=>y.fixo),part=sum(d,y=>y.part);return gHead('Sai em '+per,R$(sV),'títulos a pagar + fixos e folha + comissões/RT')+tabela(['O quê','Vencimento','Valor'],ls.map(l=>tr([E(l.categoria||l.origem||'Título'),dBR(l.vencimento),R$(l.valor)],'#/pagar/todos')).concat([tr(['Despesas fixas e folha ('+per+')','',R$(fixo)],null)]).concat(part?[tr(['Comissões e RT previstas','',R$(part)],null)]:[]),trTot('Total',['',R$(r2(sum(ls,l=>l.valor)+fixo+part))]))+conf(sV,r2(sum(ls,l=>l.valor)+fixo+part))}
   if(k==='pedido'){const x=pedidos().rows.find(y=>y.p.id===a);if(!x||x.falta)return '';
     const L_=(lb,v,sub,h)=>`<tr${h?` class="click" onclick="V130_go('${J(h)}')"`:''}><td>${lb}${sub?`<div class="lead">${sub}</div>`:''}</td><td>${v}</td></tr>`;
     return gHead(propLb(x.p)+' · '+E(nomeCli(x.p)),R$(x.lucro),'lucro previsto · margem '+P1(x.marg)+(x.av!=null?' · obra '+P0(x.av)+' avançada':''))+`<table class="no-filter"><tbody>${L_('<b>Venda</b> (produtos + serviços)',R$(x.venda),'',`#/editor/${x.p.id}`)}${L_('− Impostos sobre a venda',R$(-x.imp))}${L_('− Custo do produto',R$(-x.prod),'custo de catálogo (o que a venda considerou); o real quando já passou do planejado')}${L_('− Comissão e RT',R$(-x.com),'comissão '+R$(x.comV)+' · RT '+R$(x.rtV),'#/comissoes')}${L_('− Despesas da obra',R$(-x.obra),'técnicos '+R$(x.mo)+' · frete '+R$(x.frete)+(x.extras?' · viagens e extras '+R$(x.extras):''),x.o?`#/fobras/${x.o.id}`:'')}${L_('− Garantia (pós-venda)',x.gar?R$(-x.gar):'—','',x.o?`#/fpvgar/${x.o.id}`:'')}<tr class="tot"><td>= Lucro</td><td class="${x.lucro<0?'neg':'pos'}">${R$(x.lucro)}</td></tr></tbody></table>`+(x.o?abrir('Abrir Resultado da obra','#/fobras/'+x.o.id):abrir('Abrir o pedido','#/editor/'+x.p.id))}
@@ -839,6 +837,91 @@ html[data-inicio] #main .inicio-hero{min-height:calc(100vh - var(--v130-top,76px
 .vd-dr .vx-h4,.vx-h4{font-size:14px;font-weight:800;margin:18px 0 0}
 .vx .vx-foot{margin:34px 0 10px;font-size:12px;opacity:.65;display:flex;gap:16px;flex-wrap:wrap}
 .vx .vx-mine{font-size:13px;opacity:.7;margin-top:4px}
+/* ── v146 · Visão Executiva no estilo C (Bruno, 03/11): só a apresentação muda; o conteúdo é o mesmo ── */
+.vx{background:#EEF0F4}
+:root[data-theme="dark"] .vx{background:rgba(18,18,20,.92)}
+.vx #v130_s_b1,.vx #v130_s_b2,.vx #v130_s_b3,.vx #v130_s_b4{background:var(--card,#fff);border-radius:28px;padding:30px 32px;box-shadow:0 1px 2px rgba(20,30,60,.05),0 12px 32px rgba(20,30,60,.06);margin-top:24px;min-width:0}
+:root[data-theme="dark"] .vx .vx-s{box-shadow:none;border:1px solid rgba(255,255,255,.06)}
+.vx .vx-s .vx-sh{display:grid;grid-template-columns:auto 1fr auto;align-items:start;column-gap:14px;margin-bottom:18px}
+.vx .vx-s .vx-sh>div{display:contents}
+.vx .vx-s .vx-n{grid-row:1/3;width:34px;height:34px;border-radius:999px;background:#151821;color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:14px;letter-spacing:0;opacity:1;margin-top:1px}
+:root[data-theme="dark"] .vx .vx-s .vx-n{background:#fff;color:#151821}
+.vx .vx-s .vx-sh h2{grid-column:2;font-size:26px;font-weight:800;letter-spacing:-.02em;margin:0;line-height:1.3}
+.vx .vx-s .vx-sh .q{grid-column:2;font-size:14.5px;opacity:.65;margin-top:4px}
+.vx .vx-s .vx-lk{grid-column:3;grid-row:1;align-self:center;background:rgba(61,90,254,.09);color:#3D5AFE;padding:8px 14px;border-radius:999px;font-size:13.5px}
+.vx .vx-s .rx>.card{background:transparent;border:0;box-shadow:none;padding:0}
+.vx .vx-s .rx>.card.wide{grid-column:1/-1}
+.vx #v130_s_b3 .rx>.card:not(.wide),.vx #vx-meta-ano,.vx #v130_s_b3 .rx>.card.wide{background:rgba(120,120,128,.06)!important;border-radius:22px!important;padding:22px 24px!important}
+.vx #vx-meta-ano{margin-top:6px}
+.vx .vx-s h3{font-size:18px;font-weight:800}
+.vx .vx-tiles.vx-c4{grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+.vx .vx-s .vx-tile{border-radius:20px;padding:18px 20px;background:rgba(120,120,128,.07)}
+.vx .vx-s .vx-tile b{font-size:21px;white-space:normal;overflow-wrap:anywhere;line-height:1.2}
+.vx .vx-s .vx-tile span{font-size:13px;font-weight:500;opacity:.7;margin-top:6px}
+.vx .vx-hi .vx-tile{background:#151821;color:#fff;height:100%}.vx .vx-hi .vx-tile span{color:#aeb4c4;opacity:1}.vx .vx-hi .vx-tile b.neg{color:#ff8a8a}
+.vx .vx-s .vx-ponte{background:rgba(18,161,80,.07);border-radius:14px;padding:12px 16px;margin-top:14px;opacity:1;font-size:13.5px;color:inherit;overflow-wrap:anywhere}
+.vx .vx-s .rx table tr.tot td{background:#151821;color:#fff;border:0}
+.vx .vx-s .rx table tr.tot td:first-child{border-radius:14px 0 0 14px}.vx .vx-s .rx table tr.tot td:last-child{border-radius:0 14px 14px 0}
+.vx .vx-s .rx table tr.tot td .lead{color:#aeb4c4;opacity:1}
+.vx .vx-s .rx table tr.tot td.pos{color:#7ee2a8}.vx .vx-s .rx table tr.tot td.neg{color:#ff9b9b}
+.vx .vx-s .rx table tr.tot:hover td{background:#22263a}
+.vx .vx-s .rx table th{text-transform:none;letter-spacing:0;font-size:12.5px;font-weight:600}
+.vx .vx-s .rx table td{padding:12px 10px}
+.vx .vx-s .vx-dot{border-radius:50%}
+.vx .vx-s .vx-bar{height:10px;border-radius:5px}.vx .vx-s .vx-bar i{border-radius:5px}
+.vx .vx-s .vx-flx{max-height:none;border-radius:16px}
+.vx .vx-s .vx-big{background:var(--card,#fff);border-radius:18px;padding:18px 20px}
+.vx .vx-s .vx-big b{font-size:40px}
+.vx .vx-s .vx-big em{font-size:12.5px}
+.vx #v130_s_b3 .vx-big>em{display:inline-block;margin-top:10px;background:rgba(245,158,11,.14);color:#b45309;border-radius:999px;padding:5px 11px;font-weight:600;opacity:1}
+.vx .vx-s .vazio{background:rgba(120,120,128,.06);border-radius:18px;padding:30px;text-align:center;opacity:.75}
+.vx .vx-s select.per{border:0;background:rgba(120,120,128,.08);border-radius:999px;padding:7px 14px;font-weight:600}
+/* "vendas para conferir": pequeno, abre só quando clica */
+.vx .vx-conf{margin-top:12px;display:inline-block;max-width:100%}
+.vx .vx-conf summary{display:inline-flex;align-items:center;gap:6px;cursor:pointer;list-style:none;background:rgba(245,158,11,.14);color:#b45309;border-radius:999px;padding:5px 12px;font-size:12.5px;font-weight:700}
+.vx .vx-conf summary::-webkit-details-marker{display:none}
+.vx .vx-conf summary:after{content:"›";transition:transform .15s}.vx .vx-conf[open] summary:after{transform:rotate(90deg)}
+.vx .vx-conf-l{margin-top:8px;background:rgba(245,158,11,.07);border-radius:14px;padding:6px 14px;font-size:12.5px}
+.vx .vx-conf-l a{display:block;padding:8px 0;color:inherit;text-decoration:none;border-bottom:1px solid rgba(245,158,11,.18)}
+.vx .vx-conf-l a:last-child{border-bottom:0}
+.vx .vx-conf-l a b{color:#3D5AFE;margin-right:6px}.vx .vx-conf-l a span{margin-right:8px}.vx .vx-conf-l a em{display:block;font-style:normal;opacity:.65;margin-top:2px}
+/* celular: nada sai da tela — o texto quebra, as tabelas rolam dentro do próprio cartão */
+.vx .tw,.vx .vx-flx{overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%}
+.vx .vx-s,.vx .vx-s .rx,.vx .vx-s .rx>.card{min-width:0;max-width:100%}
+@media(max-width:900px){.vx .vx-tiles.vx-c4{grid-template-columns:1fr 1fr}}
+@media(max-width:600px){
+ .vx #v130_s_b1,.vx #v130_s_b2,.vx #v130_s_b3,.vx #v130_s_b4{padding:20px 16px;border-radius:22px;margin-top:16px}
+ .vx .vx-s .vx-sh{grid-template-columns:auto 1fr;row-gap:4px}
+ .vx .vx-s .vx-lk{grid-column:2;grid-row:auto;justify-self:start;margin-top:8px}
+ .vx .vx-s .vx-sh h2{font-size:21px}.vx .vx-s .vx-sh .q{font-size:13.5px}
+ .vx .vx-tiles.vx-c4{gap:10px}
+ .vx .vx-s .vx-tile{padding:14px}.vx .vx-s .vx-tile b{font-size:17px}
+ .vx #v130_s_b3 .rx>.card:not(.wide),.vx #vx-meta-ano,.vx #v130_s_b3 .rx>.card.wide{padding:16px 14px!important;border-radius:18px!important}
+ .vx .vx-s .vx-big b{font-size:32px}.vx .vx-s .vx-big span{font-size:18px}
+ .vx .vx-s .rx table{font-size:12.5px}.vx .vx-s .rx table td,.vx .vx-s .rx table th{padding:9px 8px}
+ .vx .vx-s .rx table td:first-child{min-width:120px}
+ .vx .vx-s .vx-ponte{font-size:12.5px;padding:10px 12px}
+ .vx .vx-s .d-flex.justify-content-between>.pt{flex:1 1 100%}
+ .vx{padding-left:8px!important;padding-right:8px!important}
+ .vx .vx-s .vx-lk{white-space:normal}
+ /* tabelas viram cartões: cada linha mostra "rótulo · valor", nada fica fora da tela */
+ .vx .vx-s .tw,.vx .vx-s .vx-flx{overflow:visible;border:0}
+ .vx .vx-s table thead{display:none}
+ .vx .vx-s table,.vx .vx-s table tbody,.vx .vx-s table tr{display:block;width:100%}
+ .vx .vx-s table tr{padding:10px 2px;border-bottom:1px solid var(--bd,#eceef3)}
+ .vx .vx-s table td{display:flow-root!important;position:relative;width:100%!important;padding:4px 0!important;border:0!important;white-space:nowrap!important;text-align:right!important;background:transparent!important;font-size:12.5px}
+ .vx .vx-s table td:before{content:attr(data-label);float:left;width:35%;margin-right:8px;white-space:normal;text-align:left;font-weight:500;opacity:.6;font-size:12px;line-height:1.3}
+ .vx .vx-s table td .lead{white-space:normal}
+ .vx .vx-s table td:first-child{display:block!important;text-align:left!important;font-size:14px;padding-bottom:4px!important;padding-left:0!important;white-space:normal!important}
+ .vx .vx-s table td:first-child:before,.vx .vx-s table td:not([data-label]):before{content:none}
+ .vx .vx-s table td:empty{display:none!important}
+ .vx .vx-s table td .vx-bar{margin-top:4px}
+ .vx #v130_s_b3 .rx>.card:not(.wide),.vx #vx-meta-ano,.vx #v130_s_b3 .rx>.card.wide{padding:14px 12px!important}
+ .vx .vx-s table td .lead{display:block}
+ .vx .vx-s table tr.tot{background:#151821;color:#fff;border-radius:14px;padding:12px 14px;border:0;margin-top:6px}
+ .vx .vx-s table tr.tot td:before{color:#aeb4c4;opacity:1}
+ .vx .vx-s table tr.wk{background:transparent}
+}
 </style>`;
 
 const saud=()=>{const h=new Date().getHours();return h<12?'Bom dia':h<18?'Boa tarde':'Boa noite'};
@@ -905,3 +988,8 @@ T(()=>{if(!document.getElementById('v130-nodir')){const st=document.createElemen
 window.V130API={com,est,cx,obr,rel,pos,qualidade,alertas,build,gaveta,AC};
 try{render()}catch(e){try{if(isHome())renderMain()}catch(_){}}
 })();
+
+/* v146: no celular as tabelas da Visão Executiva viram cartões — cada célula leva o nome da sua coluna */
+try{(function(){const lab=()=>{document.querySelectorAll('.vx .vx-s table').forEach(t=>{if(t.__lab===t.innerHTML.length)return;const hs=[...t.querySelectorAll('thead th')].map(h=>h.textContent.trim());
+  t.querySelectorAll('tbody tr').forEach(tr=>{let c=0;[...tr.children].forEach(td=>{const h=hs[c];if(h&&c>0)td.setAttribute('data-label',h);else td.removeAttribute('data-label');c+=+td.getAttribute('colspan')||1})});t.__lab=t.innerHTML.length})};
+  let q=0;new MutationObserver(()=>{if(q)return;q=1;requestAnimationFrame(()=>{q=0;lab()})}).observe(document.documentElement,{childList:true,subtree:true});lab()})()}catch(e){console.error('v146 rótulos',e)}
