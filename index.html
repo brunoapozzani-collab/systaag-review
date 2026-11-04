@@ -27119,7 +27119,7 @@ html.setAttribute('data-bg',LS.get('taag_bg')==='s'?'s':'p');renderToggle();
 
 /* ── mount / unmount the stage with the route ── */
 function isHome(){var h=location.hash.replace(/^#\/?/,'');return !h||h.split('/')[0]==='home'}
-function mount(){if(!isHome()){unmount();return}html.setAttribute('data-inicio','');fitStage();P.stop()} /* v147: fundo limpo no Início — sem globo/escamas (Bruno, 04/11/2026) */
+function mount(){if(!isHome()){unmount();return}html.setAttribute('data-inicio','');fitStage();if(html.getAttribute('data-bg')==='s'){P.stop();HBS.build()}else P.start()}
 function unmount(){html.removeAttribute('data-inicio');P.stop()}
 window.addEventListener('hashchange',function(){setTimeout(mount,0)});
 window.addEventListener('resize',function(){if(html.hasAttribute('data-inicio'))fitStage()});
@@ -27131,7 +27131,7 @@ if(typeof SCREENS!=='undefined'){
     return '<div class="inicio-wrap">'+
       '<div class="inicio-hero"><img src="'+LOGO_SRC+'" class="inicio-logo" alt="TAAG">'+
       '<div class="inicio-greet"><div class="inicio-greet-label">'+saud()+'</div><div class="inicio-greet-name">Olá, '+userName()+' 👋</div></div>'+
-      (old?'<div class="inicio-more"><button class="inicio-more-btn" type="button" onclick="window.__inicioMore(this)"><i class="bi bi-grid-1x2"></i> Resumo dos departamentos <i class="bi bi-chevron-down"></i></button></div>':'')+'</div>'+
+      (old?'<div class="inicio-more"><button class="inicio-more-btn" type="button" onclick="window.__inicioMore(this)"><i class="bi bi-grid-1x2"></i> Visão executiva <i class="bi bi-chevron-down"></i></button></div>':'')+'</div>'+
       (old?'<div class="inicio-old" hidden>'+old+'</div>':'')+'</div>'};
   window.__inicioMore=function(btn){var w=btn.closest('.inicio-wrap').querySelector('.inicio-old');var open=w.hasAttribute('hidden');if(open)w.removeAttribute('hidden');else w.setAttribute('hidden','');btn.querySelector('.bi-chevron-down,.bi-chevron-up').className='bi '+(open?'bi-chevron-up':'bi-chevron-down');if(open)setTimeout(function(){w.scrollIntoView({behavior:'smooth',block:'start'})},30)};
   if(window.OWNER)delete window.OWNER.home;

@@ -1,6 +1,6 @@
 /* v147 (04/11/2026) — Marca "taag" + atalhos dos departamentos no Início
-   1. Marca: o texto SYSTAAG do topo e o logo do Início viram o wordmark "taag" (taag-wordmark.png); fundo limpo, sem globo/escamas.
-   2. Atalhos: só no Início, uma régua fixa à direita com o resumo de cada departamento — clica, vai; "Início" traz de volta.
+   1. Marca: o texto SYSTAAG do topo e o logo do Início viram o wordmark "taag" (taag-wordmark.png); o fundo animado (globo/escamas) fica como era.
+   2. Atalhos: só no Início, uma régua fixa à direita com o resumo de cada departamento — clica, vai; o menu Início traz de volta.
    Bruno, 04/11/2026: "go and come back, easy and fast". */
 (function(){'use strict';
 try{
@@ -9,9 +9,6 @@ try{
   '.brand{letter-spacing:0;font-size:0}'+
   '.brand-img{height:16px;width:auto;display:block;filter:invert(1);opacity:.96}'+
   '.brand::after{font-size:16px;line-height:1;margin-left:8px}'+
-  /* Início limpo: sem globo, sem escamas, sem botão de fundo */
-  '#inicio-stage,#bg-toggle{display:none!important}'+
-  'html[data-inicio] body,html[data-inicio] #main,html[data-inicio] .layout{background:var(--bg,#fff)}'+
   '.inicio-logo{width:clamp(220px,44vw,620px)}'+
   /* régua de atalhos */
   '#v147-rail{display:none;position:fixed;right:18px;top:50%;transform:translateY(-50%);z-index:10000;flex-direction:column;gap:4px;padding:8px;border-radius:18px;'+
@@ -22,12 +19,12 @@ try{
   '#v147-rail a i{font-size:15px;width:18px;text-align:center;color:var(--dc)}'+
   '#v147-rail a:hover{background:var(--card-hover,#f1f5f9);transform:translateX(-2px)}'+
   '#v147-rail a small{display:block;font-weight:500;font-size:10.5px;color:var(--mut,#6b7280);line-height:1.1}'+
-  '#v147-rail a.home{margin-top:4px;border-top:1px solid var(--bd,rgba(0,0,0,.08));border-radius:0 0 12px 12px;padding-top:10px}'+
+  
   /* o conteúdo do Início não fica por baixo da régua */
-  '@media (min-width:1100px){html[data-inicio] .inicio-wrap,html[data-inicio] #v130_root{padding-right:190px}}'+
+  '@media (min-width:1100px){html[data-inicio] #v130_root{padding-right:190px}}'+
   /* no celular a régua vira uma faixa embaixo, rolável */
   '@media (max-width:760px){#v147-rail{top:calc(var(--v130-top,60px) + 10px);bottom:auto;left:72px;right:10px;transform:none;flex-direction:row;overflow-x:auto;gap:2px;padding:6px;border-radius:14px}'+
-    '#v147-rail .t{display:none}#v147-rail a{padding:8px 10px;flex-direction:column;gap:3px;font-size:10.5px}#v147-rail a small{display:none}#v147-rail a.home{margin:0;border:0;padding-top:8px}}';
+    '#v147-rail .t{display:none}#v147-rail a{padding:8px 10px;flex-direction:column;gap:3px;font-size:10.5px}#v147-rail a small{display:none}}';
   var st=document.createElement('style');st.id='v147-css';st.textContent=css;document.head.appendChild(st);
 
   var TABS=[
@@ -46,7 +43,7 @@ try{
     var r=document.createElement('nav');r.id='v147-rail';r.setAttribute('aria-label','Resumo de cada departamento');
     r.innerHTML='<div class="t">Resumos</div>'+TABS.map(function(t){
       return '<a href="'+t[0]+'" style="--dc:'+t[4]+'" title="'+E(t[2])+' › '+E(t[3])+'"><i class="bi '+t[1]+'"></i><span>'+E(t[2])+'<small>'+E(t[3])+'</small></span></a>'}).join('')+
-      '<a href="#/home" class="home" style="--dc:var(--tx,#111)" title="Voltar ao Início"><i class="bi bi-house-door"></i><span>Início</span></a>';
+      '';
     document.body.appendChild(r);
   }
   if(document.body)build();else document.addEventListener('DOMContentLoaded',build);
