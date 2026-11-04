@@ -11,19 +11,19 @@ try{
   '.brand::after{font-size:16px;line-height:1;margin-left:8px}'+
   '.inicio-logo{width:clamp(220px,44vw,620px)}'+
   /* régua de atalhos */
-  '#v147-rail{display:none;position:fixed;right:18px;top:50%;transform:translateY(-50%);z-index:10000;flex-direction:column;gap:4px;padding:8px;border-radius:18px;'+
+  '#v147-rail{display:none;position:fixed;right:24px;bottom:198px;top:auto;width:184px;box-sizing:border-box;max-height:calc(100vh - 290px);overflow-y:auto;z-index:10000;flex-direction:column;gap:2px;padding:10px;border-radius:18px;'+
     'background:var(--card,rgba(255,255,255,.86));border:1px solid var(--bd,rgba(0,0,0,.08));box-shadow:0 10px 30px rgba(0,0,0,.08);backdrop-filter:blur(14px) saturate(160%);-webkit-backdrop-filter:blur(14px) saturate(160%)}'+
   'html[data-inicio] #v147-rail{display:flex}'+
-  '#v147-rail .t{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--mut,#6b7280);padding:4px 10px 6px;text-align:center}'+
-  '#v147-rail a{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:12px;color:var(--tx,#111);text-decoration:none;font:600 12.5px var(--font-sans,system-ui);white-space:nowrap;transition:background .12s,transform .12s}'+
-  '#v147-rail a i{font-size:15px;width:18px;text-align:center;color:var(--dc)}'+
+  '#v147-rail .t{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--mut,#6b7280);padding:4px 0 8px 12px}'+
+  '#v147-rail a{display:grid;grid-template-columns:22px 1fr;align-items:center;column-gap:10px;width:100%;box-sizing:border-box;height:46px;padding:0 12px;border-radius:12px;color:var(--tx,#111);text-decoration:none;font:600 12.5px var(--font-sans,system-ui);white-space:nowrap;transition:background .12s,transform .12s}'+
+  '#v147-rail a i{font-size:16px;width:22px;height:22px;display:flex;align-items:center;justify-content:center;color:var(--dc)}'+'#v147-rail a span{display:block;line-height:1.15}'+
   '#v147-rail a:hover{background:var(--card-hover,#f1f5f9);transform:translateX(-2px)}'+
   '#v147-rail a small{display:block;font-weight:500;font-size:10.5px;color:var(--mut,#6b7280);line-height:1.1}'+
   
   /* o conteúdo do Início não fica por baixo da régua */
   '@media (min-width:1100px){html[data-inicio] #v130_root{padding-right:190px}}'+
   /* no celular a régua vira uma faixa embaixo, rolável */
-  '@media (max-width:760px){#v147-rail{top:calc(var(--v130-top,60px) + 10px);bottom:auto;left:72px;right:10px;transform:none;flex-direction:row;overflow-x:auto;gap:2px;padding:6px;border-radius:14px}'+
+  '@media (max-width:760px){#v147-rail{top:calc(var(--v130-top,60px) + 10px);bottom:auto;left:72px;right:10px;width:auto;max-height:none;flex-direction:row;overflow-x:auto;gap:2px;padding:6px;border-radius:14px}#v147-rail a{display:flex;width:auto;height:auto}'+
     '#v147-rail .t{display:none}#v147-rail a{padding:8px 10px;flex-direction:column;gap:3px;font-size:10.5px}#v147-rail a small{display:none}}';
   var st=document.createElement('style');st.id='v147-css';st.textContent=css;document.head.appendChild(st);
 
