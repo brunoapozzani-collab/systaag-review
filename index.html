@@ -1,10 +1,21 @@
 <!doctype html>
 <html lang="pt-BR" data-theme="light">
 <head>
+<script>/* v148 · MODO TREINO: com a chave systaag_treino_on=1 todo o armazenamento do protótipo passa a viver em "treino:*" — a base real não é tocada. Tem de ser o PRIMEIRO script da página. */
+(function(){var F='systaag_treino_on',P='treino:';var sp=window.Storage&&Storage.prototype;if(!sp)return;
+var g=sp.getItem,s=sp.setItem,r=sp.removeItem,k=sp.key,ld=Object.getOwnPropertyDescriptor(sp,'length'),lg=ld&&ld.get;if(!lg)return;
+window.__TREINO_RAW={get:function(x){return g.call(localStorage,x)},set:function(x,v){return s.call(localStorage,x,v)},rm:function(x){return r.call(localStorage,x)},keys:function(){var o=[],n=lg.call(localStorage);for(var i=0;i<n;i++)o.push(k.call(localStorage,i));return o}};
+var on=false;try{on=g.call(localStorage,F)==='1'}catch(e){}window.__TREINO=on;if(!on)return;
+function m(x){x=String(x);return (x===F||x.indexOf(P)===0)?x:P+x}
+function mine(st){var o=[],n=lg.call(st);for(var i=0;i<n;i++){var kk=k.call(st,i);if(kk&&kk.indexOf(P)===0)o.push(kk.slice(P.length))}return o}
+sp.getItem=function(x){return g.call(this,m(x))};sp.setItem=function(x,v){return s.call(this,m(x),v)};sp.removeItem=function(x){return r.call(this,m(x))};
+sp.key=function(i){var a=mine(this);return i<a.length?a[i]:null};sp.clear=function(){var st=this;mine(st).forEach(function(kk){r.call(st,P+kk)})};
+Object.defineProperty(sp,'length',{get:function(){return mine(this).length},configurable:true});
+})();</script>
 <script>/* v135: a base como estava gravada, antes de qualquer camada mexer nela */try{window.__v135_raw=localStorage.getItem("systaag_erp1z")||localStorage.getItem("systaag_erp1")||null;window.__v135_zero=localStorage.getItem("systaag_zero")}catch(e){}</script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>SYSTAAG — protótipo v146 (a Base manda · só o real · Gestão lê as abas)</title>
+<title>SYSTAAG — protótipo v148 (Modo treino · a Base manda · só o real)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -30799,4 +30810,5 @@ try{if(/^#\/(dbfiliais|finlanc)/.test(location.hash))render()}catch(e){}
 <script src="v145-dbcrm-layout.js"></script>
 <script src="v146-gestao.js"></script>
 <script src="v147-marca-rail.js"></script>
+<script src="v148-treino.js"></script>
 </body></html>
