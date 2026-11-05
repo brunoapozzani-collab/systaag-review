@@ -343,12 +343,15 @@ function limpar(){ST.sp=null;docs().forEach(r=>{r.querySelectorAll('[data-v155h]
 window.V155_limpar=limpar;
 
 /* ───────────────────────── vigia: toda gaveta nova vira o painel ───────────────────────── */
-let fila=false;
+let fila=false;let ULT_CLIQUE=0,ULT_HASH=0;try{window.addEventListener('hashchange',()=>{ULT_HASH=Date.now()},{capture:true})}catch(e){}try{['pointerdown','keydown'].forEach(ev=>window.addEventListener(ev,()=>{ULT_CLIQUE=Date.now()},{capture:true}))}catch(e){}
 function varrer(){fila=false;
   try{
     const dr=[...document.querySelectorAll('.vd-dr')].filter(d=>!d.closest('#v155-ov'));
     const nova=dr.find(d=>!d.hasAttribute('data-v155'));
-    if(nova){dr.forEach(d=>d.setAttribute('data-v155','1'));const D=lerGaveta(nova);if(D.lb||D.big||D.list.length)montar(D)}
+    if(nova){dr.forEach(d=>d.setAttribute('data-v155','1'));
+      /* 05/11 v157: gaveta que reaparece sozinha ao voltar para a tela (estado antigo) não abre o painel — só abre logo depois de um clique de verdade */
+      if(Date.now()-ULT_CLIQUE>2500||ULT_HASH>=ULT_CLIQUE){const x=nova.querySelector(':scope > .x');try{if(x)x.click()}catch(e){}}
+      else{const D=lerGaveta(nova);if(D.lb||D.big||D.list.length)montar(D)}}
     else if(CUR&&!(CUR.src&&CUR.src.isConnected)){tirar()}
     const mods=[...document.querySelectorAll('body > .card.p-3[style*="position: fixed"]')].filter(m=>m.hasAttribute('data-v155ativ')&&!m.hasAttribute('data-v155'));
     mods.forEach(m=>{m.setAttribute('data-v155','1');montar(lerModal(m))});

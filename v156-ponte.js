@@ -36,13 +36,18 @@ V.ir=function(spec){
   const recs=(spec.recs||[]).map(r=>({ids:(r.ids||[]).map(String).filter(x=>x.length>=1),name:r.name||'',nn:String(r.name||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/\s+/g,' ').trim(),toks:r.toks||[],h:r.h||''}));
   const sp={path:spec.path,ids:[],names:[],recs,n:recs.length,lb:spec.lb,unid:spec.unid,ponte:spec.ponte,porque:spec.porque,t:Date.now(),t0:Date.now(),fixed:false};
   if(!sp.porque)try{V.ajusta(sp)}catch(e){}
-  ST.sp=recs.length?sp:null;
+  ST.sp=recs.length?sp:null;V._limpa=recs.length&&typeof spec.limpa==='function'?{path:spec.path,f:spec.limpa,sp}:null;
   try{spec.nav()}catch(e){console.error('v156 nav',e);try{location.hash=spec.path}catch(_){}}
   if(!ST.sp)return;let i=0;const iv=setInterval(()=>{if(ST.sp!==sp||++i>40){clearInterval(iv);return}try{V155D.aplicar()}catch(e){}},500);
   setTimeout(()=>{try{V155D.aplicar()}catch(e){}},80)};
 const go=(h)=>()=>{location.hash=h};
+/* "Mostrar tudo ✕" da faixa (v155): depois de tirar o destaque, desliga o filtro nativo que a porta ligou (V.ir spec.limpa) */
+document.addEventListener('click',ev=>{const b=ev.target&&ev.target.closest&&ev.target.closest('[data-v155ban] button');if(!b)return;const L=V._limpa;if(!L)return;V._limpa=null;
+  const cur=(location.hash||'').split('?')[0];if(cur!==String(L.path).split('?')[0])return;setTimeout(()=>{try{L.f()}catch(e){console.error('v156 limpa',e)}},0)},true);
 const propRec=p=>({ids:[p.id],name:(p.numero?'#'+p.numero+' · ':'')+(T(()=>(getRow('obras',p.obra_id)||{}).nome,'')||p.nome||p.cliente_nome||p.id),h:'#/editor/'+p.id});
 V.propostas=function(ps,lb,nativo){V.ir({path:'#/propostas',lb,unid:'propostas',recs:ps.map(propRec),
+  /* "Mostrar tudo ✕" tira também o filtro da própria lista (ano, frente, filial…) que a porta ligou */
+  limpa(){try{S.propF={}}catch(e){}try{renderMain()}catch(e){}},
   nav(){try{S.propF=Object.assign({st:'',fr:'',q:'',cons:'',ym:'',fil:'',vano:''},nativo||{})}catch(e){}location.hash='#/propostas';try{renderMain()}catch(e){}}})};
 
 /* ───────── §2 um clique, uma gaveta: o número de dentro ganha do cartão de fora ───────── */
@@ -61,14 +66,20 @@ function vendGestao(){const f=S.comF||{};const gs=S.gSub||'geral';
   let v=(S.db.propostas||[]).filter(p=>(!f.frente||p.linha===f.frente)&&temCons(p,f.cons)).filter(p=>['vendida','em_obra','concluida'].includes(p.estado)&&!p.demo&&String(p.vendida_em||'').startsWith(ano()));
   if(gs==='boutique')v=v.filter(p=>p.linha==='focal');return v}
 V.gestaoProp=function(k){const f=S.comF||{};const vend=vendGestao();const ps=k?vend.filter(p=>linhaK(p)===k):vend;
-  const lb=N0(ps.length)+' · propostas vendidas '+ano()+(k?' · '+(LINLB[k]||k):'')+(f.cons?' · '+f.cons:'');
+  const lb=N0(ps.length)+' · propostas vendidas '+ano()+(k?' · '+(LINLB[k]||k):(S.gSub==='boutique'?' · '+LINLB.focal:''))+(f.cons?' · '+f.cons:'');
   const fr=k?(k.startsWith('taag')?'taag':k):((S.gSub==='boutique')?'focal':(f.frente||''));
   V.propostas(ps,lb,{fr,fil:k==='taag_sp'?'SP':k==='taag_rj'?'RJ':'',vano:ano()})};
 /* fechadas por consultor / parceiro: o mesmo filtro de negociações que os outros números da Gestão usam */
 V.negF=function(F){const c=S.comF||{};try{S.negF=Object.assign({},c.frente?{frente:c.frente}:{},c.cons?{cons:c.cons}:{},F)}catch(e){}location.hash='#/negs'};
 V.rolar=function(sel){try{const el=document.querySelector(sel);if(el){el.scrollIntoView({behavior:'smooth',block:'center'});el.style.transition='box-shadow .3s';el.style.boxShadow='0 0 0 3px rgba(13,110,253,.35)';setTimeout(()=>el.style.boxShadow='',1400)}}catch(e){}};
-V.obrasSit=function(sit){const O=S.db.obras||[];const xs=sit==null?O:O.filter(o=>(o.situacao||o.statusPlanilha||'sem situação')===sit);
-  V.ir({path:'#/obras',lb:N0(xs.length)+' · obras'+(sit?' · '+sit:''),unid:'obras',recs:xs.map(o=>({ids:[o.id],name:o.nome||o.id,h:'#/obras/'+o.id})),
+/* com o filtro de consultor ligado, a v151 troca "OBRAS 359" pelas obras do consultor (comercial da obra ou proposta
+   vendida por ele, situação pelo COP) — a porta abre essas, não as 359 */
+const pessoaF=()=>{const f=S.comF||{};if(!f.cons)return null;const r=T(()=>V123.pessoaDoConsultor(f.cons),null);return r&&r.pessoa?r.pessoa:null};
+const obrasDaPessoa=pid=>{const ids=p=>T(()=>V151.idsDaProposta(p),[])||[];const via=new Set((S.db.propostas||[]).filter(p=>p.obra_id&&ids(p).includes(pid)).map(p=>p.obra_id));
+  return (S.db.obras||[]).filter(o=>o.ativo!==false&&!o.merged_into&&((o.comercial_ids||[]).includes(pid)||via.has(o.id)))};
+V.obrasSit=function(sit){const pe=pessoaF();const O=pe?obrasDaPessoa(pe.id):(S.db.obras||[]);const sitOf=o=>pe?T(()=>COP.situacao(o),o.situacao||''):(o.situacao||o.statusPlanilha||'sem situação');
+  const xs=sit==null?O:O.filter(o=>sitOf(o)===sit);
+  V.ir({path:'#/obras',lb:N0(xs.length)+' · obras'+(pe?' de '+pe.nome:'')+(sit?' · '+sit:''),unid:'obras',recs:xs.map(o=>({ids:[o.id],name:o.nome||o.id,h:'#/obras/'+o.id})),
     nav(){try{COP.ui.obrasTab='obras'}catch(e){}try{if(COP.ope&&COP.ope.go){COP.ope.go('obras',{situacao:sit||''},'#/obras');return}}catch(e){}try{COP.ui.obras={situacao:sit||''}}catch(e){}location.hash='#/obras'}})};
 const CRMV={oport:'oportunidades',interacoes:'interacoes',tarefas:'tarefas',parceiros:'parceiros'};
 V.crmParams=function(view,params){const t0=Date.now();const iv=setInterval(()=>{try{const w=document.getElementById('crmFrame').contentWindow;
@@ -92,6 +103,8 @@ function gestaoHTML(h){if(typeof h!=='string')return h;
   if(o0>=0){const o1=h.indexOf('</div></div>',o0);const end=o1>0?o1:h.length;let c=h.slice(o0,end);
     c=c.replace(/<a href="#\/obras" class="vx-door">(\d[\d.]*) ([^<]+)<\/a>/g,(m,nn,sit)=>{const s=sit.replace(/&amp;/g,'&').replace(/&#39;/g,"'").replace(/&quot;/g,'"');return `<a href="javascript:void 0" class="vx-door" onclick="event.stopPropagation();V156.obrasSit('${J(s)}')">${nn} ${sit}</a>`});
     c=c.replace(/<a href="#\/obras" class="vx-door">(\d[\d.]*)<\/a>/,`<a href="javascript:void 0" class="vx-door" onclick="event.stopPropagation();V156.obrasSit(null)">$1</a>`);
+    /* cartão da v151 (filtro de consultor): "60 Concluída · 40 Em andamento" era texto — cada termo vira porta */
+    if(/OBRAS DE /.test(c))c=c.replace(/(<span class="sub">)([^<]*)(<\/span>)/,(m,a,txt,z)=>a+txt.split(' · ').map(t=>{const mm=/^(\d[\d.]*) (.+)$/.exec(t);if(!mm)return t;const s0=mm[2].replace(/&amp;/g,'&').replace(/&#39;/g,"'").replace(/&quot;/g,'"');return `<a href="javascript:void 0" class="vx-door" onclick="event.stopPropagation();V156.obrasSit('${J(s0)}')">${mm[1]} ${mm[2]}</a>`}).join(' · ')+z);
     h=h.slice(0,o0)+c+h.slice(end)}
   /* 3b2) KPIs do topo: "OBRAS 359" (abria Obras nas ativas = 95) e "VENDIDO 2026" (sem porta) */
   h=h.replace(/<a href="#\/obras" class="vx-door">(\d[\d.]*)<\/a>/g,`<a href="javascript:void 0" class="vx-door" onclick="event.stopPropagation();V156.obrasSit(null)">$1</a>`);
@@ -102,7 +115,7 @@ function gestaoHTML(h){if(typeof h!=='string')return h;
   h=h.replace(/<b style="font-size:28px;color:#198754">(\d[\d.]*)<\/b> <b>negociações fechadas<\/b>/,`<b style="font-size:28px;color:#198754;cursor:pointer;text-decoration:underline dotted" onclick="event.stopPropagation();V156.negF({res:'fechada'})" title="abrir as negociações fechadas">$1</b> <b>negociações fechadas</b>`);
   h=h.replace(/<span class="text-center"><b style="font-size:18px">(\d[\d.]*)<\/b><div class="sub" style="font-size:10px">(consultores|parceiros)<\/div><\/span>/g,(m,nn,w)=>`<span class="text-center" style="cursor:pointer" onclick="event.stopPropagation();V156.rolar('[data-v156l=${w}]')" title="ver a lista por ${w==='consultores'?'consultor':'parceiro'} logo abaixo"><b style="font-size:18px;text-decoration:underline dotted">${nn}</b><div class="sub" style="font-size:10px">${w}</div></span>`);
   ['CONSULTOR','PARCEIRO'].forEach(W=>{const mk='letter-spacing:.06em">FECHADAS POR '+W+'</div>';let a=h.indexOf(mk);if(a<0)return;
-    const b=h.indexOf('<div class="col-md-6">',a);const z=b>0?b:(h.indexOf('</div></div></div>',a)>0?h.indexOf('</div></div></div>',a):h.length);
+    const b=h.indexOf('<div class="col-md-6">',a);const t3=h.indexOf('</div></div></div>',a);const z=b>0?b:(t3>0?t3+6:h.length);/* +6: a última barra fecha o próprio </div> (sem isso ela ficava sem porta e a v138 adivinhava DRE) */
     let blk=h.slice(a,z);const fk=W==='CONSULTOR'?'consultor':'parc';
     blk=blk.replace(/<div class="d-flex align-items-center gap-2 py-1" style="font-size:12px"><span style="([^"]*)" title="([^"]*)">([^<]*)<\/span>([\s\S]*?)<b style="width:70px;text-align:right">(\d[\d.]*)<\/b><\/div>/g,(m,st,ti,lb,mid,nn)=>{const v=ti.replace(/&amp;/g,'&').replace(/&#39;/g,"'").replace(/&quot;/g,'"');
       return `<div class="d-flex align-items-center gap-2 py-1" style="font-size:12px;cursor:pointer" onclick="event.stopPropagation();V156.negF({res:'fechada',${fk}:'${J(v)}'})" title="abrir as ${nn} negociações fechadas de ${E(v)}"><span style="${st}" title="${ti}">${lb}</span>${mid}<b style="width:70px;text-align:right;text-decoration:underline dotted">${nn}</b></div>`});
@@ -162,8 +175,9 @@ function ligaGestao(){if(typeof SCREENS!=='object'||typeof SCREENS.gestao!=='fun
 function ligaNeg(){const f=window.negMatch;if(typeof f!=='function')return false;if(f.__v156)return true;
   const EX={consultor:n=>String(n.consultor||'—'),cliente:n=>String(n.cliente_nome||'—'),tipo:n=>String(n.tipo||''),motivo:n=>String(n.motivo||'')};
   const ACT=/Conversamos|Adiado|Indicou|Oportunidade recebida/;
-  const w=function(n,F){if(!F)return f.apply(this,arguments);const ks=Object.keys(F).filter(k=>F[k]!=null&&F[k]!==''&&(EX[k]||k==='acto'||k==='actm'));if(!ks.length)return f.apply(this,arguments);
+  const w=function(n,F){if(!F)return f.apply(this,arguments);const ks=Object.keys(F).filter(k=>F[k]!=null&&F[k]!==''&&(EX[k]||k==='acto'||k==='actm'||k==='tambem'));if(!ks.length)return f.apply(this,arguments);
     for(const k of ks){if(EX[k]){if(EX[k](n)!==String(F[k]))return false}
+      else if(k==='tambem'){if(!T(()=>negCons(n).includes(F.tambem),false))return false}
       else{const acts=(n.timeline||[]).filter(x=>ACT.test(x.o||''));if(k==='acto'&&!acts.some(x=>String(x.o||'').replace(/ —.*/,'')===F.acto))return false;if(k==='actm'&&!acts.some(x=>(String(x.data||'').slice(0,7)||'—')===F.actm))return false}}
     const G=Object.assign({},F);ks.forEach(k=>delete G[k]);return f.call(this,n,G)};w.__v156=1;window.negMatch=w;return true}
 /* Pipeline: o cartão "No futuro" abria as em jogo (res:'jogo') */
@@ -208,6 +222,8 @@ POS.push(()=>{if(!/^#\/(gestao|pipeline|negs)/.test(location.hash))return;const 
     const own=Object.assign({},F);if(c.frente&&own.frente===c.frente)delete own.frente;if(c.cons&&own.cons===c.cons)delete own.cons;
     if(cnt(own)===shown)return;const alts=[];const sem=(o,k)=>{const x=Object.assign({},o);delete x[k];return x};
     if(F.cons)alts.push(Object.assign(sem(own,'cons'),{consultor:F.cons}));if(F.parc)alts.push(Object.assign(sem(own,'parc'),{consultor:F.parc}));
+    /* dentro do filtro de consultor (ex.: Renata), "Isabela 2" = as de Renata que também são de Isabela */
+    if(F.cons&&c.cons&&F.cons!==c.cons)alts.push(Object.assign(sem(own,'cons'),{tambem:F.cons}));
     const G=alts.find(a=>cnt(a)===shown);if(G)e.setAttribute('onclick',`event.stopPropagation();V156.negF(${JSON.stringify(G)})`)})});
 
 /* Início › Operações: "72 em andamento · 85 ativas" e a ponte "82 em andamento = 72 SP + 10 RJ" abriam as 85 ATIVAS de SP */
