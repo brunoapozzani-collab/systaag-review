@@ -24,6 +24,7 @@ if(window.__v157)return;window.__v157=true;
 if(typeof S==='undefined'||!S.db)return;
 const D=window.V157_AT;if(!D||!Array.isArray(D.rows)){console.error('v157: v157-controle-at-data.js não carregou');return}
 const FONTE='Controle de AT 2026 (Pós-venda)';
+const REV='b'; /* b · 05/11: vendas do Pós-venda na meta, data da aba, famílias unidas, bônus nos novos */
 const E=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const T_=(f,d)=>{try{const v=f();return v===undefined?d:v}catch(e){return d}};
 const norm=s=>String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
@@ -71,7 +72,7 @@ function upsert(db,byId,at,extra,c,o){const ex=byId[at.id];
     fin:{confirmada:false,historico:true,obs:'Atendimento do Pós-venda (planilha CONTROLE DE AT 2026). Recebimento é do Financeiro.'}},extra);
   if(ex&&ex.at){Object.assign(ex.at,at,{sequence_number:ex.at.sequence_number||at.sequence_number})}else p.at=at;
   if(!ex){db.propostas.push(p);byId[at.id]=p}return p}
-function carregar(db){const F=estado(db);if(F.quando===D.quando)return 0;
+function carregar(db){const F=estado(db);if(F.quando===D.quando&&F.rev===REV)return 0;
   db.propostas=db.propostas||[];db.at_atendimentos=db.at_atendimentos||[];db.at_fsr=db.at_fsr||{};db.at_listas=db.at_listas||{};
   /* as propostas de exemplo que o protótipo semeou no Pós-venda (p1…p6) não são reais — saem (regra "só o real", 03/11) */
   const demo=db.propostas.filter(p=>p.linha==='posvenda'&&/^p\d+$/.test(String(p.id))&&!p.fonte);
@@ -101,7 +102,8 @@ function carregar(db){const F=estado(db);if(F.quando===D.quando)return 0;
   Object.keys(painelDoCli).forEach(k=>{const ids=[...new Set(painelDoCli[k].map(o=>o.cliente_id).filter(Boolean))];if(ids.length>1)flag('cliente_em_dois_cadastros',{cli:k,nome:(D.clientes[k]||{}).nome||k,clientes:ids})});
   const byId={};db.propostas.forEach(p=>{if(p.linha==='posvenda')byId[p.id]=p});const cardBy={};db.at_atendimentos.forEach(c=>cardBy[c.id]=c);
   let n=0,seq=(db.at_seq&&db.at_seq.at)||7;
-  D.rows.forEach(r=>{const o=r.obra?obraDe[r.obra]:(r.revisar?lad[r.cli]:null);const c=cliDe[r.cli];const nome=(D.clientes[r.cli]||{}).nome||r.original;
+  D.rows.forEach(r0=>{const r=Object.assign({},r0);if(!r.data){r.data='2026-'+String(r.mes).padStart(2,'0')+'-01';r.dataEstimada=true}
+    const o=r.obra?obraDe[r.obra]:(r.revisar?lad[r.cli]:null);const c=cliDe[r.cli];const nome=(D.clientes[r.cli]||{}).nome||r.original;
     const fechado=r.fs==='CONCLUIDO'&&!r.pend;
     const base={id:r.id,sequence_number:++seq,proposal_number:r.numero,proposal_type:'AT',request_group:r.grupo||'',name:(r.desc||'Atendimento')+'',client_name:nome,at_cliente:r.cli,
       postal_code:'',address:o&&o.endereco||'',open_status:fechado?'FECHADO':'EM ABERTO',approval_status:'APROVADO',
@@ -111,13 +113,14 @@ function carregar(db){const F=estado(db);if(F.quando===D.quando)return 0;
       custo_tecnico_planilha_cents:c$(r.tec),obra_id:o?o.id:'',cliente_id:c?c.id:'',created_at:(r.data||D.quando)+' 08:00:00',contacts:[],
       origem:FONTE,fonteAT:{mes:r.mes,linha:r.linha_aba,cliente_planilha:r.original,executor:r.executor_raw,status:r.status_raw,grupo:r.grupo_raw,pagamento:r.pag_raw},
       pendencia:r.pend||'',pendencia_tipo:r.pend_tipo||'',forma_pagamento:r.forma||'',pago_em:r.pago_em||'',relatorio_planilha:r.relatorio,
-      localAT:r.loc||'',donoAnterior:r.prev||'',revisar:r.revisar||'',notaAT:r.nota||'',origem_venda:r.grupo==='PROPOSTA'?'Pós-venda':''};
-    upsert(db,byId,base,{estado:'aprovada_cliente',data_atendimento:r.data||'',categoria:r.grupo||'AT',filial:o&&o.unidade==='RJ'?'RJ':'SP'},c,o);
+      localAT:r.loc||'',donoAnterior:r.prev||'',revisar:r.revisar||'',data_estimada:!!r.dataEstimada,notaAT:r.nota||'',origem_venda:r.grupo==='PROPOSTA'?'Pós-venda':''};
+    upsert(db,byId,base,{estado:(r.valor+r.extra)>0?(r.fs==='CONCLUIDO'?'concluida':'em_obra'):'aprovada_cliente',vendida_em:(r.valor+r.extra)>0?r.data:'',data_atendimento:r.data||'',categoria:r.grupo||'AT',filial:o&&o.unidade==='RJ'?'RJ':'SP'},c,o);
     const cid='atc26-'+r.id.slice(5);const card={id:cid,proposal_id:r.id,start_date:r.data||'',end_date:r.data||'',period:'',vehicle:'',services:r.desc||'',technicians:r.exec||[],attachments:[],
       created_at:(r.data||D.quando)+' 08:00:00',tipo:'AT',solicitante:'Pós-venda',custo_depto:'Pós-venda',cobranca:(r.valor+r.extra)>0?'Cobrável':'Sem cobrança',justificativa:'',origem:FONTE};
     if(cardBy[cid])Object.assign(cardBy[cid],card);else{db.at_atendimentos.push(card);cardBy[cid]=card}
     db.at_fsr[cid]={status:r.fs,checkin_at:null,checkout_at:null,report:r.relatorio===true?'Relatório entregue (planilha: OK)':r.relatorio===false?'Sem relatório (planilha: S/R)':'',pending_notes:r.pend||'',updated_by:'Controle de AT'};
     if(r.revisar)flag('local_a_definir',{id:r.id,cli:r.cli,nome,numero:r.numero,data:r.data,desc:r.desc,valor:r.valor+r.extra,motivo:r.revisar});
+    if(r.dataEstimada)flag('sem_data',{id:r.id,nome,numero:r.numero,valor:r.valor+r.extra,mes:r.mes});
     if(!r.status_raw)flag('sem_status',{id:r.id,nome,numero:r.numero,data:r.data});
     n++});
   /* §3 planos de serviço */
@@ -133,7 +136,7 @@ function carregar(db){const F=estado(db);if(F.quando===D.quando)return 0;
   db.at_seq=db.at_seq||{at:7,ps:550};db.at_seq.at=Math.max(db.at_seq.at||0,seq);
   /* §5 histórico */
   db.at_historico={fonte:D.fonte,anos:D.historico,grafico2026:D.grafico2026_digitado};
-  F.quando=D.quando;F.linhas=D.rows.length;F.cli=F.cli||{};
+  F.quando=D.quando;F.rev=REV;F.linhas=D.rows.length;F.cli=F.cli||{};
   return n}
 
 /* ---------- conta: o que a tela mostra ---------- */
@@ -167,13 +170,15 @@ function telaConf(){const r=numeros();const F=r.F;const fl=F.flags||[];const por
    `<div class="row g-3 mb-3">${tile('ATENDIMENTOS 2026',N0(tot),'jan–out/2026','',irGer())}${tile('RECEITA 2026',BRL(r.soma(r.ps)),'valor + cobrança extra','gr',"location.hash='#/posresultado'")}${tile('CLIENTES',N0(Object.keys(D.clientes).length),'casal/família = um cliente','',"location.hash='#/poscarteira'")}${tile('LOCAL A DEFINIR',N0(ns),'linhas sem obra certa',ns?'rd':'',"document.getElementById('v157-lad')&&document.getElementById('v157-lad').scrollIntoView({behavior:'smooth'})")}</div>
     <div class="card p-3 mb-3" style="border-left:4px solid #198754"><div>${eq1}</div><div class="mt-1">${eq2}</div>
     <div class="mt-1">${N0(r.planos.length)} planos de serviço · mensalidades ${BRL(r.planos.reduce((n,p)=>n+(p.proposal_value_cents||0),0))}/mês (a receita do plano entra quando o Financeiro registra o pagamento)</div>
-    <div class="sub mt-1" style="font-size:12px">A receita fica só no Pós-venda (centro de custo próprio): não soma nas vendas do Comercial. ${F.demoRetiradas?N0(F.demoRetiradas)+' propostas de exemplo do Pós-venda foram retiradas (não eram reais).':''}</div></div>`+
+    <div class="sub mt-1" style="font-size:12px">Os atendimentos cobrados são vendas da linha Pós-venda (AT): entram na meta da empresa (R$ 51.000.000) e na meta do Pós-venda (R$ 3.000.000). Os sem cobrança não são venda. ${F.demoRetiradas?N0(F.demoRetiradas)+' propostas de exemplo do Pós-venda foram retiradas (não eram reais).':''}</div></div>`+
    `<div class="row g-3 mb-3"><div class="col-lg-6"><div class="card p-3 h-100"><h6>Crescimento do Pós-venda</h6><div class="sub mb-2" style="font-size:12px">2021–2025: totais da aba Gráfico · 2026: soma dos atendimentos</div>${barras()}</div></div>
     <div class="col-lg-6"><div class="card p-3 h-100"><h6>2026: soma das linhas × total digitado no Gráfico</h6><div class="sub mb-2" style="font-size:12px">No sistema o total do mês é a soma das linhas; os totais digitados à mão na aba Gráfico ficam só para comparação.</div><table class="table table-sm mb-0"><tr><th>Mês</th><th>Soma das linhas</th><th>Digitado no Gráfico</th><th>Diferença</th></tr>${gRows}</table></div></div></div>`+
    `<div id="v157-lad">`+lista('Local a definir (a linha fica no cliente até a equipe dizer qual obra)',ladRows,x=>`<tr><td><b>${E(x.nm)}</b></td><td>${N0(x.a.length)} atendimento(s) · ${BRL(Math.round(x.a.reduce((n,f)=>n+f.valor,0)*100))}</td><td class="sub">${E(x.a[0].motivo)}</td><td><a href="javascript:void 0" onclick="${irGer(`{busca:'${E(x.nm).replace(/'/g,'')}'}`)}">ver as linhas</a></td></tr>`,'cliente · linhas · obras possíveis')+`</div>`+
    lista('Notas da carga (casas que mudaram de dono, linhas em dobro no Painel, lugares parecidos)',Object.values(notaUn),x=>`<tr><td><b>${E(x.p.client_name)}</b>${x.p.localAT?' · '+E(x.p.localAT):''}</td><td>${obraLink(x.p.obra_id,T_(()=>get('obras',x.p.obra_id).nome,''))}</td><td class="sub">${E(x.p.notaAT)}</td><td>${N0(x.n)}</td></tr>`,'cliente · obra · nota · atendimentos')+
-   lista('Mesmo cliente em mais de um cadastro (não foi fundido)',por('cliente_em_dois_cadastros'),f=>`<tr><td><b>${E(f.nome)}</b></td><td>${f.clientes.map(id=>E(T_(()=>get('clientes',id).nome,id))).join('<br>')}</td></tr>`,'as obras do Painel deste cliente estão em cadastros diferentes')+
+   lista('Mesmo cliente em mais de um cadastro',(F.unidos||[]).length?[]:por('cliente_em_dois_cadastros'),f=>`<tr><td><b>${E(f.nome)}</b></td><td>${f.clientes.map(id=>E(T_(()=>get('clientes',id).nome,id))).join('<br>')}</td></tr>`,'as obras do Painel deste cliente estão em cadastros diferentes')+
    lista('Linhas do Painel que não estão no sistema',por('linha_painel_ausente'),f=>`<tr><td>linha ${E(f.linha)} do Painel de Controle</td></tr>`)+
+   lista('Atendimentos sem data na planilha (entram no mês da aba)',por('sem_data'),f=>`<tr><td>${E(f.numero)}</td><td>${E(f.nome)}</td><td>${BRL(Math.round(f.valor*100))}</td><td>aba de ${MESES[f.mes-1]}/2026 → 01/${String(f.mes).padStart(2,'0')}/2026</td></tr>`,'a data certa é da equipe')+
+   lista('Famílias unidas em um cliente (backup em Base › Zona de risco)',(F.unidos||[]),f=>`<tr><td><b>${E(f.nome)}</b></td><td class="sub">${f.de.map(E).join(' · ')}</td><td>${N0(f.obras)} obras</td></tr>`,'cada local continua sendo uma obra')+
    lista('Atendimentos sem status na planilha',por('sem_status'),f=>`<tr><td>${E(f.numero)}</td><td>${E(f.nome)}</td><td>${fmtD(f.data)}</td></tr>`,'ficam como "Pendente"')+
    lista('Planos sem obra definida',por('plano_sem_obra'),f=>`<tr><td>${E(f.numero)}</td><td>${E(f.nome)}</td></tr>`,'o plano fica no cliente')+
    `<div class="card p-3 mb-3"><h6>Bônus técnico</h6><div>Regra (10% × (valor − custo técnico − deslocamento); P.S. = R$ 60): <b>${BRL(bReg)}</b> · registrado na planilha (o que foi pago): <b>${BRL(bPl)}</b> · diferença <b class="${bReg-bPl?'rd':''}">${BRL(bReg-bPl)}</b></div><div class="sub mt-1" style="font-size:12px">O resultado de 2026 usa o que a planilha registra; a regra fica calculada em cada atendimento para comparação.</div></div>`+
@@ -221,17 +226,9 @@ try{SCREENS.posconfat=telaConf;SCREENS.poscarteira=telaCarteira;
     const k=T_(()=>route().k,'');const it=[['poscarteira','Carteira do Pós-venda'],['posconfat','Conferência AT']];
     sn.insertAdjacentHTML('beforeend',`<div data-v157 class="sub" style="font-size:10px;letter-spacing:.06em;padding:8px 10px 2px;font-weight:700"><span><i class="bi bi-people me-1"></i>CARTEIRA E CARGA</span></div>`+it.map(([key,lb])=>`<a href="#/${key}" class="${key===k?'on':''}">${lb}</a>`).join(''))}catch(e){}return r}}catch(e){console.error('v157 tela',e)}
 
-/* ---------- Comercial não muda (regra do Bruno, 05/11) ----------
-   Os atendimentos do Controle de AT são do Pós-venda: não são venda do Comercial (V142.real = falso, como as propostas do Painel no v150)
-   e não aparecem na lista de Propostas do Comercial — só as 39 vendas de upgrade (grupo PROPOSTA) aparecem lá, marcadas
-   "origem Pós-venda", sem somar na meta. A receita deles fica no Resultado do Pós-venda. */
+/* ---------- Pós-venda é um departamento de vendas (Bruno, 05/11): os atendimentos cobrados são vendas da linha Pós-venda (AT),
+   meta R$ 3.000.000, e entram na barra de R$ 51.000.000; os atendimentos sem cobrança (cortesia, garantia, retorno a R$ 0) não são venda. */
 const ehAT=p=>p&&p.fonte===FONTE;
-const ehUpgrade=p=>ehAT(p)&&p.at&&p.at.origem_venda==='Pós-venda';
-try{if(window.V142&&typeof V142.real==='function'&&!V142.real.__v157){const f=V142.real;V142.real=function(p){if(ehAT(p))return false;return f.apply(this,arguments)};V142.real.__v157=1}}catch(e){}
-function semAT(fn,keep){return function(){const all=S.db.propostas;if(!Array.isArray(all))return fn.apply(this,arguments);
-  S.db.propostas=all.filter(p=>!ehAT(p)||(keep&&keep(p)));try{return fn.apply(this,arguments)}finally{S.db.propostas=all}}}
-try{if(typeof SCREENS.propostas==='function'&&!SCREENS.propostas.__v157){const _p=SCREENS.propostas;SCREENS.propostas=semAT(function(){let h=_p.apply(this,arguments);
-  if(typeof h==='string'){const n=(S.db.propostas||[]).filter(ehUpgrade).length;if(n)h=h.replace(/(<\/h\d>)/,`$1<div class="sub" style="font-size:12px;margin:-4px 0 8px">${N0(n)} upgrades vendidos pelo Pós-venda aparecem nesta lista (linha Pós-venda) e não somam na meta: a receita é do Pós-venda › Resultado. Os atendimentos do Pós-venda ficam no Pós-venda.</div>`)}return h},ehUpgrade);SCREENS.propostas.__v157=1}}catch(e){console.error('v157 propostas',e)}
 
 /* ---------- Operação não muda ----------
    As obras legado e as "local a definir" são do Pós-venda (clientes antigos, fora do Painel de Controle): não entram nas contas
@@ -242,10 +239,41 @@ function protegerOperacao(){try{Object.keys(SCREENS).forEach(k=>{const f=SCREENS
     if(!(k==='obras'||(typeof SEC_OF==='object'&&SEC_OF[k]==='ope')))return;const w=semLegado(f);w.__v157o=1;SCREENS[k]=w})}catch(e){console.error('v157 operação',e)}}
 protegerOperacao();
 
+/* ---------- §7 uma família = um cliente (Bruno, 05/11) ----------
+   A Planilha Mestra criava um cliente por linha do Painel ("VBM - RJ", "VBM - SP"). Pela regra (locais = obras do mesmo cliente;
+   uma pessoa = um registro), os cadastros da mesma família viram um só: as obras, propostas e negociações passam para o cliente
+   que fica, os nomes antigos viram apelidos (a busca e a sincronização da Mestra continuam achando). Nenhuma obra muda.
+   Antes, a base inteira vai para Base › Zona de risco (restaurável). */
+function unirFamilias(db){const F=estado(db);if(F.unidosQuando===D.quando+REV)return 0;const grupos=(F.flags||[]).filter(f=>f.tipo==='cliente_em_dois_cadastros');
+  if(!grupos.length){F.unidosQuando=D.quando+REV;return 0}
+  T_(()=>{if(window.V139&&typeof V139.guardar==='function')V139.guardar('antes de unir as famílias do Pós-venda (v157)')});
+  F.unidos=F.unidos||[];let n=0;
+  grupos.forEach(g=>{const ids=g.clientes.filter(id=>T_(()=>get('clientes',id),null));if(ids.length<2)return;
+    const keep=get('clientes',ids[0]);const outros=ids.slice(1).map(id=>get('clientes',id));const nomes=[keep.nome].concat(outros.map(c=>c.nome));
+    const novo=(D.clientes[g.cli]||{}).nome||keep.nome;
+    keep.aliases=Array.from(new Set([...(keep.aliases||[]),...nomes,...outros.flatMap(c=>c.aliases||[])].filter(a=>norm(a)!==norm(novo))));keep.nome=novo;
+    const velhos=new Set(outros.map(c=>c.id));
+    Object.keys(db).forEach(k=>{const col=db[k];if(!Array.isArray(col))return;col.forEach(x=>{if(!x||typeof x!=='object')return;
+      ['cliente_id','cliente_ref','client_id'].forEach(f=>{if(velhos.has(x[f]))x[f]=keep.id});if(x.at&&velhos.has(x.at.cliente_id))x.at.cliente_id=keep.id})});
+    db.clientes=db.clientes.filter(c=>!velhos.has(c.id));
+    Object.keys(F.cli||{}).forEach(k=>{if(velhos.has(F.cli[k]))F.cli[k]=keep.id});
+    F.unidos.push({nome:novo,de:nomes,id:keep.id,obras:(db.obras||[]).filter(o=>o.cliente_id===keep.id).length});n++});
+  F.unidosQuando=D.quando+REV;return n}
+
+/* ---------- §8 bônus técnico dos atendimentos novos (Bruno, 05/11) ----------
+   Histórico = o bônus que a planilha registra (já foi pago). Daqui para a frente o sistema calcula a regra em cada atendimento
+   novo: P.S. = R$ 60; os demais 10% × (valor − custo técnico − deslocamento). Se alguém digitar outro bônus, vale o digitado. */
+function bonusNovos(db){let n=0;(db.propostas||[]).forEach(p=>{const a=p&&p.linha==='posvenda'&&p.at;if(!a||a.origem===FONTE||a.proposal_type!=='AT')return;
+  if(a.bonus_manual)return;if(a._bonus_auto!=null&&a.technical_bonus_cents!==a._bonus_auto){a.bonus_manual=true;return}
+  const nCards=(db.at_atendimentos||[]).filter(c=>c.proposal_id===a.id).length||1;
+  const tc=T_(()=>COP.pos.techCost(a),0)+(a.custo_tecnico_planilha_cents||0);
+  const v=/^P\.?S/i.test(a.request_group||'')?6000:Math.max(0,Math.round(0.1*((a.proposal_value_cents||0)-tc-(a.displacement_cost_cents||0)*nCards)));
+  if(a.technical_bonus_cents!==v){a.technical_bonus_cents=v;n++}a._bonus_auto=v;a.bonus_regra=true});return n}
+
 /* ---------- boot ---------- */
 function boot(){try{const db=S.db;if(db.af113_zero||treino())return;
-    const n=carregar(db);if(n){T_(()=>log('propostas','v157','Controle de AT '+D.quando+': '+n+' atendimentos, '+D.planos.length+' planos'));T_(()=>save())}
+    const n=carregar(db);const u=unirFamilias(db);const b=bonusNovos(db);if(u||b)T_(()=>save());if(n){T_(()=>log('propostas','v157','Controle de AT '+D.quando+': '+n+' atendimentos, '+D.planos.length+' planos'));T_(()=>save())}
   }catch(e){console.error('v157',e)}}
 boot();
-try{const _rm=window.renderMain;window.renderMain=function(){try{const db=S.db;if(db&&!db.af113_zero&&!treino()&&!(db._v157&&db._v157.quando===D.quando))boot();protegerOperacao()}catch(e){}return _rm.apply(this,arguments)}}catch(e){}
+try{const _rm=window.renderMain;window.renderMain=function(){try{const db=S.db;if(db&&!db.af113_zero&&!treino()&&!(db._v157&&db._v157.quando===D.quando&&db._v157.rev===REV))boot();protegerOperacao();if(db&&!db.af113_zero&&!treino()&&bonusNovos(db))T_(()=>save())}catch(e){}return _rm.apply(this,arguments)}}catch(e){}
 })();
