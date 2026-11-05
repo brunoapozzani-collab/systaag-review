@@ -8951,7 +8951,7 @@ const fsrOf=id=>(S.db.at_fsr||{})[id]||{status:'PENDENTE',checkin_at:null,checko
 const ensureFsr=id=>{S.db.at_fsr=S.db.at_fsr||{};return S.db.at_fsr[id]=S.db.at_fsr[id]||{status:'PENDENTE',checkin_at:null,checkout_at:null,report:'',pending_notes:'',updated_by:''}};
 function techCost(p){let cents=0;for(const c of cards().filter(c=>c.proposal_id===p.id&&(c.custo_depto||'Pós-venda')==='Pós-venda')){const f=(S.db.at_fsr||{})[c.id];if(!f||!f.checkin_at||!f.checkout_at)continue;const h=Math.max(0,(new Date(f.checkout_at.replace(' ','T'))-new Date(f.checkin_at.replace(' ','T')))/36e5);for(const t of c.technicians)cents+=h*tecRate(t,p.request_group==='EMERGENCIAL')}return Math.round(cents)}
 P.techCost=techCost;
-function calc(p){const appts=cards().filter(c=>c.proposal_id===p.id).length;const recognized=p.proposal_type==='SERVICE_PLAN'?(p.payments||[]).filter(x=>x.paid).length*p.proposal_value_cents:p.proposal_value_cents;const disp=(p.displacement_cost_cents||0)*appts;const tc=techCost(p);const total=recognized+(p.additional_value_cents||0)-(p.discount_value_cents||0)-(p.third_party_cents||0)-(p.equipment_cost_cents||0)-disp-(p.technical_bonus_cents||0)-tc;return{appts,recognized,disp,tc,total}}
+function calc(p){const appts=cards().filter(c=>c.proposal_id===p.id).length;const recognized=p.proposal_type==='SERVICE_PLAN'?(p.payments||[]).filter(x=>x.paid).length*p.proposal_value_cents:p.proposal_value_cents;const disp=(p.displacement_cost_cents||0)*appts;const tc=techCost(p)+(p.custo_tecnico_planilha_cents||0);const total=recognized+(p.additional_value_cents||0)-(p.discount_value_cents||0)-(p.third_party_cents||0)-(p.equipment_cost_cents||0)-disp-(p.technical_bonus_cents||0)-tc;return{appts,recognized,disp,tc,total}}
 const garDe=p=>{const g=(S.db.params||{}).garantia||{mo_meses:3,equip_meses:12};const pr=p&&p.id?get('propostas',p.id):null;const f=pr&&pr.fechamento||{};return {mo:+f.garantia_mo_meses||g.mo_meses||3,eq:+f.garantia_equip_meses||g.equip_meses||12}};
 const warranty=(d,p)=>{const g=garDe(p);return d?{labor:addM(d,g.mo),equip:addM(d,g.eq),mo:g.mo,eq:g.eq}:{labor:'',equip:'',mo:g.mo,eq:g.eq}};P.garDe=garDe;
 P.calc=calc;P.warranty=warranty;
@@ -10680,7 +10680,7 @@ SCREENS.poscrono=()=>{const u=ui('poscrono');const td=C.today();if(!u.wk)u.wk=P.
 const CATS=[['receita','Receita'],['equipamentos','Equipamentos'],['servicos','Serviços e terceiros'],['deslocamento','Deslocamento e bônus'],['tecnicos','Custo técnico (horas)'],['despesas','Despesas do departamento'],['pessoal','Pessoal (rateio)'],['marketing','Marketing'],['investimentos','Investimentos']];
 const inPer=(d,per)=>!!d&&String(d).slice(0,per.length)===per;
 const realizado=per=>{const r={};CATS.forEach(([k])=>r[k]=0);
- for(const p of props()){const at=p.proposal_type==='AT';const dt=at?(p.technical_delivery_date||String(p.created_at||'').slice(0,10)):'';if(at&&p.approval_status==='APROVADO'&&inPer(dt,per)){r.receita+=(p.proposal_value_cents||0)+(p.additional_value_cents||0)-(p.discount_value_cents||0);r.equipamentos+=p.equipment_cost_cents||0;r.servicos+=p.third_party_cents||0;r.deslocamento+=(p.displacement_cost_cents||0)*cards().filter(c=>c.proposal_id===p.id).length+(p.technical_bonus_cents||0)}
+ for(const p of props()){const at=p.proposal_type==='AT';const dt=at?(p.technical_delivery_date||String(p.created_at||'').slice(0,10)):'';if(at&&p.approval_status==='APROVADO'&&inPer(dt,per)){r.receita+=(p.proposal_value_cents||0)+(p.additional_value_cents||0)-(p.discount_value_cents||0);r.equipamentos+=p.equipment_cost_cents||0;r.servicos+=p.third_party_cents||0;r.tecnicos+=p.custo_tecnico_planilha_cents||0;r.deslocamento+=(p.displacement_cost_cents||0)*cards().filter(c=>c.proposal_id===p.id).length+(p.technical_bonus_cents||0)}
   if(!at)(p.payments||[]).forEach(x=>{if(x.paid&&inPer(x.dueDate,per))r.receita+=p.proposal_value_cents||0})}
  for(const c of cards()){const f=fsrOf(c.id);if(!f.checkin_at||!f.checkout_at||!inPer(f.checkout_at,per))continue;const p=propOf(c.proposal_id)||{};const h=Math.max(0,(new Date(f.checkout_at.replace(' ','T'))-new Date(f.checkin_at.replace(' ','T')))/36e5);c.technicians.forEach(t=>r.tecnicos+=Math.round(h*P.tecRate(t,p.request_group==='EMERGENCIAL')))}
  (S.db.at_despesas||[]).forEach(d=>{if(inPer(d.data,per))r[d.cat==='marketing'?'marketing':d.cat==='investimentos'?'investimentos':'despesas']+=d.cents});
@@ -29681,14 +29681,14 @@ W.AFD={v:1,seq:W.AFD_focalSeq,dev:W.AFD_devCel};
      var vAp=soma(ap),vAn=soma(an),vRe=soma(re);
      var go=function(st){return "COP.ui.pospropostas={analise:'"+st+"'};render()"};
      var ponte='<div class="col-12"><div class="card p-2 afe-port" style="font-size:12.5px">'+
-      '<b>Total do portfólio '+BR(vAp)+'</b> = resultado líquido das '+
+      '<b>Total do portfólio '+BR(vAp/100)+'</b> = resultado líquido das '+
       '<a href="#/pospropostas" onclick="'+go('APROVADO')+';return false"><b>'+ap.length+' proposta(s) aprovada(s)</b></a> e planos. '+
       'Fora da conta até o cliente aprovar: '+
-      '<a href="#/pospropostas" onclick="'+go('EM ANALISE')+';return false"><b>EM ANÁLISE '+an.length+'</b></a> (proposto '+BR(vAn)+') · '+
-      '<a href="#/pospropostas" onclick="'+go('RECUSADO')+';return false"><b>RECUSADO '+re.length+'</b></a> ('+BR(vRe)+').'+
+      '<a href="#/pospropostas" onclick="'+go('EM ANALISE')+';return false"><b>EM ANÁLISE '+an.length+'</b></a> (proposto '+BR(vAn/100)+') · '+
+      '<a href="#/pospropostas" onclick="'+go('RECUSADO')+';return false"><b>RECUSADO '+re.length+'</b></a> ('+BR(vRe/100)+').'+
       '</div></div>';
      var rx=/(<div class="lb">Total do portfólio<\/div><div class="v gr">)[^<]*(<\/div><div class="s">)Resultado líquido somado(<\/div><\/div><\/div>)/;
-     if(rx.test(h))h=h.replace(rx,'$1'+BR(vAp)+'$2'+'resultado líquido das '+ap.length+' aprovada(s) e planos'+'$3'+ponte);
+     if(rx.test(h))h=h.replace(rx,'$1'+BR(vAp/100)+'$2'+'resultado líquido das '+ap.length+' aprovada(s) e planos'+'$3'+ponte);
      else h=insereNoTopo(h,ponte);
     }catch(e){console.error('AFE portfolio',e)}
     return h};
@@ -30827,4 +30827,6 @@ try{if(/^#\/(dbfiliais|finlanc)/.test(location.hash))render()}catch(e){}
 <script src="v151-vendedor-et.js"></script>
 <script src="v152-abas.js"></script>
 <script src="v154-rapido2.js"></script><script src="v155-inicio.js"></script><script src="v155-drill.js"></script><script src="v155-lixeira.js"></script><script src="v155-busca.js"></script><script src="v156-ponte.js"></script>
+<script src="v157-controle-at-data.js"></script>
+<script src="v157-controle-at.js"></script>
 </body></html>
