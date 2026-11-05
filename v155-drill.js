@@ -221,11 +221,35 @@ function tirar(){const o=document.getElementById('v155-ov');if(o)o.remove();CUR=
 /* os filtros que a própria tela guarda: zerados para que a lista mostre todos e o destaque escolha exatamente os do número */
 const ZERA={'#/propostas':()=>{S.propF={}},'#/negs':()=>{S.negF={}},'#/estoque':()=>{S.estCat=null;S.estSit=null;S.plF={}},
   '#/prjobras':()=>{COP.ui.prjobras={situacao:'*'}},'#/obras':()=>{COP.ui.obras={}}};
+/* v156: cada linha da gaveta = UM registro (ids do clique, ou o nome + as outras colunas) — a tela de destino mostra
+   uma linha por registro, e o que ela não tiver aparece nomeado na faixa (a ponte), nunca como diferença sem explicação */
+const NUMC=/^(R\$\s?)?[−+-]?[\d.,]+%?(\s*(un\.?|dias?|d))?$/i;
+function recsDe(tabs){const R=[];const cnt={};
+  tabs.forEach(t=>t.rows.forEach(r=>{if(r.kind!=='row')return;const on=r.on||'';const ids=[];let m;let prod=false;
+    const re=/#\/[a-z0-9_]+\/([^'"\s)?&]+)/gi;while((m=re.exec(on)))ids.push(decodeURIComponent(m[1]));
+    const rd=/S\.deal\s*=\s*'([^']+)'/.exec(on);if(rd)ids.push(rd[1]);
+    const ri=/\bid\s*:\s*'?([\w-]+)'?/.exec(on);if(ri)ids.push(ri[1]);
+    const rt=/_tog\('([^']+)'\)/.exec(on);if(rt){const seg=rt[1].split('|');if(seg.length>1){ids.push(seg[seg.length-1]);prod=/^(est_|terr|nec)/.test(seg[0])}}
+    const c0=r.tds[0];const b0=c0&&c0.querySelector('b');const name=txt(b0||c0).replace(/^[▸▾►▼]\s*/,'');
+    const toks=r.tds.slice(1).map(td=>txt(td)).filter(x=>x&&x!=='—'&&x.length>=2&&!NUMC.test(x)).map(nz).filter(x=>x.length>=2&&x.length<=90);
+    const u=[...new Set(ids.filter(x=>String(x).length>=3||/^[a-z]\d$/i.test(String(x))))];u.forEach(x=>cnt[x]=(cnt[x]||0)+1);
+    const hm=/(#\/[^'"\s)]+)/.exec(on);
+    const nn=nz(name);let nn2=nn.split(' · ')[0].split(' — ')[0].trim();if(nn2===nn){const pm=/\(([^)]+)\)/.exec(nn);if(pm)nn2=pm[1].trim()}
+    R.push({ids:u,name,nn,nn2:nn2!==nn&&nn2.length>=2?nn2:'',toks,h:prod&&u.length?'#/produto/'+u[u.length-1]:(hm&&hm[1].split('/').length>2?hm[1]:'')})}));
+  /* um "id" repetido em várias linhas (ex.: todas abrem '#/receber/vencidos') não identifica ninguém */
+  R.forEach(r=>{r.ids=r.ids.filter(x=>cnt[x]===1)});return R}
 function irFiltrado(D){
   const b=D.btn;if(!b)return;const code=b.code||b.on;const h=b.h||hashOf(code);const k=D.k||chaves(D.tabs);
   const n=D.tabs.reduce((a,t)=>a+t.n,0);
-  ST.sp=(k.ids.length||k.names.length)&&n?{path:h,ids:k.ids,names:k.names,n,lb:txt(Object.assign(document.createElement('div'),{innerHTML:D.big}))+' · '+txt(Object.assign(document.createElement('div'),{innerHTML:D.lb})),t:Date.now(),t0:Date.now(),fixed:false}:null;
+  try{if(window.V156&&typeof V156.painel==='function'&&V156.painel(D,{h,code,el:b.el,tirar}))return}catch(e){console.error('v156 painel',e)}
+  const recs=recsDe(D.tabs);
+  const h0=(D.tabs[0]&&D.tabs[0].hs[0])||'';const unid=h0?nz(h0).replace(/^(.*[^s])$/,'$1s').replace(/oes$/,'ões'):'';
+  const bigT=txt(Object.assign(document.createElement('div'),{innerHTML:D.big}));const bigN=/^\d[\d.]*$/.test(bigT)?+bigT.replace(/\./g,''):null;
+  const subT=txt(Object.assign(document.createElement('div'),{innerHTML:D.sub||''}));const subU=/^(\d[\d.]*) unidades\b/.exec(subT);
+  const ponte=recs.length&&(/un\.$/.test(bigT)||(bigN!=null&&bigN!==recs.length))?`${bigT} em ${N0(recs.length)} ${unid||'linhas'}`:(recs.length&&subU?`${subU[1]} un. em ${N0(recs.length)} ${unid||'linhas'}`:'');
+  ST.sp=(k.ids.length||k.names.length)&&n?{path:h,ids:k.ids,names:k.names,recs,unid,ponte,n:recs.length||n,lb:txt(Object.assign(document.createElement('div'),{innerHTML:D.big}))+' · '+txt(Object.assign(document.createElement('div'),{innerHTML:D.lb})),t:Date.now(),t0:Date.now(),fixed:false}:null;
   try{const base=h.split('?')[0];if(ST.sp&&ZERA[base])ZERA[base]()}catch(e){}
+  try{if(ST.sp&&window.V156&&typeof V156.ajusta==='function')V156.ajusta(ST.sp)}catch(e){}
   tirar();
   try{new Function(code).call(b.el)}catch(e){console.error('v155 abrir',e);try{location.hash=h}catch(_){}}
   /* a tela (ou o iframe do CRM) pode demorar: tenta de novo até achar a lista, por até 20 s */
@@ -259,11 +283,13 @@ function aplicar(){
     if(Date.now()-sp.t>4000){limpar();}return}
   aplicando=true;
   try{
-    const f=bate(sp);let best=null;
-    const cand=(items,host,root)=>{if(!items.length)return;let n=0;const ok=items.map(r=>{const v=f(r);if(v)n++;return v});
-      if(!best||n>best.n||(n===best.n&&n>0&&items.length>best.rows.length))best={rows:items,ok,n,root,host}};
+    const recs=sp.recs&&sp.recs.length?sp.recs:null;const f=recs?null:bate(sp);let best=null;
+    const cand=(items,host,root)=>{if(!items.length)return;let ok,n;
+      if(recs){const as=casar(recs,items);ok=as.ok;n=as.n;if(!best||n>best.n||(n===best.n&&n>0&&items.length>best.rows.length))best={rows:items,ok,n,root,host,miss:as.miss,dup:as.dup}}
+      else{n=0;ok=items.map(r=>{const v=f(r);if(v)n++;return v});
+        if(!best||n>best.n||(n===best.n&&n>0&&items.length>best.rows.length))best={rows:items,ok,n,root,host}}};
     docs().forEach(root=>{
-      root.querySelectorAll('table').forEach(t=>{if(t.closest('#v155-ov,.vd-ov,.v155-hid'))return;cand([...t.querySelectorAll(':scope > tbody > tr')].filter(r=>!r.classList.contains('tot')),t.closest('.tblwrap,.tw')||t,root)});
+      root.querySelectorAll('table').forEach(t=>{if(t.closest('#v155-ov,.vd-ov,.v155-hid'))return;cand([...t.querySelectorAll(':scope > tbody > tr')].filter(r=>!r.classList.contains('tot')&&!(recs&&/^total\b/i.test(txt(r.firstElementChild)))),t.closest('.tblwrap,.tw')||t,root)});
       /* listas em cartões (ex.: o quadro do Pipeline): cartões com o mesmo formato de clique formam um grupo */
       const g={};root.querySelectorAll('[onclick]').forEach(e=>{if(e.tagName==='TR'||e.closest('table,#v155-ov,.vd-ov,[data-v155ban]'))return;const oc=e.getAttribute('onclick')||'';if(!/'[^']{3,}'/.test(oc))return;
         const sh=oc.replace(/'[^']*'/g,"''").replace(/\d+/g,'0');(g[sh]=g[sh]||[]).push(e)});
@@ -273,16 +299,46 @@ function aplicar(){
     if(!best)return;
     const tot=best.rows.length;
     if(best.n){best.rows.forEach((r,i)=>{if(best.ok[i]){if(r.hasAttribute('data-v155h')){r.style.removeProperty('display');r.removeAttribute('data-v155h')}}else if(!r.hasAttribute('data-v155h')){r.style.setProperty('display','none','important');r.setAttribute('data-v155h','1')}})}
-    const host=best.host;let ban=host.previousElementSibling;
+    /* a linha "Total · abrir todas" soma a lista inteira: com o filtro ligado ela mentiria — fica escondida junto */
+    if(recs&&best.n&&best.host&&best.host.querySelectorAll)best.host.querySelectorAll('tbody > tr').forEach(r=>{if((r.classList.contains('tot')||/^total\b/i.test(txt(r.firstElementChild)))&&!r.hasAttribute('data-v155h')){r.style.setProperty('display','none','important');r.setAttribute('data-v155h','1')}});
+    const host=best.host;if(!host||!host.parentNode)return;let ban=host.previousElementSibling;
     if(!ban||!ban.hasAttribute('data-v155ban')){ban=host.ownerDocument.createElement('div');ban.setAttribute('data-v155ban','1');ban.style.cssText=BAN_ST;host.parentNode.insertBefore(ban,host)}
-    const dif=best.n!==sp.n?` <span style="font-weight:500;opacity:.8">(o número tem ${N0(sp.n)} — ${best.n?'nesta lista cada um pode ocupar mais de uma linha ou faltar':'esta lista não mostra estes registros'})</span>`:'';
-    const msg=best.n?`Filtrado pelo número <b>${E(sp.lb)}</b>: mostrando ${N0(best.n)} de ${N0(tot)}${dif}`:`Não achei nesta lista os registros de <b>${E(sp.lb)}</b> — mostrando tudo`;
+    let msg;
+    if(recs){const miss=best.miss||[];const nm=sp.unid||'registros';
+      const lk=r=>r.h?`<a href="javascript:void 0" data-v155go="${E(r.h)}" style="color:inherit;text-decoration:underline">${E(r.name||'(sem nome)')}</a>`:`<b>${E(r.name||'(sem nome)')}</b>`;
+      if(!best.n)msg=`Não achei nesta lista os ${N0(recs.length)} ${nm} de <b>${E(sp.lb)}</b> — mostrando tudo`;
+      else if(!miss.length)msg=`Filtrado pelo número <b>${E(sp.lb)}</b>: mostrando ${N0(best.n)} de ${N0(tot)}${sp.ponte?` <span style="font-weight:500;opacity:.8">· ${sp.ponte}</span>`:''}`;
+      else msg=`Filtrado pelo número <b>${E(sp.lb)}</b>: mostrando ${N0(best.n)} de ${N0(tot)} · <span style="font-weight:500">ponte: ${N0(recs.length)} ${nm} = ${N0(best.n)} nesta lista + ${N0(miss.length)} que esta lista não mostra${sp.porque?' ('+E(sp.porque)+')':''}: ${miss.slice(0,12).map(lk).join(' · ')}${miss.length>12?` · + ${N0(miss.length-12)}`:''}</span>`}
+    else{const dif=best.n!==sp.n?` <span style="font-weight:500;opacity:.8">(o número tem ${N0(sp.n)} — ${best.n?'nesta lista cada um pode ocupar mais de uma linha ou faltar':'esta lista não mostra estes registros'})</span>`:'';
+      msg=best.n?`Filtrado pelo número <b>${E(sp.lb)}</b>: mostrando ${N0(best.n)} de ${N0(tot)}${dif}`:`Não achei nesta lista os registros de <b>${E(sp.lb)}</b> — mostrando tudo`}
     if(ban.getAttribute('data-msg')!==msg){ban.setAttribute('data-msg',msg);ban.innerHTML=`<span style="flex:1;min-width:200px">${msg}</span><button type="button" style="border:0;border-radius:999px;padding:6px 12px;background:rgba(120,120,128,.18);color:inherit;font:600 12.5px -apple-system,sans-serif;cursor:pointer">Mostrar tudo ✕</button>`;
-      ban.querySelector('button').addEventListener('click',limpar)}
-    ban.style.background=best.n?'rgba(0,113,227,.10)':'rgba(245,158,11,.14)';
+      ban.querySelector('button').addEventListener('click',limpar);
+      ban.querySelectorAll('[data-v155go]').forEach(a=>a.addEventListener('click',ev=>{ev.preventDefault();const h=a.getAttribute('data-v155go');limpar();try{(window.top||window).location.hash=h}catch(e){location.hash=h}}))}
+    ban.style.background=best.n&&!(best.miss&&best.miss.length)?'rgba(0,113,227,.10)':'rgba(245,158,11,.14)';
     if(!sp.fixed){sp.fixed=true;try{ban.scrollIntoView({block:'center'})}catch(e){}}
-    window.__V155_last={n:best.n,tot,sp:sp.n,lb:sp.lb,path:cur};
+    window.__V155_last={n:best.n,tot,sp:sp.n,lb:sp.lb,path:cur,miss:(best.miss||[]).map(r=>r.name)};
   }catch(e){console.error('v155 filtro',e)}finally{setTimeout(()=>{aplicando=false},0)}}
+/* casa cada registro com UMA linha (um para um): pelo id quando a linha tem id; senão pelo nome + as outras colunas */
+const TOKRE=/[\w.-]{3,}/g;
+function casar(recs,items){
+  const at=items.map(r=>{let s=(r.getAttribute('onclick')||'')+' '+(r.getAttribute('href')||'')+' '+(r.getAttribute('data-v155')||'');
+    r.querySelectorAll('[onclick],[href],[data-v155]').forEach(e=>{s+=' '+(e.getAttribute('onclick')||'')+' '+(e.getAttribute('href')||'')+' '+(e.getAttribute('data-v155')||'')});return s});
+  const idx=new Map();at.forEach((s,i)=>{const seen=new Set();s.split(/[^\w.-]+/).forEach(tk=>{if(tk.length<2||seen.has(tk))return;seen.add(tk);let l=idx.get(tk);if(!l)idx.set(tk,l=[]);l.push(i)})});
+  /* os ids do destino podem vir codificados (#/produto/c%201) */
+  const tx=items.map(r=>nz(r.textContent));const bs=items.map(r=>{const b=r.querySelector('b,strong');return b?nz(b.textContent):''});
+  const used=new Array(items.length).fill(false);const ok=new Array(items.length).fill(false);const miss=[];let n=0;
+  const porId=recs.filter(r=>r.ids.length),porNome=recs.filter(r=>!r.ids.length);
+  porId.forEach(r=>{let hit=-1;for(const id of r.ids){const l=idx.get(id)||idx.get(encodeURIComponent(id));if(l){hit=l.find(i=>!used[i]);if(hit==null)hit=-1;if(hit>=0)break}}
+    if(hit<0&&r.nn){/* a lista não carrega o id: cai para o nome */hit=melhor(r,true);if(hit<0)hit=melhor(r,false)}
+    if(hit>=0){used[hit]=ok[hit]=true;n++}else miss.push(r)});
+  function melhor(r,soExato){let bi=-1,bsc=-1;for(let i=0;i<items.length;i++){if(used[i])continue;const t=tx[i];
+      const exato=bs[i]===r.nn||(!!r.nn2&&bs[i]===r.nn2);if(soExato&&!exato)continue;if(!exato&&!(r.nn.length>=2&&t.includes(r.nn))&&!(r.nn2&&r.nn2.length>=4&&t.includes(r.nn2)))continue;
+      let sc=(exato?100:0);r.toks.forEach(k=>{if(t.includes(k))sc+=10});if(sc>bsc){bsc=sc;bi=i}}return bi}
+  /* 1º quem tem o nome exato na linha; depois os outros, do mais restrito (menos linhas possíveis) ao mais solto */
+  const resto=[];porNome.forEach(r=>{const hit=r.nn?melhor(r,true):-1;if(hit>=0){used[hit]=ok[hit]=true;n++}else resto.push(r)});
+  const cands=r=>{let k=0;for(let i=0;i<items.length;i++){if(!used[i]&&r.nn&&(tx[i].includes(r.nn)||(r.nn2&&r.nn2.length>=4&&tx[i].includes(r.nn2))))k++}return k};
+  resto.map(r=>[r,cands(r)]).sort((x,y)=>x[1]-y[1]).forEach(([r])=>{const hit=r.nn?melhor(r,false):-1;if(hit>=0){used[hit]=ok[hit]=true;n++}else miss.push(r)});
+  return {ok,n,miss}}
 function limpar(){ST.sp=null;docs().forEach(r=>{r.querySelectorAll('[data-v155h]').forEach(x=>{x.style.removeProperty('display');x.removeAttribute('data-v155h')});r.querySelectorAll('[data-v155ban]').forEach(b=>b.remove())});document.querySelectorAll('[data-v155ban]').forEach(b=>b.remove())}
 window.V155_limpar=limpar;
 
@@ -313,5 +369,5 @@ function ligaAtv(){try{if(typeof COP!=='object'||!COP.ope||typeof COP.ope.listaA
 if(!ligaAtv()){let n=0;const iv=setInterval(()=>{if(ligaAtv()||++n>120)clearInterval(iv)},1000)}
 
 css();agenda();
-window.V155D={montar,lerGaveta,aplicar,limpar,st:ST};
+window.V155D={montar,lerGaveta,aplicar,limpar,recsDe,casar,st:ST};
 })();
