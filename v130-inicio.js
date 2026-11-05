@@ -80,7 +80,7 @@ let MEMO={};const C=(k,f)=>(k in MEMO)?MEMO[k]:(MEMO[k]=T(f,null));
 /* ─────────────────────────────── DADOS ─────────────────────────────── */
 const VEND=['vendida','em_obra','concluida'];
 const PAB=['rascunho','enviada','em_prevendas','aprovada_cliente','em_revisao','revisao','ajuste','aguardando'];
-const Mtot=p=>T(()=>+M.total(p),0)||T(()=>+D.propTotal(p.id),0)||0;
+const Mtot=p=>T(()=>+M.total(p),0)||T(()=>+window.D.propTotal(p.id),0)||0;
 const META_K={'TAAG':'taag','Acústica':'acustica','Focal':'focal','Pós-venda':'posvenda'};
 function metaAno(){const m=S.db.metas||{};if(VD.uni)return +m[META_K[VD.uni]]||0;if(+m.empresa)return +m.empresa;return Object.keys(META_K).reduce((a,u)=>a+(+m[META_K[u]]||0),0)}
 const nomeCli=p=>T(()=>(getRow('clientes',p.cliente_id)||(p.obra_id&&getRow('clientes',(getRow('obras',p.obra_id)||{}).cliente_id))||(S.db.clientes||[]).find(c=>c.sigla===p.sigla)||{}).nome,'')||p.nome||'';
@@ -127,7 +127,7 @@ function est(){return C('est',()=>{
   const cot=ped.filter(p=>p.estado==='cotacao');
   const atras=transito.filter(p=>p.previsao&&p.previsao<hoje());
   const nec=(q.rows||[]).filter(r=>(+r.falta||0)>0).map(r=>{const p=getRow('propostas',r.pr);const pr=getRow('produtos',r.pid)||{};return {r,p,pid:r.pid,q:+r.falta,v:r2((+r.falta)*(+pr.custo||0)),need:r.need||''}}).filter(x=>!VD.uni&&!VD.fil||noEsc(x.p));
-  const aComprarMotor=T(()=>(S.db.propostas||[]).filter(p=>['vendida','em_obra'].includes(p.estado)&&(!VD.uni&&!VD.fil||noEsc(p))).reduce((a,p)=>a+(+D.chain(p.id).acomp||0),0),null);
+  const aComprarMotor=T(()=>(S.db.propostas||[]).filter(p=>['vendida','em_obra'].includes(p.estado)&&(!VD.uni&&!VD.fil||noEsc(p))).reduce((a,p)=>a+(+window.D.chain(p.id).acomp||0),0),null);
   /* compras previstas para o caixa (ainda sem título a pagar): o que falta comprar (na semana em que a obra precisa)
      + cotações para estoque (sem proposta, na previsão) + pedidos aprovados sem título. Cotação ligada a uma proposta
      já está dentro do "falta comprar" — não entra de novo. */

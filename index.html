@@ -1831,6 +1831,7 @@ const _validar=A.validar;A.validar=function(pr,quem){const p=get('propostas',pr)
 /* guided scenario: replace unit-designation steps with the SysTAAG flow */
 CEN.splice(6,2,['Separar','no Estoque: selecionar o produto → Separar → proposta 13404 (a unidade só ganha dono aqui)','estoque',()=>{const q=Q.porProposta('pr4');q.rows.filter(r=>r.rsv).forEach(r=>A.separar('pr4',r.pid,r.rsv))}],['Despachar','a batelada vira saída; a obra recebe','separacao',()=>{const b=S.db.bateladas.find(x=>x.proposta_id==='pr4'&&x.estado==='aberta');if(!b)throw new RuleError('Nenhuma batelada aberta da GVI.');A.despachar(b.id)}]);
 </script>
+<script src="v153-rapido.js"></script>
 <script>
 /* ================= ASSEMBLY PRELUDE =================
    The four department files are loaded one after the other into THIS store. Before each department loads, the
@@ -2639,6 +2640,7 @@ const _vendidoFin=A.vendido;A.vendido=function(pr){const passos=_vendidoFin.call
 /* comissão + RT nascem por parcela recebida, marcadas para separar RT de comissão */
 const _receberFin=A.receber;A.receber=function(lid){const before=S.db.lancamentos.length;_receberFin.call(A,lid);const novos=S.db.lancamentos.slice(before);novos.forEach((l,i)=>{if(l.categoria==='Comissão / RT')l.sub=i===0?'com':'rt'})};
 </script>
+<script>/* v153 */if(window.__v153_memo){__v153_memo(FN,'obra','porDentro');__v153_memo(FN,'propPlano');__v153_memo(FN,'vendidas','semArg')}</script>
 <script>/* ======== [assembly] Adm. e Financeiro · fin#10 ======== */
 
 /* ---------- 10. UI HELPERS ---------- */
@@ -13508,6 +13510,7 @@ const _odFX = window.obraDetalhe; if (typeof _odFX === 'function') window.obraDe
 try { renderNav(); render(); } catch (e) { console.error(e); }
 })();
 </script>
+<script>/* v153 */if(window.__v153_memo){__v153_memo(FX1,'propostasDaObra')}</script>
 <style id="fx2-css">
 /* FIN-FIX-02 · B3/L10 — telas estreitas: peças que quebram linha, tabelas que rolam na horizontal */
 .tblwrap{overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%}
@@ -30792,7 +30795,7 @@ try{if(/^#\/(dbfiliais|finlanc)/.test(location.hash))render()}catch(e){}
 <script src="v124-guia.js"></script>
 <script src="v125-raiox.js"></script>
 <script src="v128-save.js"></script>
-<script src="v130-inicio.js?v=146"></script>
+<script src="v130-inicio.js?v=153"></script>
 <script src="v135-fonte.js"></script>
 <script src="v136-pessoas.js"></script>
 <script src="v137-base.js"></script>
@@ -30811,7 +30814,7 @@ try{if(/^#\/(dbfiliais|finlanc)/.test(location.hash))render()}catch(e){}
 <script src="v146-gestao.js"></script>
 <script src="v147-marca-rail.js"></script>
 <script src="v148-treino.js"></script>
-<script src="v149-visao-executiva.js"></script>
+<script src="v149-visao-executiva.js?v=153"></script>
 <script src="v149-guia-visao.js"></script>
 <script src="v149-treino-caps.js"></script>
 <script src="v150-mestra-data.js"></script>

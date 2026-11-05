@@ -92,7 +92,7 @@ const parcNeg=n=>{const ps=n.parceiros||{};const id=ps.indicador||ps.arquitetura
 /* negociações filtradas: f = {res, frente, etapa, chance, cons, parc} */
 function negs(f){f=f||{};return (S.db.negociacoes||[]).filter(n=>(!f.res||(f.res==='decidida'?['fechada','perdida'].includes(resLb(n)):resLb(n)===f.res))&&(!f.frente||String(n.frente||'').toLowerCase()===f.frente)&&(!f.etapa||etapaLb(n.etapa)===f.etapa)&&(!f.chance||chanceB(n)===f.chance)&&(!f.cons||(n.consultor||'Sem consultor')===f.cons)&&(!f.parc||parcNeg(n)===f.parc))}
 const negF=f=>Object.entries(f).map(([k,v])=>k+'='+v).join('&');const parseF=s=>{const f={};String(s||'').split('&').forEach(kv=>{const i=kv.indexOf('=');if(i>0)f[kv.slice(0,i)]=kv.slice(i+1)});return f};
-const sitObra=x=>T(()=>C.situacao(x),null)||x.situacao||x.statusPlanilha||'';
+const sitObra=x=>T(()=>COP.situacao(x),null)||x.situacao||x.statusPlanilha||'';
 const obrasAnd=()=>(S.db.obras||[]).filter(x=>x.ativo!==false&&!x.inativo&&sitObra(x)==='Em andamento');
 const pvObra=x=>String((x.entrega||{}).prevista||'').slice(0,10);
 const bucketObra=x=>{const t=hoje(),d=pvObra(x);if(!d)return 'sem';if(d<t)return 'atras';if(d<=addDias(t,7))return 'd7';if(d<=addDias(t,21))return 'd21';if(d<=addDias(t,60))return 'd60';return 'dmais'};
