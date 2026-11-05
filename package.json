@@ -1,0 +1,22 @@
+{
+  "name": "systaag-review",
+  "version": "1.0.0",
+  "description": "SYSTAAG — protótipo (fonte em index.html + v*.js; dist/ é a cópia leve gerada na publicação)",
+  "scripts": {
+    "build": "node build.mjs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/brunoapozzani-collab/systaag-review.git"
+  },
+  "bugs": {
+    "url": "https://github.com/brunoapozzani-collab/systaag-review/issues"
+  },
+  "homepage": "https://github.com/brunoapozzani-collab/systaag-review#readme",
+  "devDependencies": {
+    "clean-css": "^5.3.3",
+    "terser": "^5.51.2"
+  },
+  "private": true,
+  "type": "module"
+}

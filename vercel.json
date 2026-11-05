@@ -1,6 +1,25 @@
 {
   "headers": [
-    { "source": "/(.*)", "headers": [ { "key": "x-content-type-options", "value": "nosniff" } ] },
-    { "source": "/index.html", "headers": [ { "key": "cache-control", "value": "public, max-age=0, must-revalidate" } ] }
-  ]
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "x-content-type-options",
+          "value": "nosniff"
+        }
+      ]
+    },
+    {
+      "source": "/index.html",
+      "headers": [
+        {
+          "key": "cache-control",
+          "value": "public, max-age=0, must-revalidate"
+        }
+      ]
+    }
+  ],
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "framework": null
 }
