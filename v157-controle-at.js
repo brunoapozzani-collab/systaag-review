@@ -144,7 +144,7 @@ function numeros(){const db=S.db;const F=estado(db);const atv=()=>(db.propostas|
   return {F,ps,painel,leg,sem,soma,planilha,planos:atv().filter(p=>p.proposal_type==='SERVICE_PLAN')}}
 
 /* ---------- §6 telas ---------- */
-const tile=(l,v,s,cls,on)=>`<div class="col-md-3 col-6"><div class="card p-3 h-100" ${on?`style="cursor:pointer" onclick="${on}"`:''}><div class="sub" style="font-size:11px;letter-spacing:.06em">${l}</div><div style="font-size:26px;font-weight:800" class="${cls||''}">${v}</div><div class="sub" style="font-size:12px">${s}</div></div></div>`;
+const tile=(l,v,s,cls,on)=>`<div class="col-md-3 col-6"><div class="card p-3 h-100" ${on?`style="cursor:pointer" onclick="${on}"`:''}><div class="sub" style="font-size:11px;letter-spacing:.06em">${l}</div><div style="font-size:${String(v).length>12?20:26}px;font-weight:800;white-space:nowrap" class="${cls||''}">${v}</div><div class="sub" style="font-size:12px">${s}</div></div></div>`;
 const ok='<span style="color:#198754">✓</span>',nok='<span style="color:#dc3545">✗</span>';
 const obraLink=(id,txt)=>id?`<a href="#/obras/${E(id)}">${E(txt||id)}</a>`:E(txt||'—');
 const irGer=(extra)=>`COP.pos&&COP.pos.go('posgerencial','posgerencial',Object.assign({tipo:'propostas'},${extra||'{}'}))`;
