@@ -365,7 +365,9 @@ function mergeRec(t,win,lose){if(t==='parceiros')return mergeParc(win,lose);let 
  if(t==='clientes'){win.aliases=[...new Set([...(win.aliases||[]),lose.nome,...(lose.aliases||[])].filter(a=>a&&a!==win.nome))]}
  win.fundidos=(win.fundidos||[]).concat([{id:lose.id,nome:lose.nome,em:hoje()}]);lose.inativo=true;lose.merged_into=win.id;lose.fundido_em=hoje();lg(t,win.id,`fundido: ${lose.id} → ${win.id} (${n} vínculo(s))`);return {refs:n}}
 P.mergeRec=mergeRec;
-function scoreRec(t,r){if(t==='parceiros')return scoreParc(r);let n=0;Object.keys(r).forEach(k=>{if(r[k]!=null&&String(r[k]).trim()!=='')n++});const J=JSON.stringify(Object.assign({},S.db,{[t]:[]}));n+=(J.split('"'+r.id+'"').length-1)*3;if(!r.inativo&&r.ativo!==false)n+=2;return n}
+/* v154: o JSON da base inteira era refeito para CADA registro dentro do sort (3 MB × n) — agora uma vez por tabela e por tick */
+let _J=null,_Jst=null;const dbJson=t=>{const st=(window.__v153_stamp?__v153_stamp():String(Date.now()))+':'+t;if(_Jst!==st){_J=JSON.stringify(Object.assign({},S.db,{[t]:[]}));_Jst=st}return _J};
+function scoreRec(t,r){if(t==='parceiros')return scoreParc(r);let n=0;Object.keys(r).forEach(k=>{if(r[k]!=null&&String(r[k]).trim()!=='')n++});const J=dbJson(t);n+=(J.split('"'+r.id+'"').length-1)*3;if(!r.inativo&&r.ativo!==false)n+=2;return n}
 /* clients are found by sigla in proposals: two clients with the same name but different siglas are left for a person */
 const podeAuto=(t,a,b)=>t!=='clientes'||!a.sigla||!b.sigla||a.sigla===b.sigla;
 function gruposExatos(t){const g=new Map();(S.db[t]||[]).forEach(r=>{if(!vivo(r))return;const k=recKey(t,r);if(!k)return;(g.get(k)||g.set(k,[]).get(k)).push(r)});return [...g.values()].filter(v=>v.length>1)}

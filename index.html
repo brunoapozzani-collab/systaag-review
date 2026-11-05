@@ -6064,6 +6064,7 @@ window.__bioUnitPage=function(k){if(k!=='unidade')return;const id=location.hash.
   const t=m.querySelector('.tblwrap,table');if(t)(t.closest('.card')||t).insertAdjacentHTML('beforebegin',card);else m.insertAdjacentHTML('beforeend',card)};
 })();
 </script>
+<script>/* v154 */if(window.__v153_memo&&window.ASM){__v153_memo(ASM,'nz');__v153_memo(ASM,'pkey');__v153_memo(ASM,'parecidos','semArg');__v153_memo(ASM,'pessoas','semArg')}</script>
 <script>
 /* ===== Saída por engano (Bruno 01-Oct: "it was just a mistake — the proposal can't be wrong because of it") =====
    Bringing a unit back now asks WHY, per unit:
@@ -25250,7 +25251,10 @@ const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g,
 const escRe = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 const P = () => S.db.parceiros || [];
 const byId = id => P().find(p => p.id === id);
-const byName = n => { const k = nz(n); return k ? P().find(p => nz(p.nome) === k) : null; };
+/* v154: índice nome→parceiro por tick (antes: varria P() normalizando cada nome a cada chamada) */
+const byName = (() => { let m = null, src = null, stamp = null; return n => { const k = nz(n); if (!k) return null; const A = P(); const st = (window.__v153_stamp ? __v153_stamp() : '') + ':' + A.length;
+  if (src !== A || stamp !== st) { m = new Map(); A.forEach(p => { const kk = nz(p.nome); if (kk && !m.has(kk)) m.set(kk, p); }); src = A; stamp = st; }
+  return m.get(k) || null; }; })();
 const TIPO = { pf: 'Pessoa física', empresa: 'Empresa', outro: 'Outro', indicador: 'Indicador' };
 
 function citados(n) {
@@ -27065,7 +27069,7 @@ var P=(function(){
     p.vx+=(p.tx-p.x)*0.048;p.vy+=(p.ty-p.y)*0.048;
     if(mouseX!==-9999){var rx=p.x-mouseX,ry=p.y-mouseY,d2=rx*rx+ry*ry;if(d2<MOUSE_R*MOUSE_R){var d=Math.sqrt(d2)||1,f=(MOUSE_R-d)/MOUSE_R*(IS_3D?9:5);p.vx+=rx/d*f;p.vy+=ry/d*f}}
     p.vx*=0.86;p.vy*=0.86;p.x+=p.vx;p.y+=p.vy})}
-  function draw(){if(!running)return;ctx.clearRect(0,0,W,H);update();var rgb=pRGB();var CD=IS_3D?CDIST*1.1:CDIST*0.72,CD2=CD*CD;var rs=scl();
+  function draw(){if(!running)return;/* v154: enquanto a tela de abertura cobre tudo, não gasta CPU desenhando o que ninguém vê */if(document.readyState!=='complete'&&!html.classList.contains('pronto127')){raf=requestAnimationFrame(draw);return}ctx.clearRect(0,0,W,H);update();var rgb=pRGB();var CD=IS_3D?CDIST*1.1:CDIST*0.72,CD2=CD*CD;var rs=scl();
     for(var i=0;i<particles.length;i++){var a=particles[i];for(var j=i+1;j<particles.length;j++){var b=particles[j];var dx=a.x-b.x,dy=a.y-b.y,d2=dx*dx+dy*dy;if(d2<CD2){var d=Math.sqrt(d2);var al=0.25*(1-d/CD);
       if(IS_3D&&mouseX!==-9999){var mx=(a.x+b.x)*.5-mouseX,my=(a.y+b.y)*.5-mouseY;var md=Math.sqrt(mx*mx+my*my);if(md<110)al=Math.min(0.90,al+(1-md/110)*0.65)}
       ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.strokeStyle='rgba('+rgb+','+al.toFixed(3)+')';ctx.lineWidth=IS_3D?0.75:0.55;ctx.stroke()}}}
@@ -30783,7 +30787,7 @@ try{if(/^#\/(dbfiliais|finlanc)/.test(location.hash))render()}catch(e){}
 </script>
 
 <script src="v123-people.js"></script>
-<script src="v123-partners.js"></script>
+<script src="v123-partners.js?v=154"></script>
 <script src="v123-commission.js"></script>
 <script src="v123-flow.js"></script>
 <script src="v124-fixes.js"></script>
@@ -30822,4 +30826,5 @@ try{if(/^#\/(dbfiliais|finlanc)/.test(location.hash))render()}catch(e){}
 <script src="v151-et-data.js"></script>
 <script src="v151-vendedor-et.js"></script>
 <script src="v152-abas.js"></script>
+<script src="v154-rapido2.js"></script>
 </body></html>

@@ -24,6 +24,7 @@ let gen=0,tick=0,tickArmado=false;
 const armaTick=()=>{if(tickArmado)return;tickArmado=true;setTimeout(()=>{tickArmado=false;tick++},0)};
 const bump=()=>{gen++};
 window.__v153_invalida=bump;
+window.__v153_stamp=()=>gen+':'+tick;
 const copiaProps=(w,f)=>{Object.keys(f).forEach(k=>{try{w[k]=f[k]}catch(e){}});return w};
 const memo=(fn,pos)=>{let db=null,g=-1,t=-1,v;
   const w=function(){const d=DB();
