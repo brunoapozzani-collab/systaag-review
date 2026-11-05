@@ -291,7 +291,7 @@ function semRessuscitar(){try{const L=S.db.lixeira;const mortos=T(()=>S.db._v155
   if(n){gravar();console.info('v155: '+n+' registro(s) da Lixeira tinham voltado na abertura — tirados de novo')}}catch(e){console.error('v155 ressuscitar',e)}}
 
 /* ───────────────────────── 6 · a confirmação ───────────────────────── */
-const CSS=`<style id="v155-css">
+const CSS=`<style id="v155-lx-css">
 #v155-ov{position:fixed;inset:0;z-index:100050;background:rgba(20,20,24,.42);display:flex;align-items:center;justify-content:center;padding:16px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
 #v155-dlg{background:var(--card,#fff);color:inherit;border-radius:18px;width:min(560px,96vw);max-height:90vh;overflow:auto;box-shadow:0 24px 70px rgba(0,0,0,.35);padding:22px 22px 16px}
 #v155-dlg .ico{width:46px;height:46px;border-radius:14px;background:rgba(198,40,40,.1);color:${RED};display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:10px}
@@ -315,7 +315,7 @@ const CSS=`<style id="v155-css">
 .v155-lx .bt{display:flex;flex-direction:column;gap:6px;margin-left:auto;flex:0 0 auto;align-self:center}
 .v155-big{font-size:40px;font-weight:800;line-height:1}
 </style>`;
-function css(){if(!document.getElementById('v155-css'))document.head.insertAdjacentHTML('beforeend',CSS)}
+function css(){if(!document.getElementById('v155-lx-css'))document.head.insertAdjacentHTML('beforeend',CSS)}
 function fechar(){const o=document.getElementById('v155-ov');if(o)o.remove()}
 function lista(rs,col,max){max=max||5;const ns=rs.slice(0,max).map(r=>'<li>'+E(nomeDe(col,r))+'</li>').join('');return ns+(rs.length>max?'<li class="sub">… e mais '+N0(rs.length-max)+'</li>':'')}
 
