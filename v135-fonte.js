@@ -16,10 +16,22 @@
     const aviso=()=>{try{if(document.getElementById('v135-aba'))return;const d=document.createElement('div');d.id='v135-aba';
       d.style.cssText='position:fixed;left:50%;top:14px;transform:translateX(-50%);z-index:99999;background:#1d1d1f;color:#fff;font:600 13px/1.3 -apple-system,BlinkMacSystemFont,sans-serif;padding:10px 16px;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.25)';
       d.textContent='Os dados mudaram em outra aba — atualizando esta aba…';(document.body||document.documentElement).appendChild(d)}catch(e){}};
-    const recarregar=()=>{if(Date.now()-ultimoReload<8000)return;ultimoReload=Date.now();aviso();setTimeout(()=>location.reload(),350)};
-    window.addEventListener('storage',e=>{if(e.storageArea!==LS)return;if(e.key===null){velha=true}else{if(!CH.test(e.key))return;
+    /* 05/11 (v156b): outra aba gravou só a BASE → atualiza ESTA aba no lugar (mesma tela, mesmos filtros, o clique não se perde).
+       Antes recarregava a página inteira: com duas janelas abertas, o 1º clique numa aba virava recarga e o filtro sumia.
+       Recarga de verdade só se não der para ler a base nova, ou se mudou "começar do zero"/CRM. */
+    let mudou=new Set();
+    const noLugar=()=>{try{if(mudou.size!==1||!mudou.has('systaag_erp1z'))return false;
+        const raw=LS.getItem('systaag_erp1z');if(!raw||!window.LZString||!window.S||!S.db)return false;
+        const txt=LZString.decompressFromUTF16(raw);if(!txt)return false;const nv=JSON.parse(txt);if(!nv||typeof nv!=='object'||!Array.isArray(nv.clientes))return false;
+        const db=S.db;Object.keys(db).forEach(k=>{if(!(k in nv))delete db[k]});Object.keys(nv).forEach(k=>{db[k]=nv[k]});
+        meu.systaag_erp1z=raw;velha=false;mudou=new Set();
+        try{if(typeof renderMain==='function')renderMain()}catch(e){}
+        try{const d=document.createElement('div');d.style.cssText='position:fixed;left:50%;top:14px;transform:translateX(-50%);z-index:99999;background:#1d1d1f;color:#fff;font:600 12px/1.3 -apple-system,BlinkMacSystemFont,sans-serif;padding:8px 14px;border-radius:12px;opacity:.9';d.textContent='Atualizado com o que foi feito na outra aba';document.body.appendChild(d);setTimeout(()=>d.remove(),2200)}catch(e){}
+        return true}catch(e){console.error('v135 no lugar',e);return false}};
+    const recarregar=()=>{if(noLugar())return;if(Date.now()-ultimoReload<8000)return;ultimoReload=Date.now();aviso();setTimeout(()=>location.reload(),350)};
+    window.addEventListener('storage',e=>{if(e.storageArea!==LS)return;if(e.key===null){velha=true;mudou.add('*')}else{if(!CH.test(e.key))return;
         /* a outra aba gravou o MESMO conteúdo que esta aba já tem (recarga, migração idêntica): não é mudança */
-        if((e.newValue==null?null:String(e.newValue))===(meu[e.key]==null?null:String(meu[e.key])))return;velha=true}
+        if((e.newValue==null?null:String(e.newValue))===(meu[e.key]==null?null:String(meu[e.key])))return;velha=true;mudou.add(e.key)}
       if(document.visibilityState==='visible')recarregar()});
     document.addEventListener('visibilitychange',()=>{if(velha&&document.visibilityState==='visible')recarregar()},true);
     window.V135_aba=()=>({velha});

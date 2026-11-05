@@ -14,7 +14,7 @@ const K='systaag_v152_recarregou';
 try{window.addEventListener('beforeunload',()=>{try{if(document.getElementById('v135-aba'))sessionStorage.setItem(K,'1')}catch(e){}})}catch(e){}
 /* 2 · depois dessa recarga, a aba só lê até a pessoa mexer */
 try{if(sessionStorage.getItem(K)==='1'){sessionStorage.removeItem(K);window.__v152_quieta=true;
-    const libera=()=>{if(!window.__v152_quieta)return;window.__v152_quieta=false;try{if(typeof save==='function')save()}catch(e){}};
+    const libera=()=>{if(!window.__v152_quieta)return;window.__v152_quieta=false;/* 05/11 v156b: soltar não grava mais (gravar aqui fazia a outra aba recarregar e o clique se perder); grava na próxima mudança de verdade */};
     ['pointerdown','keydown'].forEach(ev=>window.addEventListener(ev,libera,{capture:true,once:true}));
     const LS=window.localStorage,set0=Storage.prototype.setItem,rm0=Storage.prototype.removeItem;
     const CH=/^systaag_(erp1z?|zero|crm_t)$/;
