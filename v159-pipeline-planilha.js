@@ -6,7 +6,7 @@
       em n.planilha. STATUS em branco = resultado "sem_status" (não é aberta, nem fechada, nem perdida, nem futuro) e
       etapa "Sem status na planilha". A tela lê só a Base (uma fonte).
    §2 KPI: ganha sem_status; as pontes passam a ser 913 = fechadas + perdidas + futuro + abertas + sem status.
-   §3 Comercial › Pipeline abre na vista "Como na planilha": as mesmas colunas, na mesma ordem, as mesmas linhas,
+   §3 (retirado 05/11 — o Bruno quer o desenho de antes) Comercial › Pipeline abria na vista "Como na planilha": as mesmas colunas, na mesma ordem, as mesmas linhas,
       o mesmo texto; os totais por STATUS com a ponte, cada número filtra a tabela. O quadro antigo fica na aba "Quadro".
    ===================================================================================================== */
 (function(){
@@ -83,14 +83,9 @@ function css(){if(document.getElementById('v159-css'))return;const s=document.cr
 .v159-t td.v159-ln{background:#f1f3f5;color:#666;font-variant-numeric:tabular-nums}.v159-t td.v159-ch{background:#2f6fd1;color:#fff;font-weight:600}.v159-t td.v159-vz{color:#b02a37;font-style:italic}`;document.head.appendChild(s)}
 
 function ligaTela(){if(typeof SCREENS!=='object'||typeof SCREENS.pipeline!=='function'||SCREENS.pipeline.__v159)return false;const _p=SCREENS.pipeline;
-  SCREENS.pipeline=function(){const tab=S.deal?'quadro':(S.pipeTab||'planilha');css();
-    const tabs=`<div class="tabs mb-2">${[['planilha','Como na planilha'],['quadro','Quadro']].map(([k,l])=>`<button class="${tab===k?'on':''}" onclick="S.pipeTab='${k}';S.deal=null;renderMain()">${l}</button>`).join('')}</div>`;
-    let h=_p.apply(this,arguments);if(typeof h!=='string')return h;
-    /* a ponte do quadro também conta os sem status */
-    h=h.replace(/(\+ <span style="color:#0d6efd">(\d+) em jogo<\/span>)(<\/span>)/,(m,a,b,c)=>{const k=T(()=>KPI(),{});return a+(k.sem_status?` + <span style="color:#b02a37">${k.sem_status} sem status</span>`:'')+c});
-    if(tab==='quadro')return tabs+h;
-    const cab=T(()=>head('Pipeline','A aba Pipeline da planilha To Do Comercial, linha por linha, como ela é — cada número filtra a tabela; clique numa linha para abrir a negociação.'),'<h4>Pipeline</h4>');
-    return cab+tabs+vista()};
+  /* 05/11 (Bruno): a tela fica com o desenho de antes — só os dados vêm certos da planilha; a ponte do quadro conta os sem status */
+  SCREENS.pipeline=function(){let h=_p.apply(this,arguments);if(typeof h!=='string')return h;
+    return h.replace(/(\+ <span style="color:#0d6efd">(\d+) em jogo<\/span>)(<\/span>)/,(m,a,b,c)=>{const k=T(()=>KPI(),{});return a+(k.sem_status?` + <span style="color:#b02a37">${k.sem_status} sem status na planilha</span>`:'')+c})};
   SCREENS.pipeline.__v159=true;return true}
 if(!ligaTela()){let n=0;const iv=setInterval(()=>{if(ligaTela()||++n>40)clearInterval(iv)},250)}
 
