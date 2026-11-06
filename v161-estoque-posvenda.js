@@ -115,7 +115,7 @@ const vendidaP=p=>['vendida','em_obra','concluida'].includes(p.estado)&&!p.demo;
 const Mt=p=>T(()=>+M.total(p),0)||0;
 const resN=n=>!n.resultado?'aberta':String(n.resultado).toLowerCase();
 function num(){const db=S.db;const O=vivas();
-  const conc=O.filter(o=>!o.legadoAT&&sit(o)==='Concluída');const at=O.filter(o=>!o.legadoAT&&sit(o)==='Assistência técnica');
+  const OD=T(()=>window.V161D.obras(),null);/* v161d: concluídas/AT = a mesma lista de Operação › Obras */const conc=OD?OD.conc:O.filter(o=>!o.legadoAT&&sit(o)==='Concluída');const at=OD?OD.at:O.filter(o=>!o.legadoAT&&sit(o)==='Assistência técnica');
   const leg=O.filter(o=>o.legadoAT&&!o.localADefinir);const lad=O.filter(o=>o.legadoAT&&o.localADefinir);
   const fin=conc.concat(at,leg,lad);const finIds=new Set(fin.map(o=>o.id));
   const fora=O.filter(o=>!finIds.has(o.id)&&o.entrega&&o.entrega.realizada);const foraAnd=fora.filter(o=>sit(o)!=='Cancelada'),foraCan=fora.filter(o=>sit(o)==='Cancelada');
