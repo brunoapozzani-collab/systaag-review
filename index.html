@@ -27650,11 +27650,13 @@ function semanas(){try{return FN.semanas13()}catch(e){return []}}
 /* 2. lucratividade por venda — FN.obra / FS.obraRow are the engines of Financeiro › Obras. We only regroup the
    same cents into the lines of the e-mail: receita − custo do produto − garantia − despesas da obra. */
 function obraRows(){
-  var rows=[];(S.db.obras||[]).forEach(function(o){var x=null,r=null;try{x=FS.obraRow(o)}catch(e){}try{r=FN.obra(o)}catch(e){}
+  var rows=[];(S.db.obras||[]).forEach(function(o){var x=null,r=null;var H=window.V161&&V161.comHist?V161.comHist:function(f){return f()};/* v161: a conta da obra enxerga as vendas históricas reais */try{x=H(function(){return FS.obraRow(o)})}catch(e){}try{r=H(function(){return FN.obra(o)})}catch(e){}
     if(!x||!r||!(x.contratado>0))return;
     var av=+r.av||0;var gar=r2(+r.fpvLiq||0);var despesas=r2((+r.moR||0)+(+r.extrasR||0)+(+r.planilha||0)+(+r.frete||0)*av);
     var impCom=r2((+r.imp||0)*av+(+r.comR||0));var produto=r2(+r.equipR||0);var receita=r2(+r.receitaR||0);
     var lucro=r2(receita-produto-gar-despesas-impCom);
+    /* v161 (Bruno 05/11): sem contrato × avanço — receita = contrato cheio, custos = só os lançados (as mesmas linhas da Rentabilidade em andamento e de Financeiro › Obras) */
+    try{if(window.V161&&typeof V161.obraLucro==='function'){var q=V161.obraLucro(o,x,r);receita=q.receita;produto=q.produto;gar=q.gar;despesas=q.despesas;impCom=q.impCom;lucro=q.lucro}}catch(e){}
     var nome='';try{nome=C.obraNome?C.obraNome(o):(o.nome||o.id)}catch(e){nome=o.nome||o.id}
     rows.push({o:o,x:x,r:r,nome:nome,status:x.status,uni:x.unidade||'',contratado:r2(x.contratado),receita:receita,produto:produto,gar:gar,despesas:despesas,impCom:impCom,lucro:lucro,lucroFin:r2(x.lucroReal),margemPlano:x.margem,margem:receita?lucro/receita:0,av:av,planoLucro:r2(x.lucroPrev)})});
   return rows}
@@ -27826,12 +27828,12 @@ function tabVendas(m){var H=hd('Vendas, meta e funil de conversão','#/gestao','
   return H}
 
 function tabLucro(m){var H=hd('Lucratividade por pedido de venda','#/fobras','Financeiro › Obras');
-  H+='<div class="dir-formula">(produtos + serviços) − <b>custo do produto</b> − <b>serviços de garantia</b> − <b>despesas da obra</b> = lucro da venda &nbsp;·&nbsp; depois − impostos e comissões/RT = lucro real &nbsp;<span class="dir-chip warn">fórmula a confirmar · Rodolfo / Cesar</span><br><span class="sub">receita = contratado reconhecido pelo avanço físico · custo do produto = unidades entregues ao custo de compra · garantia = OS do Pós-venda fechadas como Garantia nesta obra · despesas da obra = diárias + viagem (uber, hotel, alimentação, terceiros, frete) + extras lançados</span></div>';
+  H+='<div class="dir-formula">(produtos + serviços) − <b>custo do produto</b> − <b>serviços de garantia</b> − <b>despesas da obra</b> = lucro da venda &nbsp;·&nbsp; depois − impostos e comissões/RT = lucro real &nbsp;<span class="dir-chip warn">fórmula a confirmar · Rodolfo / Cesar</span><br><span class="sub">receita = valor cheio do contrato (sem multiplicar pelo avanço) · custos = só os já lançados · custo do produto = unidades entregues ao custo de compra · garantia = OS do Pós-venda fechadas como Garantia nesta obra · despesas da obra = diárias + viagem (uber, hotel, alimentação, terceiros, frete) + extras lançados</span></div>';
   var rows=m.rows;var rowsF=rows.filter(function(r){return DIR.obras==='todas'||r.status===DIR.obras}).sort(function(a,b){return b.contratado-a.contratado});var cnt={andamento:0,concluida:0};rows.forEach(function(r){if(cnt[r.status]!=null)cnt[r.status]++});
   H+='<div class="dir-sub"><button class="'+(DIR.obras==='andamento'?'on':'')+'" onclick="DIRX.go(\'obras\',\'andamento\')">Em andamento ('+cnt.andamento+')</button><button class="'+(DIR.obras==='concluida'?'on':'')+'" onclick="DIRX.go(\'obras\',\'concluida\')">Concluídas ('+cnt.concluida+')</button><button class="'+(DIR.obras==='todas'?'on':'')+'" onclick="DIRX.go(\'obras\',\'todas\')">Todas ('+rows.length+')</button></div>';
   if(!rowsF.length)return H+'<div class="card place p-4">Nenhuma venda neste filtro.</div>';
   var T=function(k){return r2(rowsF.reduce(function(a,r){return a+r[k]},0))};var tR=T('receita'),tL=T('lucro');
-  var top=rowsF.slice(0,12).map(function(r){return {x:r.nome,y:Math.max(0,r.margem),color:!r.receita?'#c4c4c4':r.margem<0?'#f23d4f':r.margem<m.margMin?'#f5a623':'#00a650',href:'#/fobras/'+r.o.id,title:r.nome+' · margem '+P1(r.margem)+' · lucro '+R$(r.lucro),txt:r.receita?P1(r.margem)+(r.margem<0?' (resultado negativo)':''):'sem avanço físico'}});
+  var top=rowsF.slice(0,12).map(function(r){return {x:r.nome,y:Math.max(0,r.margem),color:!r.receita?'#c4c4c4':r.margem<0?'#f23d4f':r.margem<m.margMin?'#f5a623':'#00a650',href:'#/fobras/'+r.o.id,title:r.nome+' · margem '+P1(r.margem)+' · lucro '+R$(r.lucro),txt:r.receita?P1(r.margem)+(r.margem<0?' (resultado negativo)':''):'sem valor de contrato'}});
   H+='<div class="row g-3 mb-3"><div class="col-lg-7"><div class="card p-3 h-100"><b>Margem por venda</b> <span class="sub">· as '+top.length+' maiores · vermelho = prejuízo · amarelo = abaixo de '+P1(m.margMin)+'</span>'+svgBarsH(top,{ref:m.margMin,max:0.5})+'</div></div>'
     +'<div class="col-lg-5"><div class="card p-3 h-100"><b>Totais do filtro</b><table class="tbl mt-2" style="font-size:13px"><tr><td>Receita reconhecida</td><td class="text-end"><b>'+R$(tR)+'</b></td></tr><tr><td>− Custo do produto</td><td class="text-end">'+R$(T('produto'))+'</td></tr><tr><td>− Serviços de garantia</td><td class="text-end">'+R$(T('gar'))+'</td></tr><tr><td>− Despesas da obra</td><td class="text-end">'+R$(T('despesas'))+'</td></tr><tr><td>− Impostos e comissões/RT</td><td class="text-end">'+R$(T('impCom'))+'</td></tr><tr style="font-weight:800;border-top:2px solid var(--bd)"><td>= Lucro</td><td class="text-end" style="color:'+(tL<0?'var(--mlr)':'var(--mlk)')+'">'+R$(tL)+' <span class="sub">('+P1(tR?tL/tR:0)+')</span></td></tr></table><div class="sub mt-2">'+rowsF.filter(function(r){return r.receita&&r.lucro<0}).length+' com resultado negativo · '+rowsF.filter(function(r){return r.receita&&r.margem>=0&&r.margem<m.margMin}).length+' abaixo da margem mínima · '+rowsF.filter(function(r){return !r.receita}).length+' sem avanço ainda</div></div></div></div>';
   H+='<div class="card"><div class="tblwrap"><table class="tbl dir-tbl"><thead><tr><th>Venda · obra</th><th>Linha</th><th class="text-end">Contratado</th><th class="text-end">Avanço</th><th class="text-end">Receita</th><th class="text-end">Custo produto</th><th class="text-end">Garantia</th><th class="text-end">Despesas obra</th><th class="text-end">Impostos+com.</th><th class="text-end">Lucro</th><th class="text-end">Margem</th><th class="text-end">Plano</th></tr></thead><tbody>'
@@ -30833,4 +30835,5 @@ try{if(/^#\/(dbfiliais|finlanc)/.test(location.hash))render()}catch(e){}
 <script src="v159-pipeline-planilha-data.js"></script>
 <script src="v159-pipeline-planilha.js"></script>
 <script src="v160-filtros.js"></script>
+<script src="v161-rentabilidade.js"></script>
 </body></html>
