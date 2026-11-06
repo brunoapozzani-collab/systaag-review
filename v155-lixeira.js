@@ -13,7 +13,13 @@
    5. Uma fonte de verdade: excluir tira o registro da Base, então toda tela (que lê a Base) deixa de mostrar; ligações de
       outros registros para ele são desligadas (e religadas no Restaurar) — nada fica apontando para o vazio.
    6. Cada exclusão / restauração / exclusão definitiva entra na Auditoria (S.db.auditoria) e no registro de eventos.
-   Tudo neste arquivo; nada do index é editado. */
+   Tudo neste arquivo; nada do index é editado.
+   v161 (Bruno, 05/11, decisão final — substitui a 1ª do mesmo dia): "O único lugar onde se exclui proposta, obra, cliente é dentro
+   da Base." Aqui mudaram só 4 pontos: (a) o botão 🗑 das linhas/cartões/fichas só é desenhado em telas da Base (SEC_OF='bd');
+   (b) a gaveta da negociação (Pipeline) não ganha mais o botão; (c) confirmar() recusa fora da Base com "Excluir só na Base";
+   (d) novo tipo que a Base passa a excluir: lançamentos do Financeiro (as propostas do Pós-venda já são propostas da Base —
+   S.db.at_propostas é só uma vista de S.db.propostas com linha 'posvenda'). O resto
+   (telas extras da Base, guarda das exclusões antigas do core) está em v161-lixeira.js. */
 (function(){
 'use strict';
 if(window.__v155lx)return;window.__v155lx=true;
@@ -69,7 +75,7 @@ const TIPO={
   drive_eventos:{s:'arquivo recebido',p:'arquivos recebidos',n:x=>x.arquivo||x.id},prj_horas:{s:'lançamento de horas',p:'lançamentos de horas'},
   apontamentos:{s:'apontamento',p:'apontamentos'},compromissos:{s:'compromisso',p:'compromissos'},os:{s:'OS',p:'OS'},
   ajustes_custo:{s:'ajuste de custo',p:'ajustes de custo'},jornadas:{s:'jornada',p:'jornadas'},lancamentos:{s:'lançamento financeiro',p:'lançamentos financeiros'},
-  'fin.lancamentos':{s:'lançamento do Financeiro',p:'lançamentos do Financeiro'},veiculos_usos:{s:'uso de veículo',p:'usos de veículo'},
+  'fin.lancamentos':{s:'lançamento do Financeiro',p:'lançamentos do Financeiro',g:'o',i:'bi-cash-coin',n:x=>(x.descricao||x.historico||x.desc||x.nome||x.id)+(x.data?' · '+String(x.data).split('-').reverse().join('/'):'')},veiculos_usos:{s:'uso de veículo',p:'usos de veículo'},
   at_atendimentos:{s:'atendimento AT',p:'atendimentos AT'},at_relatorios:{s:'relatório AT',p:'relatórios AT'},
   bateladas:{s:'separação',p:'separações'},pedidos:{s:'pedido de compra',p:'pedidos de compra'},pedidos_alt:{s:'pedido de alteração',p:'pedidos de alteração'},
   saidas:{s:'saída do estoque',p:'saídas do estoque'},montagens:{s:'montagem',p:'montagens'},kitsobra:{s:'kit de obra',p:'kits de obra'},
@@ -88,7 +94,7 @@ const tipo=k=>TIPO[k]||{s:k,p:k};
 const nomeDe=(col,r)=>{if(!r)return '';const t=tipo(col);return String(T(()=>t.n?t.n(r):(r.nome||r.titulo||r.id),'')||r.id||'')};
 const qt=(n,col)=>N0(n)+' '+(n===1?tipo(col).s:tipo(col).p);
 /* o que pode ser raiz de uma exclusão (ganha o botão) */
-const ROOTS=['obras','propostas','clientes','negociacoes','pessoas','produtos','fornecedores','parceiros','kits','marcas','categorias','locais','veiculos','contas','catserv','receitas','plataformas','kpmarcas','subetapas'];
+const ROOTS=['fin.lancamentos','obras','propostas','clientes','negociacoes','pessoas','produtos','fornecedores','parceiros','kits','marcas','categorias','locais','veiculos','contas','catserv','receitas','plataformas','kpmarcas','subetapas'];
 
 /* ───────────────────────── 2 · permissão "Excluir registros" ───────────────────────── */
 const GESTOR_PERFIS=['ti','diretoria','financeiro'];     /* os perfis cujo papel é Gestor (UQ.form: ti/diretoria/financeiro → gestor) */
@@ -166,6 +172,7 @@ const RULES={
   contas(x,c){const n=(S.db.lancamentos||[]).filter(l=>l.conta_id===c.id).length+T(()=>(S.db.fin.lancamentos||[]).filter(l=>l.conta_id===c.id).length,0);
     if(n)x.bloq(N0(n)+' lançamento(s) estão nesta conta.');if(T(()=>S.db.caixa.padrao===c.id,false)||T(()=>S.db.fin.params.conta_padrao===c.id,false))x.bloq('É a conta padrão do caixa — escolha outra conta padrão antes.')},
   receitas(x,r){const n=(S.db.produtos||[]).filter(p=>p.receita_id===r.id).length;if(n)x.bloq(N0(n)+' produto(s) usam esta receita de serviço.')},
+  'fin.lancamentos'(x,l){if(String(l.id).indexOf('erp:')===0||l.fonte==='erp')x.bloq('Este lançamento vem do ERP (venda/compra) — ele some sozinho quando a origem muda.')},
   kits(){},catserv(){},plataformas(){},subetapas(){}
 };
 /* rede de segurança: qualquer campo de ligação (…_id, …_ids, …Id, merged_into) que ainda aponte para um id que sai, em qualquer tabela da Base,
@@ -319,7 +326,13 @@ function css(){if(!document.getElementById('v155-lx-css'))document.head.insertAd
 function fechar(){const o=document.getElementById('v155-ov');if(o)o.remove()}
 function lista(rs,col,max){max=max||5;const ns=rs.slice(0,max).map(r=>'<li>'+E(nomeDe(col,r))+'</li>').join('');return ns+(rs.length>max?'<li class="sub">… e mais '+N0(rs.length-max)+'</li>':'')}
 
+/* v161 · excluir só na Base */
+const naBaseK=k=>{try{return !!k&&typeof SEC_OF!=='undefined'&&SEC_OF[k]==='bd'}catch(e){return false}};
+const naBase=()=>{try{return naBaseK(route().k)}catch(e){return false}};
+const ONDE_BASE={obras:'Clientes · Obras · Propostas',propostas:'Clientes · Obras · Propostas',clientes:'Clientes · Obras · Propostas',negociacoes:'Negociações',pessoas:'Pessoas',produtos:'Produtos',parceiros:'Parceiros',fornecedores:'Fornecedores','fin.lancamentos':'Lançamentos financeiros',locais:'Locais',catserv:'Serviços & diárias'};
+const SO_BASE=col=>'Excluir só na Base — abra <b>Base de dados › '+E(ONDE_BASE[col]||'a lista do cadastro')+'</b>.';
 function confirmar(col,id,extraSel){
+  if(!naBase()){try{toast(SO_BASE(col),true)}catch(e){}return}
   try{css();
     if(!podeExcluir()){toast(NEGADO,true);return}
     const x=plano(col,id,extraSel);if(!x){toast('Registro não encontrado — talvez já esteja na Lixeira.',true);return}
@@ -399,6 +412,7 @@ function decorar(){if(decorando)return;decorando=true;try{css();
   if(!pode){m.querySelectorAll('[data-v155],#v155-hdbtn').forEach(b=>b.remove());m.querySelectorAll('button[onclick*="V139_excluir"]').forEach(b=>b.style.display='none');return}
   let k='',arg='';try{const r=route();k=r.k;arg=r.arg?decodeURIComponent(r.arg):''}catch(e){}
   if(k==='dblixeira')return;
+  if(!naBaseK(k)){m.querySelectorAll('[data-v155],#v155-hdbtn').forEach(b=>b.remove());return}
   /* 1 · a ficha */
   const fc=FICHA[k];
   if(fc&&arg&&find(fc,arg)&&!m.querySelector('#v155-hdbtn')){
@@ -437,7 +451,7 @@ function decorarPermissoes(){try{const m=document.getElementById('main');if(!m||
 
 /* ───────────────────────── 9 · API ───────────────────────── */
 window.V155={
-  pode:podeExcluir,plano,mover,restaurar:null,purgar:null,
+  pode:podeExcluir,plano,mover,restaurar:null,purgar:null,naBase,naBaseK,soBase:SO_BASE,tipo:c=>tipo(c),
   excluir(c,id){confirmar(c,id)},
   restaurar(bid){if(!podeExcluir()){toast(NEGADO,true);return}const b=lix().find(o=>o.id===bid);if(!b)return;
     try{const r=restaurar(bid);toast(`«${E(r.b.raiz.nome)}» voltou${(r.b.veio||[]).length?' com '+r.b.veio.map(v=>qt(v.n,v.c)).join(', '):''}.`+(r.pulados.length?` (${r.pulados.length} já existiam e ficaram como estão)`:''));redesenha()}catch(e){toast(e.message||String(e),true)}},
@@ -473,7 +487,7 @@ try{window.V139_excluir=function(key){try{if(!podeExcluir()){toast(NEGADO,true);
   if(r0&&r0.id!=null)return confirmar(t0,r0.id);toast('Esta pessoa não tem cadastro com número — use Base › Pessoas › unir antes.',true)}catch(err){console.error('v155 pessoa',err)}}}catch(e){}
 try{if(window.AF107)AF107.apagarCliente=function(id){confirmar('clientes',id)}}catch(e){}
 /* a gaveta da negociação (Pipeline) também ganha o botão */
-try{const _dd=window.dealDrawer;if(typeof _dd==='function'&&!_dd.__v155){const g=function(){const h=_dd.apply(this,arguments);try{if(typeof h==='string'&&S.deal&&podeExcluir()&&find('negociacoes',S.deal)&&h.indexOf('data-v155d')<0)return h+`<div class="mt-3" data-v155d="1"><button class="btn-soft v155-hd" onclick="V155.excluir('negociacoes','${J(S.deal)}')"><i class="bi bi-trash3 me-1"></i>Excluir negociação</button></div>`}catch(e){}return h};g.__v155=1;window.dealDrawer=g}}catch(e){}
+try{const _dd=window.dealDrawer;if(typeof _dd==='function'&&!_dd.__v155){const g=function(){const h=_dd.apply(this,arguments);try{if(typeof h==='string'&&S.deal&&naBase()&&podeExcluir()&&find('negociacoes',S.deal)&&h.indexOf('data-v155d')<0)return h+`<div class="mt-3" data-v155d="1"><button class="btn-soft v155-hd" onclick="V155.excluir('negociacoes','${J(S.deal)}')"><i class="bi bi-trash3 me-1"></i>Excluir negociação</button></div>`}catch(e){}return h};g.__v155=1;window.dealDrawer=g}}catch(e){}
 try{const _rm=window.renderMain;if(typeof _rm==='function'&&!_rm.__v155){const g=function(){menu();const r=_rm.apply(this,arguments);try{decorar();decorarPermissoes()}catch(e){}return r};g.__v155=1;window.renderMain=g;try{renderMain=g}catch(e){}}}catch(e){console.error('v155 renderMain',e)}
 try{const mo=new MutationObserver(ms=>{if(decorando)return;if(ms.some(x=>x.addedNodes&&x.addedNodes.length&&![...x.addedNodes].every(n=>n.nodeType===1&&(n.classList.contains('v155-tr')||n.id==='v155-hdbtn'||n.id==='v155-perm'))))
   {clearTimeout(window.__v155t);window.__v155t=setTimeout(()=>{decorar();decorarPermissoes()},90)}});
