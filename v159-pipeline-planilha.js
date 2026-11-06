@@ -102,7 +102,7 @@ function ligaTela(){if(typeof SCREENS!=='object'||typeof SCREENS.pipeline!=='fun
   /* 05/11 (Bruno): a tela fica com o desenho de antes — só os dados vêm certos da planilha; a ponte do quadro conta os sem status;
      e a última coluna do quadro, depois de "Revisão de proposta", é STATUS VAZIO: as negociações sem status ficam à vista, para alguém resolver */
   SCREENS.pipeline=function(){let h=_p.apply(this,arguments);if(typeof h!=='string')return h;
-    h=h.replace(/(\+ <span style="color:#0d6efd">(\d+) em jogo<\/span>)(<\/span>)/,(m,a,b,c)=>{const k=T(()=>KPI(),{});return a+(k.sem_status?` + <span style="color:#b02a37">${k.sem_status} status vazio</span>`:'')+c});
+    h=h.replace(/(\+ <span style="color:#0d6efd">(\d+) em jogo<\/span>)(<\/span>)/,(m,a,b,c)=>{const f=S.comF||{};const k=T(()=>KPI(n=>(!f.frente||n.frente===f.frente)&&(!f.cons||negCons(n).includes(f.cons))),{});return a+(k.sem_status?` + <span style="color:#b02a37">${k.sem_status} status vazio</span>`:'')+c});
     const ix=depoisDaColuna(h,'REVISÃO DE PROPOSTA');if(ix>0)h=h.slice(0,ix)+colunaVazia()+h.slice(ix);return h.replace(/>NaNd</g,'>—<')};
   SCREENS.pipeline.__v159=true;
   /* card sem data de criação mostrava "NaNd" — sem data, mostra "—" */

@@ -12,7 +12,7 @@ const E=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','
 const st=window.V160=window.V160||{aberto:false,acoes:{}};
 const css=()=>{if(document.getElementById('v160-css'))return;const s=document.createElement('style');s.id='v160-css';s.textContent=`
 .v160-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.v160-bar .v160-q{flex:1;min-width:180px}
+.v160-bar .v160-q{flex:1 1 260px;min-width:180px;max-width:none!important;width:auto!important}
 .v160-btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--bd,rgba(0,0,0,.15));background:transparent;border-radius:10px;padding:6px 12px;font-size:13px;cursor:pointer;white-space:nowrap}
 .v160-btn.on{border-color:#2a78d6;color:#2a78d6}
 .v160-n{background:#2a78d6;color:#fff;border-radius:999px;font-size:11px;padding:0 7px;line-height:18px}
