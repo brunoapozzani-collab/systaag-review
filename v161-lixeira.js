@@ -128,11 +128,11 @@ function tela(k,arg){const cfg=TELAS[k];const all=cfg.rows();const pode=T(()=>V(
     :`<div class="card p-4 text-center" style="border-radius:18px"><div style="font-size:40px;opacity:.35"><i class="bi ${cfg.ic}"></i></div><div class="sub mt-1">Nenhum registro ainda.</div></div>`;
   return hd+topo+aviso+tabela}
 let tq=null;
-window.V161={naBase,limpa,busca(k,v){ST.q[k]=v;clearTimeout(tq);tq=setTimeout(()=>{try{render()}catch(e){try{renderMain()}catch(e2){}}
+window.V161=Object.assign(window.V161||{},{naBase,limpa,busca(k,v){ST.q[k]=v;clearTimeout(tq);tq=setTimeout(()=>{try{render()}catch(e){try{renderMain()}catch(e2){}}
   setTimeout(()=>{const i=document.getElementById('v161-q');if(i){i.focus();const n=i.value.length;i.setSelectionRange(n,n)}},30)},280)},
   contar(){/* para o teste: controles visíveis agora que excluem registro principal */const vis=el=>el.offsetParent!==null||!!el.closest('#modalRoot');
     const els=[...document.querySelectorAll(SEL_MESTRE+',[data-v155],#v155-hdbtn,[data-v161],[onclick^="FUI.remover("]')].filter(vis).filter(el=>!el.closest('#v155-ov'));
-    return els.filter(el=>!(/^FUI\.remover\(/.test(el.getAttribute('onclick')||'')&&/Excluir na Base/.test(el.textContent))).length}};
+    return els.filter(el=>!(/^FUI\.remover\(/.test(el.getAttribute('onclick')||'')&&/Excluir na Base/.test(el.textContent))).length}});
 try{Object.keys(TELAS).forEach(k=>{SCREENS[k]=function(arg){return tela(k,arg)};LABEL[k]=TELAS[k].t;SEC_OF[k]='bd';if(window.OWNER)OWNER[k]='bd'})}catch(e){console.error('v161 telas',e)}
 function menu(){try{const bd=NAV.find(s=>s.id==='bd');if(!bd)return;const ks=Object.keys(TELAS);if(ks.every(k=>bd.items.some(i=>i[0]===k)))return;
   ks.forEach(k=>{if(bd.items.some(i=>i[0]===k))return;const li=bd.items.findIndex(i=>i[0]==='dblixeira');const it=[k,TELAS[k].t];if(li>=0)bd.items.splice(li,0,it);else bd.items.push(it)})}catch(e){}}
@@ -146,4 +146,18 @@ try{let t=null;const mo=new MutationObserver(ms=>{if(limpando)return;if(!ms.some
   const st=()=>{if(document.body)mo.observe(document.body,{childList:true,subtree:true});else setTimeout(st,300)};st()}catch(e){}
 window.addEventListener('hashchange',()=>setTimeout(limpa,200));
 setTimeout(()=>{menu();try{renderNav()}catch(e){}limpa()},1600);
+})();
+
+/* v161c · CRM (iframe próprio): "Excluir parceiro" também só na Base — achado da auditoria 06/11 (324 → 323 sem passar pela Lixeira) */
+(function(){
+'use strict';
+const MSG='Excluir parceiro só na Base — abra Base de dados › Parceiros (vai para a Lixeira e pode voltar).';
+function trava(){try{const f=document.getElementById('crmFrame');const w=f&&f.contentWindow;if(!w||!w.document)return;
+  if(typeof w.excluirParceiro==='function'&&!w.excluirParceiro.__v161){const g=function(){try{(typeof w.toast==='function'?w.toast(MSG,true):(typeof toast==='function'&&toast(MSG,true)))}catch(e){}return false};g.__v161=1;w.excluirParceiro=g}
+  if(!w.__v161mo&&w.document.body){w.__v161mo=1;const some=()=>{w.document.querySelectorAll('[onclick*="excluirParceiro("]').forEach(b=>b.remove())};some();
+    try{new w.MutationObserver(some).observe(w.document.body,{childList:true,subtree:true})}catch(e){}}
+}catch(e){}}
+function liga(){const f=document.getElementById('crmFrame');if(f&&!f.__v161lx){f.__v161lx=1;f.addEventListener('load',()=>{trava();setTimeout(trava,800)})}trava()}
+try{new MutationObserver(liga).observe(document.body||document.documentElement,{childList:true,subtree:false})}catch(e){}
+setInterval(liga,2000);liga();
 })();

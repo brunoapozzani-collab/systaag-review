@@ -222,7 +222,7 @@ function ligaTelas(){let ok=true;
   if(typeof SCREENS==='object'&&typeof SCREENS.pipeline==='function'){if(!SCREENS.pipeline.__v161){const _q=SCREENS.pipeline;SCREENS.pipeline=function(){const h=_q.apply(this,arguments);if(typeof h!=='string')return h;try{return telaPipeline(h)}catch(e){return h}};SCREENS.pipeline.__v161=true}}else ok=false;
   return ok}
 
-function css(){if(document.getElementById('v161-css'))return;const s=document.createElement('style');s.id='v161-css';s.textContent=`
+function css(){if(document.getElementById('v161c-css'))return;const s=document.createElement('style');s.id='v161c-css';s.textContent=`
 .v161-ponte{font-size:12.5px;line-height:1.7;color:var(--bs-secondary-color,#555)}.v161-ponte u{cursor:pointer;text-decoration-style:dotted}
 .v161-cards .card.v161-on{outline:2px solid #0d6efd;outline-offset:-2px}
 .v161-meses{display:flex;align-items:flex-end;gap:6px;height:120px;margin:8px 0 4px;padding-top:6px}
