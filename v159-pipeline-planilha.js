@@ -34,10 +34,18 @@ function liga(){const db=S.db;const N=db.negociacoes||[];let mud=0;
     if(best==null||bp<4){falta.push(r.linha);return}
     const n=L[best];usados.add(n.id);ptr=best+1;
     const pl={linha:r.linha,c:r.c};if(JSON.stringify(n.planilha)!==JSON.stringify(pl)){n.planilha=pl;mud++}
-    if(!r.c[ST]){if(n.resultado!=='sem_status'){n.resultado='sem_status';mud++}if(n.etapa!==SEM){n.etapa=SEM;mud++}}
-    else if(n.resultado==='sem_status'){n.resultado=null;n.etapa='desenvolver';mud++}});
+    /* o STATUS da planilha manda: resultado e etapa seguem o que está escrito nela hoje */
+    const st=nz(r.c[ST]);const RES={fechado:'fechada',perdido:'perdida',futuro:'futuro'};const ETP={'proposta enviada':'enviada','desenvolver proposta':'desenvolver','revisao de proposta':'revisao','proposta desenvolvida':'desenvolvida','aguardando apresentacao':'aguardando'};
+    let res,etp;if(!st){res='sem_status';etp=SEM}else if(RES[st]){res=RES[st];etp=n.etapa===SEM?'desenvolver':n.etapa}else if(ETP[st]){res=null;etp=ETP[st]}else{res=n.resultado;etp=n.etapa}
+    if((n.resultado||null)!==(res||null)){n.resultado=res;mud++}if(n.etapa!==etp){n.etapa=etp;mud++}
+    if(r.c[ST]&&n.status_pipeline!==r.c[ST]){n.status_pipeline=r.c[ST];mud++}
+    if(r.c[CONS]&&n.consultor!==r.c[CONS]){n.consultor=r.c[CONS];mud++}
+    const ch=r.c[0]===''?null:+r.c[0];if(r.c[0]!==''&&!isNaN(ch)&&n.chance!==ch){n.chance=ch;mud++}});
   N.forEach(n=>{if(n.planilha&&!usados.has(n.id)){delete n.planilha;mud++}});
-  const fora=L.filter(n=>!usados.has(n.id)).map(n=>n.id);
+  let fora=L.filter(n=>!usados.has(n.id)).map(n=>n.id);
+  /* linhas que a nossa importação de 02/11 quebrou (o STATUS caiu na coluna CLIENTE): não são negociações — saem da Base */
+  const lixo=L.filter(n=>!usados.has(n.id)&&/^(fechado|perdido|futuro)$/.test(nz(n.cliente_nome)));
+  if(lixo.length){const ids=new Set(lixo.map(n=>n.id));db.negociacoes=db.negociacoes.filter(n=>!ids.has(n.id));db._v159_removidas=(db._v159_removidas||[]).concat(lixo.map(n=>({id:n.id,cliente_nome:n.cliente_nome,quando:D.quando,motivo:'linha quebrada da importação de 02/11 (STATUS na coluna CLIENTE)'})));mud+=lixo.length;fora=fora.filter(id=>!ids.has(id))}
   db._v159={quando:D.quando,linhas:D.rows.length,ligadas:usados.size,sem_negociacao:falta,fora_da_planilha:fora};
   return mud}
 const mud=T(liga,0);
