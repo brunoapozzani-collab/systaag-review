@@ -275,6 +275,8 @@ function aplicar(){
   const cur=(location.hash||'').split('?')[0];const alvo=sp.path.split('?')[0];
   const noAlvo=cur===alvo||cur.indexOf(alvo+'/')===0||alvo.indexOf(cur+'/')===0;
   if(!noAlvo){
+    /* 05/11 v157: a pessoa clicou em outra coisa depois de chegar (ex.: Início no menu) — solta o destaque, não puxa de volta */
+    if(ULT_CLIQUE>sp.t0+300){limpar();return}
     /* o CRM (iframe) às vezes volta para a página inicial dele ao abrir pela 1ª vez: leva de volta à tela pedida, uma vez */
     const VIEW={crmparceiros:'parceiros',crminteracoes:'interacoes',crmtarefas:'tarefas',crmoport:'oportunidades',crmesteira:'esteira',crmgestao:'gestao',crmhome:'home'};
     const vk=VIEW[alvo.replace(/^#\//,'')];
