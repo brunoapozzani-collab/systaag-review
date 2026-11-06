@@ -239,7 +239,9 @@ function recsDe(tabs){const R=[];const cnt={};
   /* um "id" repetido em várias linhas (ex.: todas abrem '#/receber/vencidos') não identifica ninguém */
   R.forEach(r=>{r.ids=r.ids.filter(x=>cnt[x]===1)});return R}
 function irFiltrado(D){
-  const b=D.btn;if(!b)return;const code=b.code||b.on;const h=b.h||hashOf(code);const k=D.k||chaves(D.tabs);
+  const b=D.btn;if(!b)return;
+  /* v161: o motor do filtro mora em v161-filtro.js (sem faixa, sem relógio, sem vazar) — aqui só se avisa de onde veio */
+  try{if(window.V161F)V161F.desde(D)}catch(e){}const code=b.code||b.on;const h=b.h||hashOf(code);const k=D.k||chaves(D.tabs);
   const n=D.tabs.reduce((a,t)=>a+t.n,0);
   try{if(window.V156&&typeof V156.painel==='function'&&V156.painel(D,{h,code,el:b.el,tirar}))return}catch(e){console.error('v156 painel',e)}
   const recs=recsDe(D.tabs);
@@ -250,9 +252,11 @@ function irFiltrado(D){
   ST.sp=(k.ids.length||k.names.length)&&n?{path:h,ids:k.ids,names:k.names,recs,unid,ponte,n:recs.length||n,lb:txt(Object.assign(document.createElement('div'),{innerHTML:D.big}))+' · '+txt(Object.assign(document.createElement('div'),{innerHTML:D.lb})),t:Date.now(),t0:Date.now(),fixed:false}:null;
   try{const base=h.split('?')[0];if(ST.sp&&ZERA[base])ZERA[base]()}catch(e){}
   try{if(ST.sp&&window.V156&&typeof V156.ajusta==='function')V156.ajusta(ST.sp)}catch(e){}
+  if(window.V161F){try{V161F.arm(ST.sp)}catch(e){console.error('v161 arm',e)}}
   tirar();
   try{new Function(code).call(b.el)}catch(e){console.error('v155 abrir',e);try{location.hash=h}catch(_){}}
-  /* a tela (ou o iframe do CRM) pode demorar: tenta de novo até achar a lista, por até 20 s */
+  if(window.V161F){try{V161F.depois()}catch(e){}return}
+  /* (sem a v161) a tela (ou o iframe do CRM) pode demorar: tenta de novo até achar a lista, por até 20 s */
   const sp=ST.sp;if(sp){let i=0;const iv=setInterval(()=>{if(ST.sp!==sp||++i>40){clearInterval(iv);return}aplicar()},500)}
   setTimeout(aplicar,80)}
 
@@ -271,6 +275,7 @@ function docs(){const m=document.getElementById('main');const r=[];if(m)r.push(m
 const BAN_ST='display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 10px;padding:10px 14px;border-radius:12px;background:rgba(0,113,227,.10);color:inherit;font:600 13px/1.4 -apple-system,BlinkMacSystemFont,sans-serif';
 let aplicando=false;
 function aplicar(){
+  if(window.V161F)return V161F.sync();
   const sp=ST.sp;if(!sp)return;
   const cur=(location.hash||'').split('?')[0];const alvo=sp.path.split('?')[0];
   const noAlvo=cur===alvo||cur.indexOf(alvo+'/')===0||alvo.indexOf(cur+'/')===0;
@@ -341,7 +346,7 @@ function casar(recs,items){
   const cands=r=>{let k=0;for(let i=0;i<items.length;i++){if(!used[i]&&r.nn&&(tx[i].includes(r.nn)||(r.nn2&&r.nn2.length>=4&&tx[i].includes(r.nn2))))k++}return k};
   resto.map(r=>[r,cands(r)]).sort((x,y)=>x[1]-y[1]).forEach(([r])=>{const hit=r.nn?melhor(r,false):-1;if(hit>=0){used[hit]=ok[hit]=true;n++}else miss.push(r)});
   return {ok,n,miss}}
-function limpar(){ST.sp=null;docs().forEach(r=>{r.querySelectorAll('[data-v155h]').forEach(x=>{x.style.removeProperty('display');x.removeAttribute('data-v155h')});r.querySelectorAll('[data-v155ban]').forEach(b=>b.remove())});document.querySelectorAll('[data-v155ban]').forEach(b=>b.remove())}
+function limpar(){if(window.V161F){V161F.limpar();ST.sp=null;return}ST.sp=null;docs().forEach(r=>{r.querySelectorAll('[data-v155h]').forEach(x=>{x.style.removeProperty('display');x.removeAttribute('data-v155h')});r.querySelectorAll('[data-v155ban]').forEach(b=>b.remove())});document.querySelectorAll('[data-v155ban]').forEach(b=>b.remove())}
 window.V155_limpar=limpar;
 
 /* ───────────────────────── vigia: toda gaveta nova vira o painel ───────────────────────── */
