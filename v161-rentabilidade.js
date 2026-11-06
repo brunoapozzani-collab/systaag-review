@@ -184,6 +184,17 @@ const CSS=`<style id="v161css">
 function css(){if(document.getElementById('v161css'))return;const d=document.createElement('div');d.innerHTML=CSS;const st=d.firstElementChild;if(st)(document.head||document.documentElement).appendChild(st)}
 const AGUARDA='resultado: aguardando custos (produtos entregues e despesas do Financeiro)';
 const lk=(t,on)=>`<u role="button" onclick="event.stopPropagation();${on}">${t}</u>`;
+/* v161e (Bruno 06/11): cada linha conta as obras que têm proposta DAQUELA unidade; "com valor" = venda com valor NAQUELA unidade.
+   Uma obra com vendas de duas unidades aparece nas duas linhas — a ponte diz qual é e como as linhas fecham com o total. */
+function ponteMulti(R){const ms=R.O.filter(x=>Object.keys(x.porU).length>1);if(!ms.length)return '';
+  const nm=x=>E(x.o.nome||x.o.id);const parte=x=>UNIS.filter(k=>x.porU[k]).map(k=>`${E(k)} ${x.porU[k].v>0?R$(x.porU[k].v):'sem valor'}`).join(', ');
+  const sR=UNIS.reduce((a,k)=>a+R.U[k].obras.length,0),sC=UNIS.reduce((a,k)=>a+R.U[k].comValor.length,0),sS=UNIS.reduce((a,k)=>a+R.U[k].semValor.length,0);
+  const semOutra=UNIS.reduce((a,k)=>a+R.U[k].semValor.filter(e=>e.x.valor>0).length,0);const semRep=sS-R.tot.sem-semOutra,comRep=sC-R.tot.com;
+  const lin=UNIS.filter(k=>R.U[k].obras.length).map(k=>`${E(k)} ${N0(R.U[k].obras.length)} (${N0(R.U[k].comValor.length)} com + ${N0(R.U[k].semValor.length)} sem)`).join(' + ');
+  return `${plural(ms.length,'obra tem','obras têm')} vendas de duas unidades e ${ms.length===1?'aparece':'aparecem'} nas duas linhas: ${ms.slice(0,6).map(x=>`<b>${nm(x)}</b> — ${parte(x)}`).join(' · ')}${ms.length>6?' · + '+N0(ms.length-6):''}`+
+    ` · somando as linhas: ${lin} = ${N0(sR)} = ${N0(R.tot.obras)} obras + ${N0(sR-R.tot.obras)} contada${sR-R.tot.obras===1?'':'s'} duas vezes`+
+    ` · com valor ${N0(sC)} nas linhas = ${N0(R.tot.com)} obras${comRep?` + ${N0(comRep)} com valor em duas unidades`:''}`+
+    ` · sem valor ${N0(sS)} nas linhas = ${N0(R.tot.sem)} obras${semOutra?` + ${N0(semOutra)} que ${semOutra===1?'tem':'têm'} valor em outra unidade`:''}${semRep>0?` + ${N0(semRep)} sem valor em duas unidades`:''}`}
 function tileHTML(){const R=calc();const mx=Math.max(1,R.tot.valor);
   const rows=UNIS.map(u=>{const x=R.U[u];const w=x.valor/mx*100;
     const sub=!x.obras.length&&!x.semObra.length?'nenhuma obra em andamento':[x.obras.length?`${plural(x.obras.length,'obra em andamento','obras em andamento')} · ${N0(x.comValor.length)} com valor de venda · ${x.semValor.length?lk(N0(x.semValor.length)+' sem valor na Base',op('sv',u)):'0 sem valor na Base'}`:'nenhuma obra em andamento',x.semObra.length?lk(plural(x.semObra.length,'venda sem obra ligada','vendas sem obra ligada'),op('so',u)):''].filter(Boolean).join(' · ');
@@ -193,7 +204,7 @@ function tileHTML(){const R=calc();const mx=Math.max(1,R.tot.valor);
       <div class="r">${x.obras.length?`<b>${R$(x.valor)}</b><span>valor vendido${x.comValor.length?' de '+plural(x.comValor.length,'obra','obras'):''} · ${E(res)}</span>`:`<b>—</b><span>nenhuma obra em andamento${x.semObra.length?' · as vendas sem obra não são valor em andamento':''}</span>`}</div></div>`}).join('');
   const u=(t,on)=>`<u role="button" onclick="${on}">${t}</u>`;const tt=R.tot;
   const pont=`<div class="vx-ponte" id="v161_ponte" data-obras="${tt.obras}" data-com="${tt.com}" data-sem="${tt.sem}">Ponte: ${u(plural(tt.obras,'obra em andamento','obras em andamento'),op('uni','*'))} = ${u(N0(tt.com)+' com valor',op('uni','*'))} + ${u(N0(tt.sem)+' sem valor',op('sv','*'))} <span class="sub">(sem valor de venda na Base — chega com as propostas e o Financeiro; não conta como R$ 0)</span> · ${R$(tt.valor)} = soma das vendas de ${plural(tt.com,'obra','obras')} = ${UNIS.filter(k=>R.U[k].comValor.length).map(k=>u(R$(R.U[k].valor)+' '+E(k),op('uni',k))).join(' + ')||'—'}`+
-    (R.multi?` <span class="sub">(${plural(R.multi,'obra tem','obras têm')} vendas de duas unidades e aparece${R.multi===1?'':'m'} nas duas linhas)</span>`:'')+
+    (R.multi?` · <span class="v161-multi">${ponteMulti(R)}</span>`:'')+
     (R.semObra.length?` · ${u(plural(R.semObra.length,'venda sem obra ligada','vendas sem obra ligada'),op('so','*'))} (${UNIS.filter(k=>R.U[k].semObra.length).map(k=>N0(R.U[k].semObra.length)+' '+E(k)).join(' + ')} · ${R$(tt.vSemObra)}) fora do valor em andamento — ainda não têm obra`:'')+
     ` · ${tt.custos>0?`custos lançados ${R$(tt.custoCusto)} em ${plural(R.comCusto.length,'obra','obras')} com valor e custo · resultado dessas obras ${R$(r2(tt.valorCusto-tt.custoCusto))}`:AGUARDA}</div>`;
   css();return `<div class="vx149-box v161" id="v161_tile" data-obras="${tt.obras}" data-total="${tt.valor}"><h4 role="button" style="cursor:pointer" onclick="${op('uni','*')}">Rentabilidade em andamento <span class="v161-mm">por obra · valor vendido · barra = parte do valor vendido</span> <span class="vx149-h4go">›</span></h4>${rows}</div>`+pont}
@@ -226,7 +237,7 @@ function gaveta(k,a){if(!['uni','sv','so'].includes(k))return '';const R=calc();
     `<div class="lead">valor vendido · ${plural(obrasN,'obra em andamento','obras em andamento')} = ${N0(com.length)} com valor + ${N0(sem.length)} sem valor · ${R$(vt)} = soma das vendas de ${plural(com.length,'obra','obras')}${so.length?' · '+plural(so.length,'venda sem obra ligada','vendas sem obra ligada')+' fora':''} · ${temCusto?`custos lançados em ${plural(cc.length,'obra','obras')} com valor e custo`:E(AGUARDA)}</div>`+
     `<div class="vx149-fonte"><b>De onde vem:</b> uma linha do Painel de Controle = uma obra (situação Em andamento, a mesma lista do Início › Operações). Valor da obra = soma do valor de venda das propostas vendidas dela (METAS 2026, Painel de Controle, Controle de AT). Obra sem venda com valor fica na lista com nome — não é R$ 0. Custos = só o que já foi lançado na Base (equipamentos entregues ao custo de compra, diárias apontadas, viagem 204.x, extras, projeto, garantia, saídas da planilha ligadas à obra, comissões); enquanto não há custo lançado, não há margem nem resultado.</div>`;
   const ordem=k==='sv'?secSem+secCom+secSo:k==='so'?secSo+secCom+secSem:secCom+secSem+secSo;
-  return head_+ordem+(k==='uni'?`<a class="btnl" href="javascript:void 0" onclick="V161.abrir('${J(a)}')">Abrir Financeiro › Obras (estas obras) ›</a>`:'')}
+  return head_+ordem+(k==='uni'?`<a class="btnl" href="javascript:void 0" onclick="V161.abrir('${J(a)}')/* v161e: destino do painel curto · V130_go('#/fobras') */">Abrir Financeiro › Obras (estas obras) ›</a>`:k==='sv'?`<a class="btnl" href="javascript:void 0" onclick="COP.ui.obrasTab='obras';COP.ope.go('obras',{situacao:'Em andamento'},'#/obras')">Abrir Operação › Obras (estas obras) ›</a>`:'')}
 
 /* plumbing: chaves "v161:…" no V130_open */
 const OPEN0=window.V130_open,CLOSE0=window.V130_close,GO0=window.V130_go;

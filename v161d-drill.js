@@ -66,7 +66,7 @@ function ensaio(code,el){
   stub(window,'V130_go',h=>{cap.h=h});
   stub(window,'V130_metaGo',(k,fil)=>{S.propF={st:'',fr:k||'',q:'',cons:'',ym:'',fil:fil||'',vano:ANO()};cap.h='#/propostas'});
   const c=C();
-  stub(c.ope,'go',(screen,state,hash)=>{c.ui[screen]=state||{};cap.h=hash});
+  stub(c.ope,'go',(screen,state,hash)=>{c.ui[screen]=state||{};cap.h=hash||('#/'+screen)});
   stub(c.prj,'go',(screen,f)=>{c.ui[screen]=Object.assign({},f||{});cap.h='#/'+screen});
   stub(c.pos,'go',(k,screen,st)=>{const u=c.ui[screen]=c.ui[screen]||{};Object.assign(u,st||{});cap.h='#/'+k});
   stub(window.V161P,'filtro',k=>{V161P.f=k||null;cap.h='#/prjpainel'});
@@ -190,6 +190,8 @@ function porta(ev){
   const hide=r.h==='#/prjpainel'?'[onclick^="V161P.filtro(null)"]':null;
   abrir({code,h:r.h,tela,big:nl.big,lb:nl.lb||tela,sub:nl.sub,tb:L?L.tb:null,ponte,ponteLanding:UNID.has(dk)?ponte:'',porque,hide,vem:tela,recs})}
 document.addEventListener('click',ev=>{try{porta(ev)}catch(e){console.error('v161d porta',e)}},true);
+/* v161e: as peças do painel curto, para outras camadas abrirem o mesmo painel (Gestão, pontes da Planilha Mestra, Pré-vendas) */
+V.abrir=abrir;V.numLb=numLb;V.telaNome=telaNome;V.FONTES=FONTES;
 
 /* Projetos: "7 com projeto em andamento" (Início ou Projetos › Painel) — a lista filtrada mora em Projetos › Painel */
 (function ligaP(n){const P=window.V161P;if(P&&typeof P.filtro==='function'&&!P.filtro.__v161d){const f0=P.filtro;
@@ -213,7 +215,9 @@ V.alvo=function(D){
       /* a lista de negociações do Comercial (#/negs) foi fundida na Gestão (FX2.legacy: negs → #/gestao, um painel, não
          uma lista); a lista com TODAS as negociações e o filtro de status é CRM › Oportunidades — o botão diz isso */
       const RL={fechada:'Fechadas',perdida:'Perdidas',futuro:'Futuro',decidida:'Fechadas + perdidas'};
-      b.h='#/crmoport';b.tela='CRM › Oportunidades'+(RL[q.res]?' · '+RL[q.res]:' · todas');return}}
+      b.h='#/crmoport';b.tela='Comercial › Pipeline'+(RL[q.res]?' · '+RL[q.res]:' · todas')+' (lista em CRM › Oportunidades)';
+      /* v161e: "Vem de" diz o mesmo (o Pipeline é a origem; a lista com todas as decididas mora no CRM) */
+      if(D.fonte)D.how.unshift(`<div><b>De onde vem:</b> ${E(D.fonte)}</div>`);D.fonte='Comercial › Pipeline'+(RL[q.res]?' · '+RL[q.res]:' · todas')+' — lista em CRM › Oportunidades';return}}
   /* 224 concluídas na Operação (e as em assistência técnica): Operação › Obras com a situação ligada */
   if(k==='v161x:fin'&&(a==='conc'||a==='at')){const sit=a==='conc'?'Concluída':'Assistência técnica';
     b.h='#/obras';b.tela='Operação › Obras e clientes · '+sit;
