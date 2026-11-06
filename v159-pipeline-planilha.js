@@ -24,15 +24,20 @@ const ABERTOS=['proposta enviada','desenvolver proposta','revisao de proposta','
 const SEM='Sem status na planilha';
 
 /* ---------- §1 a linha da planilha entra na Base ---------- */
-function liga(){const db=S.db;const N=db.negociacoes||[];let mud=0;const byId={};N.forEach(n=>byId[n.id]=n);
-  const livres=N.filter(n=>/^Pipeline \(/.test(n.origem||''));const usados=new Set();const falta=[];
-  D.rows.forEach((r,i)=>{let n=byId['pl'+(i+1)];
-    if(!n||usados.has(n.id)||(nz(n.cliente_nome)!==nz(r.c[CLI])&&nz(n.status_pipeline)!==nz(r.c[ST])))n=livres.find(x=>!usados.has(x.id)&&nz(x.cliente_nome)===nz(r.c[CLI])&&nz(x.status_pipeline)===nz(r.c[ST]))||null;
-    if(!n){falta.push(r.linha);return}usados.add(n.id);
-    const pl={linha:r.linha,c:r.c};if(nz(n.status_pipeline)!==nz(r.c[ST])&&r.c[ST]){n.status_pipeline=r.c[ST];mud++}if(JSON.stringify(n.planilha)!==JSON.stringify(pl)){n.planilha=pl;mud++}
+function liga(){const db=S.db;const N=db.negociacoes||[];let mud=0;
+  const L=N.filter(n=>/^Pipeline \(/.test(n.origem||'')).sort((a,b)=>(+String(a.id).replace(/\D/g,'')||0)-(+String(b.id).replace(/\D/g,'')||0));
+  const usados=new Set();const falta=[];const iso=d=>{const m=String(d||'').match(/(\d{2})\/(\d{2})\/(\d{4})/);return m?m[3]+'-'+m[2]+'-'+m[1]:''};
+  const pts=(n,r)=>(nz(n.status_pipeline)===nz(r.c[ST])?2:0)+(String(n.data_upgrade||'').slice(0,10)===iso(r.c[12])?1:0)+(nz(n.consultor)===nz(r.c[CONS])?1:0)+(nz(n.cliente_nome)===nz(r.c[CLI])?3:0)+(nz(n.tipo_pipeline)===nz(r.c[TIPO])?1:0);
+  let ptr=0;
+  D.rows.forEach(r=>{let best=null,bp=-1;for(let k=Math.max(0,ptr-8);k<Math.min(L.length,ptr+9);k++){const n=L[k];if(usados.has(n.id))continue;const p=pts(n,r)-Math.abs(k-ptr)*0.01;if(p>bp){bp=p;best=k}}
+    if(best==null||bp<4){const k=L.findIndex(n=>!usados.has(n.id)&&nz(n.cliente_nome)===nz(r.c[CLI]));if(k>=0){best=k;bp=9}}
+    if(best==null||bp<4){falta.push(r.linha);return}
+    const n=L[best];usados.add(n.id);ptr=best+1;
+    const pl={linha:r.linha,c:r.c};if(JSON.stringify(n.planilha)!==JSON.stringify(pl)){n.planilha=pl;mud++}
     if(!r.c[ST]){if(n.resultado!=='sem_status'){n.resultado='sem_status';mud++}if(n.etapa!==SEM){n.etapa=SEM;mud++}}
     else if(n.resultado==='sem_status'){n.resultado=null;n.etapa='desenvolver';mud++}});
-  const fora=livres.filter(n=>!usados.has(n.id)).map(n=>n.id);
+  N.forEach(n=>{if(n.planilha&&!usados.has(n.id)){delete n.planilha;mud++}});
+  const fora=L.filter(n=>!usados.has(n.id)).map(n=>n.id);
   db._v159={quando:D.quando,linhas:D.rows.length,ligadas:usados.size,sem_negociacao:falta,fora_da_planilha:fora};
   return mud}
 const mud=T(liga,0);
