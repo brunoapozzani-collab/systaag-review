@@ -19,7 +19,14 @@
       arquivo da arquitetura não recebido; prontos; aprovados no mês = (C) enviado no mês), a ponte das obras em andamento,
       a barra por obra, a tabela por projetista e a ponte do total de obras com Operação.
    §4 Página da obra (Projetos e Operação): barra + chips dos 12 entregáveis, arquivos recebidos, etapas, diárias, entrega.
-   §5 window.V161P = os mesmos números para o Início (v130 lê os entregáveis pendentes daqui). */
+   §5 window.V161P = os mesmos números para o Início (v130 lê os entregáveis pendentes daqui).
+   §6 (Bruno, 06/11/2026) Obra cuja linha do Painel ainda diz "sistema completo" (em andamento) mas cuja Entrega Técnica
+      (arquivo ET da v151) diz "Realizada" ESTÁ CONCLUÍDA: situação Concluída na Base (vale para Operação, Projetos, Início
+      e clientes do Pós-venda), etapas finalizadas, com a nota o.concluidaPorET ("concluída pela E.T. realizada em
+      dd/mm/aaaa (a planilha ainda diz sistema completo)") e a lista em Base › Conferência Mestra. Se a planilha mudar o
+      status, ou a E.T. deixar de dizer Realizada, a nota sai e vale a planilha de novo.
+      Etapa com término vencido e sem "OK" = atrasada (a mesma regra da Operação: previsão de fim < hoje e não concluída);
+      entregável em branco na planilha = "sem status". */
 (function(){
 'use strict';
 if(window.__v161p)return;window.__v161p=true;
@@ -71,7 +78,7 @@ function etStatus(x,concl,t){const a=x.ini||'',b=x.fim||'';
 
 /* ---------- §1 sincronização ---------- */
 function sincObra(db,o,row,t){let n=0;const snap=o._v161=o._v161||{};['ent','arq','et','cp'].forEach(k=>snap[k]=snap[k]||{});
-  const concl=/^(concluido|cancelada)$/i.test(norm(row.status));
+  const concl=/^(concluido|cancelada)$/i.test(norm(row.status))||!!o.concluidaPorET;
   /* entregáveis: os 12 do Painel, na ordem do sistema; prazo/link/obs digitados no app ficam */
   const nomes=ENTS();const ex=Array.isArray(o.entregaveis)?o.entregaveis:[];const usados=new Set();
   const novos=nomes.map((nm,k)=>{const r=row.ent[k];let e=ex.find(x=>x&&!usados.has(x)&&x.nome===nm)||ex.find(x=>x&&!usados.has(x)&&norm(x.nome)===norm(nm))||null;
@@ -140,6 +147,22 @@ function sincronizar(db){const F=estado(db);const t=hoje();F.flags=[];let n=0,li
 
 /* ---------- §5 números (uma conta, usada por Projetos e pelo Início) ---------- */
 const P=window.V161P=window.V161P||{};
+/* ---------- §6 concluída pela E.T. realizada (Bruno, 06/11/2026) ---------- */
+const etReal=o=>/realizad/i.test(String((o.et||{}).situacao||''));
+const planConcl=o=>/^(concluido|cancelada)$/i.test(norm(o.statusPlanilha));
+function concluiPorET(db){let n=0;const t=hoje();
+  (db.obras||[]).forEach(o=>{if(!o||o.merged_into||o.inativo||o.legadoAT)return;const m=o.concluidaPorET;
+    if(m){/* a planilha mudou o status, ou a E.T. não diz mais Realizada: vale a planilha */
+      if(!etReal(o)||planConcl(o)||norm(o.statusPlanilha)!==norm(m.statusPlanilha)){if(o.situacao==='Concluída'&&!planConcl(o))o.situacao=m.antes||'Em andamento';delete o.concluidaPorET;n++}
+      return}
+    if(!etReal(o)||planConcl(o))return;if(T_(()=>C.situacao(o),o.situacao)!=='Em andamento')return;
+    const et=o.et||{};const d=ISO(et.data)?et.data:ISO(et.fim)?et.fim:'';
+    o.concluidaPorET={data:d,dataDe:ISO(et.data)?'data da E.T.':ISO(et.fim)?'fim da execução na E.T. (a coluna da data da E.T. está vazia)':'sem data na E.T.',antes:o.situacao||'Em andamento',statusPlanilha:o.statusPlanilha||'',fonte:et.fonte||'',regra:'Bruno 06/11/2026: E.T. realizada = obra concluída',em:t};
+    o.situacao='Concluída';o.entrega=o.entrega||{};if(!o.entrega.realizada&&d)o.entrega.realizada=d;n++});
+  return n}
+P.notaET=o=>{const m=o&&o.concluidaPorET;return m?`concluída pela E.T. realizada em ${m.data?dBR(m.data):'(sem data)'} (a planilha ainda diz ${m.statusPlanilha||o.statusPlanilha||'em andamento'})`:''};
+P.concluidasET=()=>(S.db.obras||[]).filter(o=>o&&o.concluidaPorET&&!o.merged_into&&!o.inativo);
+
 const ativas=()=>(S.db.obras||[]).filter(o=>!o.merged_into&&!o.inativo);
 const sit=o=>T_(()=>C.situacao(o),o.situacao||'');
 const emAnd=()=>ativas().filter(o=>o.ativo!==false&&sit(o)==='Em andamento'&&!o.prospeccao);
@@ -191,7 +214,7 @@ function ponteObras(){const all=S.db.obras||[];const leg=all.filter(o=>o.legadoA
   const ln=op.filter(o=>!o.merged_into&&!o.inativo&&temLinha(o)).length;const semL=op.filter(o=>!(!o.merged_into&&!o.inativo&&temLinha(o)));
   const fund=semL.filter(o=>o.merged_into||o.inativo).length;const semLs={};semL.filter(o=>!o.merged_into&&!o.inativo).forEach(o=>{const k=sit(o)||'sem situação';semLs[k]=(semLs[k]||0)+1});
   const soma2=ln+semL.length+leg.length;
-  return {txt:`<b>${N0(all.length)} obras na Base</b> = ${u(N0(and)+' em andamento',go('Em andamento'))} + ${u(N0(hold)+' on hold',go('On hold'))} + ${u(N0(conc)+' concluídas',go('Concluída'))} <span class="sub">(= ${N0(and+hold+conc)}, o total de Operação)</span> + ${u(N0(canc)+' canceladas',go('Cancelada'))} + ${u(N0(asst)+' em assistência técnica',go('Assistência técnica'))}${outros?' + '+N0(outros)+' sem situação':''}${pros?' + '+N0(pros)+' em prospecção (fora das listas até o Vendido)':''}${fora?' + '+N0(fora)+' inativas':''} + <a href="#/posobras">${N0(leg.length)} clientes antigos do Pós-venda</a> <span class="sub">(Controle de AT — fora da Operação)</span> ${soma1===all.length?'<span style="color:#198754">✓</span>':'<span class="bad">✗</span>'}`,
+  return {txt:`<b>${N0(all.length)} obras na Base</b> = ${u(N0(and)+' em andamento',go('Em andamento'))} + ${u(N0(hold)+' on hold',go('On hold'))} + ${u(N0(conc)+' concluídas',go('Concluída'))}${P.concluidasET().length?` <span class="sub">(${N0(P.concluidasET().length)} pela E.T. realizada)</span>`:''} <span class="sub">(= ${N0(and+hold+conc)}, o total de Operação)</span> + ${u(N0(canc)+' canceladas',go('Cancelada'))} + ${u(N0(asst)+' em assistência técnica',go('Assistência técnica'))}${outros?' + '+N0(outros)+' sem situação':''}${pros?' + '+N0(pros)+' em prospecção (fora das listas até o Vendido)':''}${fora?' + '+N0(fora)+' inativas':''} + <a href="#/posobras">${N0(leg.length)} clientes antigos do Pós-venda</a> <span class="sub">(Controle de AT — fora da Operação)</span> ${soma1===all.length?'<span style="color:#198754">✓</span>':'<span class="bad">✗</span>'}`,
     txt2:`Por origem: ${N0(ln)} com linha no Painel de Controle de ${QBR} + ${N0(semL.length)} da Mestra sem linha hoje (${[fund?N0(fund)+' fundidas em outra obra':'',...Object.entries(semLs).map(([k,v])=>N0(v)+' '+k.toLowerCase())].filter(Boolean).join(' · ')}) + ${N0(leg.length)} do Controle de AT = ${N0(soma2)} ${soma2===all.length?'<span style="color:#198754">✓</span>':'<span class="bad">✗</span>'}`,
     and,hold,conc,canc,asst,ln,semL:semL.length,leg:leg.length,total:all.length,ok:soma1===all.length&&soma2===all.length}}
 
@@ -232,12 +255,14 @@ function painel(inner){const r=P.resumo();const ea=r.ea;const b=r.b;const nb=k=>
 /* §4 página da obra */
 function cardObra(o,ops){const s=P.estado(o);const k=P.K[s.k];const linha=temLinha(o);
   const arq=(o.arquivosRecebidos||[]).map(a=>`<span class="chip ${a.recebido==='Recebido'?'ok':a.recebido==='Não recebido'?'bad':''}" title="${E(a.nome)} · ${E(a.recebido||'—')}${a.recebidoEm?' em '+dBR(a.recebidoEm):''}" style="font-size:11.5px">${E(a.nome)}${a.recebidoEm?' · <span class="mono">'+dBR(a.recebidoEm)+'</span>':a.recebido?' · '+E(a.recebido.toLowerCase()):' · sem registro'}${a.rev?' · <span class="mono">'+E(a.rev)+'</span>':''}</span>`).join(' ');
-  const et=(o.execucaoPlanilha||[]).map(x=>`<span class="chip ${x.status==='OK'?'ok':x.status==='N/A'?'':x.termino&&x.termino<hoje()?'bad':x.inicio&&x.inicio<=hoje()?'info':''}" style="font-size:11.5px" title="${E(x.item)}${x.status?' · '+E(x.status):''}">${E(x.item)}${x.status==='OK'?' · OK':x.status==='N/A'?' · N/A':''}${x.inicio||x.termino?' · <span class="mono">'+(x.inicio?dBR(x.inicio).slice(0,5):'—')+' → '+(x.termino?dBR(x.termino):'—')+'</span>':''}${x.status&&!/^(OK|N\/A)$/.test(x.status)?' · '+E(x.status):''}</span>`).join(' ');
+  const atrE=x=>!o.concluidaPorET&&x.status!=='OK'&&x.status!=='N/A'&&x.termino&&x.termino<hoje();
+  const et=(o.execucaoPlanilha||[]).map(x=>`<span class="chip ${x.status==='OK'?'ok':x.status==='N/A'?'':atrE(x)?'bad':x.inicio&&x.inicio<=hoje()?'info':''}" style="font-size:11.5px" title="${E(x.item)}${x.status?' · '+E(x.status):''}${atrE(x)?' · atrasada: o término passou sem OK na planilha':''}">${E(x.item)}${x.status==='OK'?' · OK':x.status==='N/A'?' · N/A':atrE(x)?' · <b>atrasada</b>':''}${x.inicio||x.termino?' · <span class="mono">'+(x.inicio?dBR(x.inicio).slice(0,5):'—')+' → '+(x.termino?dBR(x.termino):'—')+'</span>':''}${x.status&&!/^(OK|N\/A)$/.test(x.status)?' · '+E(x.status):''}</span>`).join(' ');
   const pv=(o.entrega||{}).prevista;const dv=o.diariasContratadas,de=o.diariasExecutadas;
   const diar=dv==null&&de==null?'<span class="sub">sem diárias no Painel</span>':`<b>${N0(de||0)}</b> executadas de <b>${N0(dv||0)}</b> vendidas${dv!=null&&de!=null?(de>dv?` <span class="chip bad" style="font-size:11px">${N0(de-dv)} além do vendido</span>`:` · saldo ${N0(dv-de)}`):''}`;
   return `<div class="card p-3 mb-3" id="v161-obra" data-k="${s.k}" data-prontos="${s.prontos}" data-total="${s.total}">
    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2"><h6 class="m-0">${ops?'Projeto e execução · Painel de Controle':'Entregáveis · Painel de Controle'} <span class="sub" style="font-weight:400">${linha?'lido em '+QBR+' · linha '+E(o.linhaPlanilha):'esta obra não tem linha no Painel hoje — dados da cópia anterior'}</span></h6><span class="chip ${k[2]}">${E(k[0])}</span></div>
    <div class="mb-2" style="max-width:520px">${barra(o,s)}<div class="sub" style="font-size:12px">${N0(s.prontos)} de ${N0(s.total)} entregáveis prontos${s.na?' · '+N0(s.na)+' N/A não contam':''}${s.semst?' · '+N0(s.semst)+' sem status na planilha':''}</div></div>
+   ${o.concluidaPorET?`<div class="mb-2" id="v161-notaet" style="font-size:12.5px;padding:6px 10px;border-radius:8px;background:rgba(25,135,84,.08)"><i class="bi bi-check2-circle me-1" style="color:#198754"></i><b>${E(P.notaET(o))}</b> <span class="sub">· regra do Bruno (06/11): E.T. realizada = obra concluída · data = ${E(o.concluidaPorET.dataDe)}</span></div>`:''}
    ${chips(o)}
    <div class="sub mt-2" style="font-size:11.5px">Legenda: <span class="chip ok" style="font-size:10.5px">(C) concluído</span> <span class="chip info" style="font-size:10.5px">(A) em andamento</span> <span class="chip warn" style="font-size:10.5px">(A/P) aguardando arquitetura</span> <span class="chip" style="font-size:10.5px;border:1px dashed var(--bd,#ccc)">sem status</span> <span class="chip" style="font-size:10.5px;opacity:.45">N/A</span> · data = projeto enviado · Rxx = revisão · clique num chip para editar no app (vira bandeira se a planilha disser outra coisa)</div>
    <div class="mt-3"><div class="sub mb-1" style="font-size:11px;font-weight:600">ARQUIVOS RECEBIDOS DA ARQUITETURA</div>${arq||'<span class="sub">—</span>'}${o.plataformaProjetos&&(o.plataformaProjetos.ferramenta||o.plataformaProjetos.nome)?`<span class="sub ms-2" style="font-size:11.5px">· plataforma: ${E(o.plataformaProjetos.ferramenta||'')}${o.plataformaProjetos.nome?' — '+E(o.plataformaProjetos.nome):''}</span>`:''}</div>
@@ -261,12 +286,13 @@ function telas(){
       <details class="mt-2"><summary style="font-size:12.5px">Outras ${N0(ex.length-amb.length)} correções de data (ano do vizinho na mesma linha · digitação corrigida)</summary>${ex.filter(x=>!/hoje/.test(x.tipo)).map(x=>`<div style="font-size:12px">linha ${E(x.linha)} · ${E(x.cliente)} · ${E(COLN(x.coluna))}: "${E(x.valor)}" → ${x.data?dBR(x.data):'—'} <span class="sub">${E(x.tipo)}</span></div>`).join('')}</details>
       <div class="mt-2"><b>Editado no app — a planilha diz outra coisa (o app foi mantido)</b> <span class="chip ${ed.length?'warn':''}">${N0(ed.length)}</span>${ed.slice(0,200).map(x=>`<div style="font-size:12px"><a href="#/prjobras/${E(x.obra_id)}">${E(x.obra)}</a> · ${E(x.campo)}: app <b>${E(x.no_app||'—')}</b> · planilha ${E(x.planilha||'—')}</div>`).join('')}</div>
       ${outras.length?`<details class="mt-2"><summary style="font-size:12.5px">Outras bandeiras ${N0(outras.length)}</summary>${outras.map(x=>`<div style="font-size:12px">${E(x.tipo)} · linha ${E(x.linha||'—')} · ${E(x.obra||x.cliente||'')} ${E(x.planilha||x.campo||'')}</div>`).join('')}</details>`:''}
+      ${(()=>{const xs=P.concluidasET().slice().sort((a,b)=>String(a.nome).localeCompare(String(b.nome),'pt-BR'));return `<div class="mt-2" id="v161-conf-et" data-n="${xs.length}"><b>Concluídas pela E.T. realizada — a planilha ainda diz outra coisa</b> <span class="chip ${xs.length?'info':''}">${N0(xs.length)}</span> <span class="sub" style="font-size:12px">regra do Bruno (06/11): E.T. "Realizada" = obra concluída em todo o sistema</span>${xs.map(o=>`<div style="font-size:12px"><a href="#/obras/${E(o.id)}">${E(o.nome)}</a> · linha ${E(o.linhaPlanilha||'—')} · ${E(P.notaET(o))} <span class="sub">· data = ${E(o.concluidaPorET.dataDe)}</span></div>`).join('')}</div>`})()}
       <div class="sub mt-2" style="font-size:12px">${N0(F.atividadesRetiradas||0)} atividades da cópia de 26/09 saíram da lista (histórico). Fonte: ${E(D.fonte)} · arquivo v161-painel-data.js gerado por tools/gen-v161-painel.py.</div></div>`;
     const i=h.lastIndexOf('<div class="sub" style="font-size:12px">Fonte:');return i>=0?h.slice(0,i)+card+h.slice(i):h+card};SCREENS.dbmestra.__v161=1}}
 telas();
 
 /* ---------- boot ---------- */
-function boot(){try{const db=S.db;if(db.af113_zero||treino())return;const n=sincronizar(db);
+function boot(){try{const db=S.db;if(db.af113_zero||treino())return;const n=concluiPorET(db)+sincronizar(db);
     if(n){T_(()=>log('obras','v161','Painel de Controle '+D.quando+': '+n+' campos de projeto/execução atualizados'));T_(()=>save())}}catch(e){console.error('v161',e)}}
 boot();
 try{const _rm=window.renderMain;window.renderMain=function(){try{telas();const db=S.db;if(db&&!db.af113_zero&&!treino()&&(!db._v161||db._v161.quando!==D.quando))boot()}catch(e){}return _rm.apply(this,arguments)}}catch(e){}
