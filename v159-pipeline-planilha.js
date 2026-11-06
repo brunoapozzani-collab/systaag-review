@@ -33,7 +33,8 @@ function liga(){const db=S.db;const N=db.negociacoes||[];let mud=0;
     if(best==null||bp<4){const k=L.findIndex(n=>!usados.has(n.id)&&nz(n.cliente_nome)===nz(r.c[CLI]));if(k>=0){best=k;bp=9}}
     if(best==null||bp<4){falta.push(r.linha);return}
     const n=L[best];usados.add(n.id);ptr=best+1;
-    const pl={linha:r.linha,c:r.c};if(JSON.stringify(n.planilha)!==JSON.stringify(pl)){n.planilha=pl;mud++}
+    const pl={linha:r.linha,c:r.c};const novo=JSON.stringify(n.planilha)!==JSON.stringify(pl);if(novo){n.planilha=pl;mud++}
+    if(!novo&&n.v159_aplicado)return; n.v159_aplicado=D.quando;
     /* o STATUS da planilha manda: resultado e etapa seguem o que está escrito nela hoje */
     const st=nz(r.c[ST]);const RES={fechado:'fechada',perdido:'perdida',futuro:'futuro'};const ETP={'proposta enviada':'enviada','desenvolver proposta':'desenvolver','revisao de proposta':'revisao','proposta desenvolvida':'desenvolvida','aguardando apresentacao':'aguardando'};
     let res,etp;if(!st){res='sem_status';etp=SEM}else if(RES[st]){res=RES[st];etp=n.etapa===SEM?'desenvolver':n.etapa}else if(ETP[st]){res=null;etp=ETP[st]}else{res=n.resultado;etp=n.etapa}
@@ -90,11 +91,23 @@ function css(){if(document.getElementById('v159-css'))return;const s=document.cr
 .v159-t td{border:1px solid rgba(0,0,0,.12);padding:6px;text-align:center;vertical-align:middle;max-width:260px}.v159-t tbody tr{cursor:pointer}.v159-t tbody tr:hover td{background:rgba(13,110,253,.06)}
 .v159-t td.v159-ln{background:#f1f3f5;color:#666;font-variant-numeric:tabular-nums}.v159-t td.v159-ch{background:#2f6fd1;color:#fff;font-weight:600}.v159-t td.v159-vz{color:#b02a37;font-style:italic}`;document.head.appendChild(s)}
 
+const COL_LB='STATUS VAZIO';
+function colunaVazia(){const f=S.comF||{};const xs=(S.db.negociacoes||[]).filter(n=>n.resultado==='sem_status'&&(!f.frente||n.frente===f.frente)&&(!f.cons||T(()=>negCons(n).includes(f.cons),true)));
+  const card=n=>{let h=T(()=>dealCard(n),'');const ln=n.planilha?'linha '+n.planilha.linha+' da planilha':'';
+    return h.replace(/<\/div>\s*$/,`<div class="sub" style="font-size:11px;color:#b02a37;margin-top:4px">⚠ STATUS em branco${ln?' · '+ln:''} — defina a etapa</div></div>`)};
+  return `<div style="min-width:230px;flex:1"><div class="card p-2 mb-2 d-flex flex-row justify-content-between" style="border:1px dashed #b02a37"><b style="font-size:11px;letter-spacing:.06em;color:#b02a37">${COL_LB}</b><span class="sub">${xs.length}</span></div>${xs.map(card).join('')||'<div class="sub text-center py-3" style="font-size:12px">—</div>'}</div>`}
+function depoisDaColuna(h,rot){const k=h.indexOf('>'+rot+'</b>');if(k<0)return -1;const ini=h.lastIndexOf('<div style="min-width:230px;flex:1">',k);if(ini<0)return -1;
+  const re=/<div\b|<\/div>/g;re.lastIndex=ini;let d=0,m;while((m=re.exec(h))){d+=m[0]==='</div>'?-1:1;if(d===0)return m.index+6}return -1}
 function ligaTela(){if(typeof SCREENS!=='object'||typeof SCREENS.pipeline!=='function'||SCREENS.pipeline.__v159)return false;const _p=SCREENS.pipeline;
-  /* 05/11 (Bruno): a tela fica com o desenho de antes — só os dados vêm certos da planilha; a ponte do quadro conta os sem status */
+  /* 05/11 (Bruno): a tela fica com o desenho de antes — só os dados vêm certos da planilha; a ponte do quadro conta os sem status;
+     e a última coluna do quadro, depois de "Revisão de proposta", é STATUS VAZIO: as negociações sem status ficam à vista, para alguém resolver */
   SCREENS.pipeline=function(){let h=_p.apply(this,arguments);if(typeof h!=='string')return h;
-    return h.replace(/(\+ <span style="color:#0d6efd">(\d+) em jogo<\/span>)(<\/span>)/,(m,a,b,c)=>{const k=T(()=>KPI(),{});return a+(k.sem_status?` + <span style="color:#b02a37">${k.sem_status} sem status na planilha</span>`:'')+c})};
-  SCREENS.pipeline.__v159=true;return true}
+    h=h.replace(/(\+ <span style="color:#0d6efd">(\d+) em jogo<\/span>)(<\/span>)/,(m,a,b,c)=>{const k=T(()=>KPI(),{});return a+(k.sem_status?` + <span style="color:#b02a37">${k.sem_status} status vazio</span>`:'')+c});
+    const ix=depoisDaColuna(h,'REVISÃO DE PROPOSTA');if(ix>0)h=h.slice(0,ix)+colunaVazia()+h.slice(ix);return h};
+  SCREENS.pipeline.__v159=true;
+  /* tirar da coluna: escolher uma etapa (ou fechar/perder) na negociação resolve o "sem status" */
+  T(()=>{if(A&&A.moverEtapa&&!A.moverEtapa.__v159){const mv=A.moverEtapa;A.moverEtapa=function(id,etapa){const n=get('negociacoes',id);if(n&&n.resultado==='sem_status')n.resultado=null;return mv.apply(this,arguments)};A.moverEtapa.__v159=true}});
+  return true}
 if(!ligaTela()){let n=0;const iv=setInterval(()=>{if(ligaTela()||++n>40)clearInterval(iv)},250)}
 
 if(mud){T(()=>save_())}
