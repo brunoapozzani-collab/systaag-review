@@ -409,10 +409,10 @@ function decorar(){if(decorando)return;decorando=true;try{css();
   /* as exclusões antigas, sem volta, saem de cena — excluir agora é só pela Lixeira */
   m.querySelectorAll('button').forEach(b=>{if(b.style.display!=='none'&&VELHO.test(b.getAttribute('onclick')||''))b.style.display='none'});
   /* sem permissão: nenhum botão de excluir (nem os antigos de pessoas do v139) */
-  if(!pode){m.querySelectorAll('[data-v155],#v155-hdbtn').forEach(b=>b.remove());m.querySelectorAll('button[onclick*="V139_excluir"]').forEach(b=>b.style.display='none');return}
+  if(!pode){m.querySelectorAll('[data-v155*="|"],#v155-hdbtn').forEach(b=>b.remove())/* v161b: só os 🗑 (data-v155="col|id") — a gaveta do número também leva data-v155="1" e não pode sumir */;m.querySelectorAll('button[onclick*="V139_excluir"]').forEach(b=>b.style.display='none');return}
   let k='',arg='';try{const r=route();k=r.k;arg=r.arg?decodeURIComponent(r.arg):''}catch(e){}
   if(k==='dblixeira')return;
-  if(!naBaseK(k)){m.querySelectorAll('[data-v155],#v155-hdbtn').forEach(b=>b.remove());return}
+  if(!naBaseK(k)){m.querySelectorAll('[data-v155*="|"],#v155-hdbtn').forEach(b=>b.remove())/* v161b: só os 🗑 (data-v155="col|id") — a gaveta do número também leva data-v155="1" e não pode sumir */;return}
   /* 1 · a ficha */
   const fc=FICHA[k];
   if(fc&&arg&&find(fc,arg)&&!m.querySelector('#v155-hdbtn')){
