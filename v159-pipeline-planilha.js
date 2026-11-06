@@ -27,9 +27,9 @@ const SEM='Sem status na planilha';
 function liga(){const db=S.db;const N=db.negociacoes||[];let mud=0;const byId={};N.forEach(n=>byId[n.id]=n);
   const livres=N.filter(n=>/^Pipeline \(/.test(n.origem||''));const usados=new Set();const falta=[];
   D.rows.forEach((r,i)=>{let n=byId['pl'+(i+1)];
-    if(!n||usados.has(n.id)||nz(n.cliente_nome)!==nz(r.c[CLI]))n=livres.find(x=>!usados.has(x.id)&&nz(x.cliente_nome)===nz(r.c[CLI])&&nz(x.status_pipeline)===nz(r.c[ST]))||null;
+    if(!n||usados.has(n.id)||(nz(n.cliente_nome)!==nz(r.c[CLI])&&nz(n.status_pipeline)!==nz(r.c[ST])))n=livres.find(x=>!usados.has(x.id)&&nz(x.cliente_nome)===nz(r.c[CLI])&&nz(x.status_pipeline)===nz(r.c[ST]))||null;
     if(!n){falta.push(r.linha);return}usados.add(n.id);
-    const pl={linha:r.linha,c:r.c};if(JSON.stringify(n.planilha)!==JSON.stringify(pl)){n.planilha=pl;mud++}
+    const pl={linha:r.linha,c:r.c};if(nz(n.status_pipeline)!==nz(r.c[ST])&&r.c[ST]){n.status_pipeline=r.c[ST];mud++}if(JSON.stringify(n.planilha)!==JSON.stringify(pl)){n.planilha=pl;mud++}
     if(!r.c[ST]){if(n.resultado!=='sem_status'){n.resultado='sem_status';mud++}if(n.etapa!==SEM){n.etapa=SEM;mud++}}
     else if(n.resultado==='sem_status'){n.resultado=null;n.etapa='desenvolver';mud++}});
   const fora=livres.filter(n=>!usados.has(n.id)).map(n=>n.id);
