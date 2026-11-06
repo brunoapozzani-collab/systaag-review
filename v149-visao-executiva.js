@@ -69,7 +69,7 @@ function kpisDe(fn){if(KMEMO[fn])return KMEMO[fn];return KMEMO[fn]=T(()=>{const 
 const kpi=(fn,re)=>{const K=kpisDe(fn);return Object.values(K).find(x=>x&&x.lb&&re.test(x.lb))||null};
 
 /* ───────── dados compartilhados entre blocos e gavetas ───────── */
-const SEM_TXT={gn:'tranquilo',am:'atenção',rd:'precisa de alguém',gr:'sem dados'};
+const SEM_TXT={gn:'em ordem',am:'atenção',rd:'precisa de alguém',gr:'sem dados'};
 const SEMREG={}; /* n → {cls, porque:[...]} — o semáforo explica a si mesmo */
 const semafo=(n,cls,porque)=>{SEMREG[n]={cls,porque};return cls};
 const stP=p=>String(p.status||'').trim().toLowerCase();
@@ -345,7 +345,7 @@ SCREENS.home=function(){let h=HOME_V130.apply(this,arguments);if(typeof h!=='str
   try{const i0=h.indexOf('<div class="vx-top">');const i1=h.indexOf('<div class="vx-foot">');if(i0<0||i1<0)return h;
     const topEnd=h.indexOf('</div></div>',i0)+'</div></div>'.length; /* fecha .vx-top */
     const novo=blocos();if(!novo)return h;
-    const top=h.slice(i0,topEnd).replace('Cada número abre os registros que o formam.','Sete áreas, um assunto por bloco. Verde = tranquilo · amarelo = atenção · vermelho = precisa de alguém (clique no ponto para saber por quê). Cada número abre os registros que o formam — os mesmos das abas.');
+    const top=h.slice(i0,topEnd).replace('Cada número abre os registros que o formam.','Sete áreas, um assunto por bloco. Verde = em ordem · amarelo = atenção · vermelho = precisa de alguém (clique no ponto para saber por quê). Cada número abre os registros que o formam — os mesmos das abas.');
     h=h.slice(0,i0)+top+novo+h.slice(i1);
     if(MY.dr){const dr=T(()=>gaveta149(MY.dr,MY.arg),'');if(dr&&h.indexOf('id="v130_drawer"')<0)h+=`<div class="vd vd-ov fx2-wrapped" style="background:rgba(0,0,0,.38)" onclick="if(event.target===this)V130_close()"><div class="vd-dr" id="v130_drawer">${dr}</div></div>`}
     return h}catch(e){console.error('Visão executiva v149',e);return h}};

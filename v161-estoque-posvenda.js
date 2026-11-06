@@ -154,7 +154,7 @@ const cliNome=p=>(p.at&&p.at.client_name)||T(()=>get('clientes',p.cliente_id).no
 const obraCli=o=>T(()=>get('clientes',o.cliente_id).nome,'')||'—';
 function semInfo(r){const cls=r.pendAtr.length?'rd':r.chamados?'am':'gn';
   return {cls,porque:[r.pendAtr.length?`${N0(r.pendAtr.length)} atendimentos em aberto há mais de 7 dias → vermelho`:'nenhum atendimento parado há mais de 7 dias',r.chamados?`${N0(r.chamados)} chamados abertos (atendimentos do Controle de AT não concluídos em campo + solicitações) → amarelo`:'nenhum chamado aberto']}}
-const SEMTXT={gn:'tranquilo',am:'atenção',rd:'precisa de alguém',gr:'sem dados'};
+const SEMTXT={gn:'em ordem',am:'atenção',rd:'precisa de alguém',gr:'sem dados'};
 function gaveta(k,a){const r=num();
   if(k==='sem'){const s=semInfo(r);return gHead('Por que Pós-vendas está assim: «'+SEMTXT[s.cls]+'»?',`<i class="vx149-dot ${s.cls}" style="width:22px;height:22px"></i>`,'a cor é calculada agora, com os registros do sistema')+`<ul class="vx149-why">${s.porque.map(x=>`<li>${E(x)}</li>`).join('')}</ul>`}
   if(k==='fin'){const G={conc:['Concluídas na Operação',r.conc],at:['Em assistência técnica',r.at],leg:['Casas do Controle de AT (obras legado)',r.leg],lad:['Local a definir (atendimentos sem obra certa)',r.lad],fora:['Fora: com data de entrega mas em andamento/cancelada',r.foraAnd.concat(r.foraCan)]};
