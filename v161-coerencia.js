@@ -215,3 +215,28 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 /* camadas que embrulham as telas depois de nós: a nossa volta a ficar por fora; as importações tardias também passam aqui */
 try{const _rm=window.renderMain;window.renderMain=function(){D.ALL=S.db.obras;T(semNome);T(ligaTelas);const r=_rm.apply(this,arguments);T(portas);return r}}catch(e){}
 })();
+
+/* v161d · Grande Utopia EVO (Bruno, 06/11: "faça o que for melhor para o número total")
+   1) a peça de série A1BUCH01000064 estava como "OD 108 - WHITE" (produto que só existe por essa linha) — o registro de
+      consignado da Audiogene diz que é a LOWER do par → vai para LOWER/UPPER GDE UTOPIA EVO (o produto do par)
+   2) o mesmo par aparecia duas vezes: consignado Audiogene (12/2025, 1 unidade com as 2 séries, R$ 759.521,74) e nosso
+      (Showroom 02/11/2026, as 2 peças) → conta uma vez só, como nosso (o registro mais novo: a consignação terminou na compra);
+      o registro de consignado vai para a Base › Lixeira com o motivo (pode voltar no Restaurar). Roda uma vez por Base. */
+(function(){
+'use strict';
+const K='utopia1';
+function roda(){try{
+  if(typeof S==='undefined'||!S.db||!Array.isArray(S.db.unidades)||!window.V155)return false;
+  const F=S.db._v161d=S.db._v161d||{};if(F[K])return true;
+  const U=S.db.unidades;const ser=u=>String(u.serie||u.serial||'').toUpperCase();
+  const pecaLow=U.find(u=>ser(u)==='A1BUCH01000064');const pecaUp=U.find(u=>ser(u)==='A1BUDH01000063');
+  const consig=U.find(u=>/A1BUCH01000064/.test(ser(u))&&/A1BUDH01000063/.test(ser(u)));
+  if(!pecaLow&&!consig){F[K]={quando:new Date().toISOString(),nada:true};return true}
+  const log={quando:new Date().toISOString(),acoes:[]};
+  if(pecaLow&&pecaUp&&pecaLow.produto_id!==pecaUp.produto_id){log.acoes.push({un:pecaLow.id,produto_antes:pecaLow.produto_id,produto_depois:pecaUp.produto_id});pecaLow.produto_antes_v161d=pecaLow.produto_id;pecaLow.produto_id=pecaUp.produto_id}
+  if(consig&&pecaLow&&pecaUp&&window.V155&&typeof V155.plano==='function'&&typeof V155.mover==='function'){
+    try{const x=V155.plano('unidades',consig.id);if(x){x.motivo='Consignação Audiogene encerrada — o mesmo par Grande Utopia EVO está no Inventário Showroom (02/11/2026) como nosso; contava duas vezes (v161d, 06/11/2026)';
+      V155.mover(x);log.acoes.push({lixeira:consig.id,valor:consig.custo})}}catch(e){log.erro=String(e.message||e)}}
+  F[K]=log;try{save()}catch(e){}return true}catch(e){console.error('v161d utopia',e);return true}}
+let n=0;const iv=setInterval(()=>{if(roda()||++n>60)clearInterval(iv)},1000);
+})();
