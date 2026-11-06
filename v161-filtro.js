@@ -123,7 +123,7 @@ V.arm=function(sp,extra){
   const base=String(sp.path||'').split('?')[0];
   const key=KEY&&Date.now()-KEY.t<4000?KEY:null;KEY=null;
   L={sp,base,crm:CRMV[base.replace(/^#\//,'')]||null,t0:Date.now(),active:false,nat:null,regos:0,ins:0,host:null,M:0,n:0,
-    recsAt:extra&&extra.recsAt||null,limpa:extra&&extra.limpa||null,key};
+    recsAt:extra&&extra.recsAt||null,limpa:extra&&extra.limpa||null,hide:extra&&extra.hide||null,key};
   try{L.nat=nativo(base,key)}catch(e){console.error('v161 nativo',e);L.nat=null}
   if(L.nat&&L.nat.set)try{L.nat.set()}catch(e){console.error('v161 nativo set',e);L.nat=null}
   dlog('arm '+base+' '+(key?key.k+'|'+key.a:'-')+' nat='+(L.nat?L.nat.desc:'-'));
@@ -189,6 +189,8 @@ function sync(){
     if(L.crm){
       /* o CRM troca o endereço sozinho (#/crmhome enquanto o iframe abre): quem decide é a vista do iframe */
       if(!/^#\/crm/.test(cur())){if(L.active||clicou||agora-L.t0>10000)fim(false);return}
+      /* v161d: depois de chegar, o endereço foi para outra vista (digitado, voltar, menu) → a chegada acabou */
+      if(L.active&&cur()!==L.base){fim(false);return}
       ligaFrame();const v=fview();
       if(v!==L.crm){
         if(clicou){fim(false);return}
@@ -267,6 +269,8 @@ function etiqueta(root,best){
     root.querySelectorAll('.chip.info,.v160-tag').forEach(c=>{if(c.closest('[data-v161chip]')||!antes(c))return;const t=txt(c);
       if(c.classList.contains('v160-tag')){c.classList.add('v161-hid');return}
       if(/^Filtro:/i.test(t)){const p=c.parentElement;if(p&&p!==root&&p.querySelectorAll('.chip').length===1)p.classList.add('v161-hid');else c.classList.add('v161-hid')}})}
+  if(L.hide)root.querySelectorAll(L.hide).forEach(c=>{if(!c.closest('[data-v161chip]'))c.classList.add('v161-hid')});
+  titulo(root,best);
   const novo=!box;
   if(novo){box=d.createElement('div');box.className='v161-chips';box.setAttribute('data-v161chip','1')}
   if(box.getAttribute('data-h')!==html){box.setAttribute('data-h',html);box.innerHTML=html;liga(box)}
@@ -279,6 +283,16 @@ function etiqueta(root,best){
     let h=best.host;if(h===root||h.contains(root)){h=best.rows[0];while(h&&h.parentElement!==root)h=h.parentElement}
     if(h&&h.parentNode)h.parentNode.insertBefore(box,h);else root.insertBefore(box,root.firstChild)}
   if(novo){L.ins++;dlog('chip '+L.ins)}}
+/* o número do título ("Propostas 1.345") passa a dizer o filtro: "568 de 1.345" */
+function titulo(root,best){const n=L.n||best.n;if(!n)return;const h=root.querySelector('h1,.h1');if(!h)return;const c=h.querySelector('.chip,.badge');if(!c)return;
+  const w=root.ownerDocument.createTreeWalker(c,NodeFilter.SHOW_TEXT,null);let t;const mexi=L.txt=L.txt||[];
+  while((t=w.nextNode())){const s0=t.__v161o!=null?t.__v161o:t.data;const m=/^\s*(\d[\d.]*)\s*$/.exec(s0);if(!m)continue;const X=+m[1].replace(/\./g,'');if(!(X>n))continue;
+    const s=N0(n)+' de '+N0(X);if(t.data!==s){if(t.__v161o==null){t.__v161o=t.data;mexi.push(t)}t.data=s}}}
+/* a mesma etiqueta para quem filtra a tela por conta própria (ex.: Rentabilidade → Financeiro › Obras) */
+V.chipHTML=function(label,onclickCode,ponteHtml){return `<div class="v161-chips" data-v161chip="1" data-v161own="1"><span class="v161-tag">${E(label)} <b role="button" title="Mostrar tudo" aria-label="Tirar o filtro" onclick="${E(onclickCode)}">×</b></span>${ponteHtml?`<div class="v161-ponte">${ponteHtml}</div>`:''}</div>`};
+V.chip=function(label,onClear,opts){opts=opts||{};css(document);const tp=document.createElement('template');tp.innerHTML=V.chipHTML(label,'',opts.ponte||'');const box=tp.content.firstElementChild;
+  const b=box.querySelector('.v161-tag b');b.removeAttribute('onclick');b.addEventListener('click',ev=>{ev.preventDefault();ev.stopPropagation();box.remove();try{onClear&&onClear()}catch(e){console.error('v161 chip',e)}});
+  if(opts.before&&opts.before.parentNode)opts.before.parentNode.insertBefore(box,opts.before);else if(opts.into)opts.into.appendChild(box);return box};
 function liga(box){const b=box.querySelector('.v161-tag b');if(b)b.addEventListener('click',ev=>{ev.preventDefault();ev.stopPropagation();fim(true)});
   box.querySelectorAll('[data-v161go]').forEach(a=>a.addEventListener('click',ev=>{ev.preventDefault();const h=a.getAttribute('data-v161go');fim(false);try{(window.top||window).location.hash=h}catch(e){location.hash=h}}))}
 function onde(root,best){
@@ -306,7 +320,13 @@ function onMut(ms){vigiaFrame();if(!L&&!ST.sp)return;if(EM)return;
   if(!document.getElementById('crmFrame')||!(FD()||{}).__v161o)ligaFrame();
   sync()}
 try{new MutationObserver(onMut).observe(document.body||document.documentElement,{childList:true,subtree:true})}catch(e){console.error('v161 vigia',e)}
-window.addEventListener('hashchange',()=>{if(L&&cur()!==L.base&&ULT>L.t0+250)fim(false)});
+/* v161d (06/11): qualquer navegação que não seja a da própria chegada a termina — clique, endereço digitado, voltar.
+   (capture: roda antes do render do núcleo, para a tela nova nunca nascer com o filtro de antes) */
+window.addEventListener('hashchange',()=>{if(!L||cur()===L.base)return;
+  /* a tela de destino abriu numa sub-rota sua (#/fcontas → #/fcontas/contas): é a mesma chegada */
+  if(!L.active&&cur().indexOf(L.base+'/')===0){L.base=cur();return}
+  if(L.crm&&!L.active&&/^#\/crm/.test(cur())&&ULT<=L.t0+250&&Date.now()-L.t0<12000)return;/* o CRM abrindo pela 1ª vez passa pela página inicial dele */
+  fim(false)},true);
 /* abrir outro número solta o filtro de antes (a gaveta nova nunca herda) */
 function envolveOpen(nome){const O=window[nome];if(typeof O!=='function'||O.__v161)return false;const W=function(){try{if(L)fim(false)}catch(e){}return O.apply(this,arguments)};
   Object.keys(O).forEach(k=>{try{W[k]=O[k]}catch(e){}});W.__v161=true;window[nome]=W;return true}
@@ -333,7 +353,7 @@ function trocaIr(){const W=window.V156;if(!W||typeof W.ir!=='function'||W.ir.__v
     if(!sp.porque&&recs.length)try{W.ajusta(sp)}catch(e){}
     const temRecs=recs.length||typeof spec.recsAt==='function';
     ST.sp=temRecs?sp:null;
-    if(temRecs){V.arm(sp,{recsAt:recs.length?null:spec.recsAt,limpa:typeof spec.limpa==='function'?spec.limpa:null});if(L&&spec.ponteF)L.ponteF=spec.ponteF}
+    if(temRecs){V.arm(sp,{recsAt:recs.length?null:spec.recsAt,limpa:typeof spec.limpa==='function'?spec.limpa:null,hide:spec.hide||null});if(L&&spec.ponteF)L.ponteF=spec.ponteF}
     try{spec.nav()}catch(e){console.error('v156 nav',e);try{location.hash=spec.path}catch(_){}}
     V.depois()};
   ir.__v161=true;W.ir=ir;return true}

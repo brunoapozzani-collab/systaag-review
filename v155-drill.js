@@ -147,7 +147,7 @@ function lerGaveta(dr){
     D.list.push({html:n.outerHTML})});
   /* o botão principal = o último "Abrir …" (o link do rodapé de antes); os outros ficam pequenos abaixo dele */
   if(D.alts.length){const b=D.alts.pop();if(hashOf(b.on))D.btn=b;else D.alts.push(b)}
-  alvo(D);return D}
+  alvo(D);if(window.V161D&&V161D.alvo)try{V161D.alvo(D)}catch(e){console.error("v161d alvo",e)}return D}
 
 /* destino: o link do rodapé de antes; quando ele leva a um painel sem a lista desses registros, a lista que os tem */
 function alvo(D){const b=D.btn;if(!b)return;b.h=hashOf(b.on);b.tela=telaDe(b.lb);const k=chaves(D.tabs);D.k=k;
