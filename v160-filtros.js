@@ -28,6 +28,22 @@ V160.run=k=>{const c=st.acoes[k];if(!c)return;try{(new Function(c))()}catch(e){c
 V160.sel=el=>{const k=el.value;if(k)V160.run(k)};
 V160.toggle=()=>{st.aberto=!st.aberto;const p=document.getElementById('v160-pop');if(p)p.style.display=st.aberto?'flex':'none';const b=document.getElementById('v160-fb');if(b)b.classList.toggle('on',st.aberto)};
 
+
+/* ---------- Indicador (05/11 Bruno): INDICADOR, GERENCIADORA e ARQUITETURA contam como indicador; "Sem indicador" = as três em branco ---------- */
+const nz=s=>String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/\s+/g,' ').trim();
+const VAZ=/^(|-|—|n\/a|na|nao|não|sem|nenhum|nenhuma)$/i;
+function indsDe(n){const c=n.planilha&&n.planilha.c;const xs=c?[c[5],c[6],c[7]]:[n.fontes&&n.fontes.indicador,n.fontes&&n.fontes.gerenciadora,n.fontes&&n.fontes.arquitetura];
+  return [...new Set(xs.map(x=>String(x||'').trim()).filter(x=>!VAZ.test(x)))]}
+V160.indsDe=indsDe;
+function passaInd(n,k){if(!k)return true;const xs=indsDe(n);return k==='_sem'?!xs.length:xs.some(x=>nz(x)===k)}
+function listaInd(base){const m={};let sem=0;base.forEach(n=>{const xs=indsDe(n);if(!xs.length){sem++;return}xs.forEach(x=>{const k=nz(x);(m[k]=m[k]||{k,n:0,sp:{}});m[k].n++;m[k].sp[x]=(m[k].sp[x]||0)+1})});
+  return {sem,xs:Object.values(m).map(g=>({k:g.k,n:g.n,lb:Object.entries(g.sp).sort((a,b)=>b[1]-a[1])[0][0]})).sort((a,b)=>a.lb.localeCompare(b.lb,'pt-BR'))}}
+V160.ind=v=>{S.comF={...(S.comF||{}),ind:v||''};try{render()}catch(e){try{renderMain()}catch(_){}}};
+function envolve(nomeTela){const f0=SCREENS&&SCREENS[nomeTela];if(typeof f0!=='function'||f0.__v160i)return;
+  const W=function(){const k=(S.comF||{}).ind;if(!k)return f0.apply(this,arguments);const all=S.db.negociacoes;
+    S.db.negociacoes=all.filter(n=>passaInd(n,k));try{return f0.apply(this,arguments)}finally{S.db.negociacoes=all}};
+  Object.keys(f0).forEach(x=>{try{W[x]=f0[x]}catch(e){}});W.__v160i=true;SCREENS[nomeTela]=W}
+const envolveTodas=()=>{try{['pipeline','gestao','hoje'].forEach(envolve)}catch(e){}};
 function grupos(row){/* a fileira antiga: botões .chip separados por um "|" */
   const gs=[[]];[...row.childNodes].forEach(n=>{if(n.nodeType===1&&n.tagName==='BUTTON')gs[gs.length-1].push(n);else if(n.nodeType===1&&/^\s*\|\s*$/.test(n.textContent))gs.push([])});return gs.filter(g=>g.length)}
 const nome=b=>{const t=b.textContent.trim();return t===t.toUpperCase()?t.toLowerCase().replace(/(^|\s|-)(\p{L})/gu,(m,a,c)=>a+c.toUpperCase()):t};
@@ -38,9 +54,13 @@ function montar(row){
     const opts=g.map((b,j)=>{const k=reg(b.getAttribute('onclick')||'');const on=b.classList.contains('info');if(on&&j>0){n++;tags.push(`<span class="v160-tag">${E(lb)}: ${E(nome(b))} <b onclick="V160.run('${reg(todo.getAttribute('onclick')||'')}')" title="tirar este filtro">×</b></span>`)}
       return `<option value="${k}"${on?' selected':''}>${E(j===0?(i===0?'Todas as frentes':'Todos os consultores'):nome(b))}</option>`}).join('');
     return `<span><label>${E(lb)}</label><select onchange="V160.sel(this)">${opts}</select></span>`}).join('');
-  return {n,html:`<div id="v160-pop" class="v160-pop" style="display:${st.aberto?'flex':'none'}">${sels}</div>${tags.length?`<div class="v160-tags">${tags.join('')}</div>`:''}`}}
+  const f=S.comF||{};const fr=(S.db.negociacoes||[]).filter(n=>(!f.frente||n.frente===f.frente)&&(!f.cons||(typeof negCons==='function'?negCons(n).includes(f.cons):true)));
+  const L=listaInd(fr);const ki=f.ind||'';
+  const indSel=`<span><label>Indicador</label><select onchange="V160.ind(this.value)"><option value="">Todos os indicadores</option><option value="_sem"${ki==='_sem'?' selected':''}>Sem indicador (${L.sem.toLocaleString('pt-BR')})</option>${L.xs.map(g=>`<option value="${E(g.k)}"${ki===g.k?' selected':''}>${E(g.lb)} (${g.n.toLocaleString('pt-BR')})</option>`).join('')}</select></span>`;
+  if(ki){n++;const lb=ki==='_sem'?'Sem indicador':((L.xs.find(g=>g.k===ki)||{}).lb||ki);tags.push(`<span class="v160-tag">Indicador: ${E(lb)} <b onclick="V160.ind('')" title="tirar este filtro">×</b></span>`)}
+  return {n,html:`<div id="v160-pop" class="v160-pop" style="display:${st.aberto?'flex':'none'}">${sels}${indSel}</div>${tags.length?`<div class="v160-tags">${tags.join('')}</div>`:''}`}}
 
-function aplicar(){const m=document.getElementById('main');if(!m)return;
+function aplicar(){envolveTodas();const m=document.getElementById('main');if(!m)return;
   const row=[...m.querySelectorAll('div.d-flex')].find(d=>!d.dataset.v160&&[...d.children].some(b=>b.tagName==='BUTTON'&&/S\.comF=/.test(b.getAttribute('onclick')||'')));
   if(!row)return;css();const r=montar(row);if(!r)return;
   /* a linha: busca existente (se houver) · Filtros · Nova oportunidade (se houver) */
@@ -64,5 +84,5 @@ function aplicar(){const m=document.getElementById('main');if(!m)return;
 
 let pend=false;const agenda=()=>{if(pend)return;pend=true;requestAnimationFrame(()=>{pend=false;try{aplicar()}catch(e){console.error('v160',e)}})};
 const liga=()=>{const m=document.getElementById('main');if(!m)return false;new MutationObserver(agenda).observe(m,{childList:true,subtree:true});agenda();return true};
-if(!liga()){let k=0;const iv=setInterval(()=>{if(liga()||++k>80)clearInterval(iv)},250)}
+envolveTodas();setTimeout(envolveTodas,0);if(!liga()){let k=0;const iv=setInterval(()=>{if(liga()||++k>80)clearInterval(iv)},250)}
 })();
