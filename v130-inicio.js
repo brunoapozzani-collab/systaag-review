@@ -163,7 +163,8 @@ function obr(){return C('obr',()=>{
   const cls=o=>{const pv=o.entrega&&o.entrega.prevista;if(!pv)return 'sem';if(pv<t)return 'atras';const pr=prog(o);if(pv<=lim&&(pr==null||pr<0.7))return 'risco';return 'ok'};
   const g={ok:[],risco:[],atras:[],sem:[]};at.forEach(o=>g[cls(o)].push(o));
   const prox=at.filter(o=>o.entrega&&o.entrega.prevista&&o.entrega.prevista>=t&&o.entrega.prevista<=addDias(t,60)).sort((a,b)=>a.entrega.prevista.localeCompare(b.entrega.prevista));
-  const pend=[];at.forEach(o=>(o.entregaveis||[]).forEach(e=>{if(!/conclu|enviad|aprovad|finaliz|entregue|^ok$/i.test(e.status||''))pend.push({o,e})}));
+  /* v161: pendentes = o que o Painel de Controle marca (A) ou (A/P) — N/A e vazio (sem status) não contam; a conta é a do V161P (a mesma de Projetos › Painel) */
+  const pend=(window.V161P&&typeof V161P.pendentes==='function')?V161P.pendentes():[];if(!window.V161P)at.forEach(o=>(o.entregaveis||[]).forEach(e=>{if(!/conclu|enviad|aprovad|finaliz|entregue|^ok$|^n\/a$|sem informa/i.test(e.status||''))pend.push({o,e})}));
   const obrasPrj=at.filter(o=>pend.some(x=>x.o===o));
   const mat=at.map(o=>({o,q:T(()=>Q.porObra(o.id),null)})).filter(x=>x.q&&x.q.falta>0);
   return {at,g,prox,prog,cls,pend,obrasPrj,mat,fila:T(()=>window.V124DIR.fila(op),[]),op}})}
