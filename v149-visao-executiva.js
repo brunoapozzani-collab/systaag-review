@@ -83,14 +83,14 @@ const LIN_COR={taag_sp:COR.azul,taag_rj:COR.azul,acustica:COR.lar,focal:COR.verd
 const linhaDe=p=>{const l=String(p.linha||'').toLowerCase();if(l==='taag'){const f=T(()=>FIL.daProposta(p),'');return f==='RJ'?'taag_rj':'taag_sp'}return LIN_LB[l]?l:'outra'};
 const Mtot=p=>T(()=>+M.total(p),0)||0;
 const negV=n=>{const c=T(()=>API.com(),null);return c?T(()=>c.negV(n),+n.valor||0):(+n.valor||0)};
-const chanceB=n=>{const ch=+n.chance||0;return ch>=70?'alta':ch>=30?'media':'baixa'};
-const CH_LB={alta:'Alta · 70% ou mais',media:'Média · 30% a 69%',baixa:'Baixa · abaixo de 30%'};
+const chanceB=n=>{if(window.V161D&&V161D.faixa)return V161D.faixa(n);const ch=+n.chance||0;return ch>=70?'alta':ch>=30?'media':'baixa'};/* v161d: a régua única (Base › params.chance_faixas) */
+const CH_LB={alta:'Alta · 70% ou mais',media:'Média · 30% a 69%',baixa:'Baixa · abaixo de 30%',sem:'Sem chance informada'};try{if(window.V161D&&V161D.CH_LB)Object.assign(CH_LB,V161D.CH_LB())}catch(e){}
 const etapaLb=e=>({desenvolver:'Desenvolver proposta',enviada:'Proposta enviada',revisao:'Revisão de proposta',desenvolvida:'Proposta desenvolvida',encontro:'Encontro',aguardando:'Aguardando'})[String(e||'').toLowerCase()]||(e?String(e):'Sem etapa');
 const resLb=n=>!n.resultado?'aberta':String(n.resultado).toLowerCase();
 const FR_LB={taag:'TAAG',acustica:'Acústica',focal:'Focal',posvenda:'Pós-venda'};
 const parcNeg=n=>{const ps=n.parceiros||{};const id=ps.indicador||ps.arquitetura||ps.gerenciadora;return id?(pNome(id)||('Parceiro '+id)):'Sem parceiro (direto)'};
 /* negociações filtradas: f = {res, frente, etapa, chance, cons, parc} */
-function negs(f){f=f||{};return (S.db.negociacoes||[]).filter(n=>(!f.res||(f.res==='decidida'?['fechada','perdida'].includes(resLb(n)):resLb(n)===f.res))&&(!f.frente||String(n.frente||'').toLowerCase()===f.frente)&&(!f.etapa||etapaLb(n.etapa)===f.etapa)&&(!f.chance||chanceB(n)===f.chance)&&(!f.cons||(n.consultor||'Sem consultor')===f.cons)&&(!f.parc||parcNeg(n)===f.parc))}
+function negs(f){f=f||{};return (S.db.negociacoes||[]).filter(n=>(!f.res||(f.res==='decidida'?['fechada','perdida'].includes(resLb(n)):resLb(n)===f.res))&&(!f.frente||String(n.frente||'').toLowerCase()===f.frente)&&(!f.etapa||etapaLb(n.etapa)===f.etapa)&&(!f.chance||chanceB(n)===f.chance)&&(!f.cons||(window.V161D&&V161D.consDe?V161D.consDe(n).includes(f.cons):(n.consultor||'Sem consultor')===f.cons))&&(!f.parc||parcNeg(n)===f.parc))}
 const negF=f=>Object.entries(f).map(([k,v])=>k+'='+v).join('&');const parseF=s=>{const f={};String(s||'').split('&').forEach(kv=>{const i=kv.indexOf('=');if(i>0)f[kv.slice(0,i)]=kv.slice(i+1)});return f};
 const sitObra=x=>T(()=>COP.situacao(x),null)||x.situacao||x.statusPlanilha||'';
 const obrasAnd=()=>(S.db.obras||[]).filter(x=>x.ativo!==false&&!x.inativo&&sitObra(x)==='Em andamento');
@@ -136,10 +136,10 @@ function bCom(){if(!can('com'))return '';const c=API.com();if(!c)return '';
   /* oportunidades em negociação: o Pipeline (negociações abertas = sem resultado) */
   const N=S.db.negociacoes||[];const fech=negs({res:'fechada'}),perd=negs({res:'perdida'}),fut=negs({res:'futuro'}),ab=negs({res:'aberta'});
   const semSt=N.filter(n=>n.resultado==='sem_status');const open=c.negs;const vNeg=sum(open,negV);
-  const byB={alta:[],media:[],baixa:[]};open.forEach(n=>byB[chanceB(n)].push(n));
-  const chance=[['alta','🟢 '+CH_LB.alta,COR.verde],['media','🟡 '+CH_LB.media,COR.amb],['baixa','🔴 '+CH_LB.baixa,COR.verm]].map(([k,lb,cor])=>({lb,v:byB[k].length,max:Math.max(1,open.length),cor,txt:`<b>${N0(byB[k].length)}</b> · ${R0(sum(byB[k],negV))}`,on:my('neg','res=aberta&chance='+k)}));
-  const byC={};open.forEach(n=>{const k=n.consultor||'Sem consultor';(byC[k]=byC[k]||{n:0,v:0});byC[k].n++;byC[k].v=r2(byC[k].v+negV(n))});
-  const cons=Object.entries(byC).sort((a,b)=>b[1].n-a[1].n).map(([k,x])=>({lb:E(k),v:x.n,max:Math.max(1,open.length),cor:COR.azul,txt:`<b>${N0(x.n)}</b> · ${R0(x.v)}`,on:my('neg','res=aberta&cons='+k)}));
+  const byB={alta:[],media:[],baixa:[],sem:[]};open.forEach(n=>(byB[chanceB(n)]||byB.sem).push(n));
+  const chance=[['alta','🟢 '+CH_LB.alta,COR.verde],['media','🟡 '+CH_LB.media,COR.amb],['baixa','🔴 '+CH_LB.baixa,COR.verm],['sem','⚪ '+CH_LB.sem,COR.cinza]].filter(([k])=>k!=='sem'||byB.sem.length).map(([k,lb,cor])=>({lb,v:byB[k].length,max:Math.max(1,open.length),cor,txt:`<b>${N0(byB[k].length)}</b> · ${R0(sum(byB[k],negV))}`,on:my('neg','res=aberta&chance='+k)}));
+  const byC={};open.forEach(n=>{const ks=window.V161D&&V161D.consDe?V161D.consDe(n):[n.consultor||'Sem consultor'];ks.forEach(k=>{(byC[k]=byC[k]||{n:0,v:0,c:0});byC[k].n++;if(ks.length>1)byC[k].c++;byC[k].v=r2(byC[k].v+negV(n)/ks.length)})});/* v161d: conta para cada consultor; valor 50/50 */
+  const cons=Object.entries(byC).sort((a,b)=>b[1].n-a[1].n).map(([k,x])=>({lb:E(k),v:x.n,max:Math.max(1,open.length),cor:COR.azul,txt:`<b>${N0(x.n)}</b> · ${R0(x.v)}${x.c?` · <span class="sub">inclui ${N0(x.c)} compartilhada${x.c>1?'s':''}</span>`:''}`,on:my('neg','res=aberta&cons='+k)}));
   const byP={};open.forEach(n=>{const k=parcNeg(n);(byP[k]=byP[k]||{n:0,v:0});byP[k].n++;byP[k].v=r2(byP[k].v+negV(n))});
   const parcs=Object.entries(byP).sort((a,b)=>b[1].n-a[1].n).map(([k,x])=>({lb:E(k),v:x.n,max:Math.max(1,open.length),cor:COR.teal,txt:`<b>${N0(x.n)}</b> · ${R0(x.v)}`,on:my('neg','res=aberta&parc='+k)}));
   const mais=(rows,n)=>rows.length>n?rows.slice(0,n).concat([{lb:`<i>+ ${N0(rows.length-n)} outros</i>`,v:0,max:1,cor:COR.cinza,txt:`<b>${N0(rows.slice(n).reduce((a,r)=>a+r.v,0))}</b>`,on:my('neg','res=aberta')}]):rows;
@@ -150,7 +150,7 @@ function bCom(){if(!can('com'))return '';const c=API.com();if(!c)return '';
     ${box('Conversão',gauge(conv,P1(fech.length,fech.length+perd.length),`${door(my('neg','res=fechada'),N0(fech.length)+' ganhas')} de ${door(my('neg','res=decidida'),N0(fech.length+perd.length)+' decididas')}`,my('neg','res=decidida')),'',my('neg','res=decidida'))}
     ${box('Pipeline inteiro',pilha([{lb:'ganhas',v:fech.length,cor:COR.verde,on:my('neg','res=fechada')},{lb:'perdidas',v:perd.length,cor:COR.cinza,on:my('neg','res=perdida')},{lb:'futuro',v:fut.length,cor:COR.amb,on:my('neg','res=futuro')},{lb:'abertas',v:ab.length,cor:COR.azul,on:my('neg','res=aberta')}].concat(semSt.length?[{lb:'status vazio',v:semSt.length,cor:COR.verm,on:"S.comF={};location.hash='#/pipeline'"}]:[]),`${N0(N.length)} = ${N0(fech.length)} + ${N0(perd.length)} + ${N0(fut.length)} + ${N0(ab.length)}${semSt.length?' + '+N0(semSt.length)+' status vazio':''}`,my('neg','')),'',my('neg',''))}
    </div>
-   <div class="vx149-grid c3" style="margin-top:14px">${box('Por chance de fechamento',barras(chance),'',my('neg','res=aberta'))}${box('Por consultor',cons.length?barras(mais(cons,6)):'<div class="vx149-vazio">—</div>','',my('neg','res=aberta'))}${box('Por parceiro (quem indicou)',parcs.length?barras(mais(parcs,6)):'<div class="vx149-vazio">—</div>','',my('neg','res=aberta'))}</div>`;
+   <div class="vx149-grid c3" style="margin-top:14px">${box('Por chance de fechamento',barras(chance)+(window.V161D&&V161D.ponteChance?V161D.ponteChance(open):''),'',my('neg','res=aberta'))}${box('Por consultor',(cons.length?barras(mais(cons,6)):'<div class="vx149-vazio">—</div>')+(window.V161D&&V161D.ponteCons?V161D.ponteCons(open,'inicio'):''),'',my('neg','res=aberta'))}${box('Por parceiro (quem indicou)',parcs.length?barras(mais(parcs,6)):'<div class="vx149-vazio">—</div>','',my('neg','res=aberta'))}</div>`;
   return sec('b2',secHead('2','Comercial',`Meta ${E(c.y)}: quanto já vendemos, quanto está previsto e quanto falta — os mesmos números de Comercial › Gestão. Depois, as oportunidades em negociação.`,['Comercial › Gestão','#/gestao'],semf),
     tiles+box('Metas por linha — realizado × meta <span class="vx149-mk" role="button" onclick="'+my('ano')+'"><u></u> hoje já passou '+P1(fracAno*100,100)+' do ano</span>',barras(rows),'',my('meta'))+
     ponte(`${u(N0(c.ano.length)+' propostas',op('vendAno'))} = ${termos||'—'} · ${u(R0(vend),op('vendAno'))} = ${ks.filter(k=>g[k]).map(k=>u(R0(g[k].v),metaGo(k))).join(' + ')}${g.outra?' + '+u(R0(g.outra.v),op('vendAno')):''}`,'o mesmo de Comercial › Propostas')+
@@ -219,8 +219,8 @@ function bFin(){if(!can('fin'))return '';const t=hoje();
 /* ───────── 7 · PÓS-VENDAS ───────── */
 function bPos(){if(!can('pos'))return '';const p=API.pos();
   const N=negs({frente:'posvenda'});const ab=negs({frente:'posvenda',res:'aberta'}),fech=negs({frente:'posvenda',res:'fechada'}),perd=negs({frente:'posvenda',res:'perdida'});const fut=N.length-ab.length-fech.length-perd.length;
-  const byB={alta:[],media:[],baixa:[]};ab.forEach(n=>byB[chanceB(n)].push(n));
-  const chance=[['alta','🟢 '+CH_LB.alta,COR.verde],['media','🟡 '+CH_LB.media,COR.amb],['baixa','🔴 '+CH_LB.baixa,COR.verm]].map(([k,lb,cor])=>({lb,v:byB[k].length,max:Math.max(1,ab.length),cor,txt:`<b>${N0(byB[k].length)}</b> · ${R0(sum(byB[k],negV))}`,on:my('neg','frente=posvenda&res=aberta&chance='+k)}));
+  const byB={alta:[],media:[],baixa:[],sem:[]};ab.forEach(n=>(byB[chanceB(n)]||byB.sem).push(n));
+  const chance=[['alta','🟢 '+CH_LB.alta,COR.verde],['media','🟡 '+CH_LB.media,COR.amb],['baixa','🔴 '+CH_LB.baixa,COR.verm],['sem','⚪ '+CH_LB.sem,COR.cinza]].filter(([k])=>k!=='sem'||byB.sem.length).map(([k,lb,cor])=>({lb,v:byB[k].length,max:Math.max(1,ab.length),cor,txt:`<b>${N0(byB[k].length)}</b> · ${R0(sum(byB[k],negV))}`,on:my('neg','frente=posvenda&res=aberta&chance='+k)}));
   const semf=semafo('7',(p&&p.osAtr.length)?'rd':(p&&p.os.length)?'am':'gn',[p&&p.osAtr.length?`${N0(p.osAtr.length)} chamados abertos há mais de 7 dias → vermelho`:'nenhum chamado parado há mais de 7 dias',p&&p.os.length?`${N0(p.os.length)} chamados abertos → amarelo`:'nenhum chamado aberto']);
   const tiles=`<div class="vx-tiles vx-c3">${tile('Em negociação (Pipeline · Pós-venda)',N0(ab.length),my('neg','frente=posvenda&res=aberta'),'',R0(sum(ab,negV)))}${tile('Propostas AT enviadas ou aprovadas',N0(p?p.pv.length:0),op('pvProp'),'pos',p?R$(p.vPv):'')}${tile('Chamados abertos',N0(p?p.os.length:0),op('os'),p&&p.osAtr.length?'neg':'',p&&p.osAtr.length?N0(p.osAtr.length)+' há mais de 7 dias':'')}</div>`;
   return sec('b7',secHead('7','Pós-vendas','Oportunidades de assistência técnica em negociação (o Pipeline, frente Pós-venda) e os chamados abertos.',['Pós-venda › Visão geral','#/posvisao'],semf),
