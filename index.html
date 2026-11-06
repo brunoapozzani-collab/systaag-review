@@ -1015,7 +1015,7 @@ const TABLES=['clientes','obras','propostas','itens','produtos','unidades','pedi
 const S={db:null,eventos:[],changed:new Set()};
 const uid=(p)=>p+'_'+Math.random().toString(36).slice(2,8);
 const BRL=v=>'R$ '+(Math.round(v)).toLocaleString('pt-BR');
-const today=()=>new Date().toISOString().slice(0,10);
+const today=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};/* v161: o dia de hoje no fuso de quem usa (antes era UTC: depois das 21h de Brasília já era amanhã) */
 const dplus=(d)=>{const x=new Date();x.setDate(x.getDate()+d);return x.toISOString().slice(0,10)};
 var ETAPAS=/*SEED*/[['Estrutural','Cabeamento'],['Estrutural','Rec. caixas acústicas'],['Estrutural','Quadro de automação'],['Estrutural','Keypads'],['Estrutural','Rack'],['Áudio e Vídeo','Instalação'],['Áudio e Vídeo','Programação'],['Áudio e Vídeo','Calibração'],['Áudio e Vídeo','Entrega técnica']]/*/SEED*/;
 const DOCS=['Estudo de pontos','Diagrama de equipamentos','Projeto executivo','Levantamento de cargas','Detalhe do quadro','Lista de cabos','Planta de forro','Detalhe das TVs','Medidas dos equipamentos','Detalhe do móvel','Bayface do rack','Keypads'];
@@ -7629,7 +7629,7 @@ const C=COP;
 C.VERSION=1;
 C.onMigrate=C.onMigrate||[];          // modules push fn(db) to seed their own tables once
 C.esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-C.today=()=>new Date().toISOString().slice(0,10);
+C.today=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
 C.fmtD=d=>{if(!d)return '—';const s=String(d).slice(0,10);return s.length===10?s.slice(8,10)+'/'+s.slice(5,7)+'/'+s.slice(0,4):s};
 C.fmtDm=d=>{if(!d)return '—';const s=String(d).slice(0,10);return s.slice(8,10)+'/'+s.slice(5,7)};
 C.fmtDT=d=>{if(!d)return '—';try{return new Date(d).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'})}catch(e){return String(d)}};
@@ -30833,4 +30833,5 @@ try{if(/^#\/(dbfiliais|finlanc)/.test(location.hash))render()}catch(e){}
 <script src="v159-pipeline-planilha-data.js"></script>
 <script src="v159-pipeline-planilha.js"></script>
 <script src="v160-filtros.js"></script>
+<script src="v161-filtro.js"></script>
 </body></html>
