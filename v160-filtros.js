@@ -55,7 +55,7 @@ function aplicar(){const m=document.getElementById('main');if(!m)return;
     else{bar.insertAdjacentHTML('beforeend','<span class="v160-q"></span>')}
     bar.insertAdjacentHTML('beforeend',btn+(dica?`<span class="v160-i" title="${E(dica)}">ⓘ</span>`:''));bar.appendChild(topo);
     card.insertAdjacentHTML('beforeend',r.html);row.remove()}
-  else{wrap.appendChild(bar);if(q){q.classList.add('v160-q');bar.appendChild(q)}else bar.insertAdjacentHTML('beforeend','<span class="v160-q"></span>');
+  else{if(!q){wrap.className='mb-2';bar.style.justifyContent='flex-end'}wrap.appendChild(bar);if(q){q.classList.add('v160-q');bar.appendChild(q)};
     bar.insertAdjacentHTML('beforeend',btn);wrap.insertAdjacentHTML('beforeend',r.html);row.replaceWith(wrap)}
   /* o "Mostrando N de M" que ficou sozinho na linha da busca */
   [...m.querySelectorAll('span,div')].forEach(x=>{if(!x.dataset.v160&&!x.children.length&&/^Mostrando \d/.test(x.textContent.trim())){const p=x.parentElement;x.style.fontSize='12px';if(p&&p.children.length===1){p.style.margin='0 0 6px';p.style.minHeight='0'}}});
