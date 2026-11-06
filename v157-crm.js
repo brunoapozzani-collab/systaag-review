@@ -19,7 +19,7 @@
    ===================================================================================================== */
 (function(){
 'use strict';
-if(window.__v157)return;window.__v157=true;
+if(window.__v157c)return;window.__v157c=true;
 const V=window.V157=window.V157||{};
 const N0=v=>(+v||0).toLocaleString('pt-BR');
 const E=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
