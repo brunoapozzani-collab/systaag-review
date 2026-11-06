@@ -105,6 +105,8 @@ function ligaTela(){if(typeof SCREENS!=='object'||typeof SCREENS.pipeline!=='fun
     h=h.replace(/(\+ <span style="color:#0d6efd">(\d+) em jogo<\/span>)(<\/span>)/,(m,a,b,c)=>{const k=T(()=>KPI(),{});return a+(k.sem_status?` + <span style="color:#b02a37">${k.sem_status} status vazio</span>`:'')+c});
     const ix=depoisDaColuna(h,'REVISÃO DE PROPOSTA');if(ix>0)h=h.slice(0,ix)+colunaVazia()+h.slice(ix);return h};
   SCREENS.pipeline.__v159=true;
+  /* card sem data de criação mostrava "NaNd" — sem data, mostra "—" */
+  T(()=>{if(typeof dealCard==='function'&&!dealCard.__v159){const dc=dealCard;dealCard=function(n){return String(dc.apply(this,arguments)).replace(/>NaNd</g,'>—<')};dealCard.__v159=true}});
   /* tirar da coluna: escolher uma etapa (ou fechar/perder) na negociação resolve o "sem status" */
   T(()=>{if(A&&A.moverEtapa&&!A.moverEtapa.__v159){const mv=A.moverEtapa;A.moverEtapa=function(id,etapa){const n=get('negociacoes',id);if(n&&n.resultado==='sem_status')n.resultado=null;return mv.apply(this,arguments)};A.moverEtapa.__v159=true}});
   return true}
