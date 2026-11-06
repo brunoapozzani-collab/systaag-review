@@ -19,6 +19,19 @@
    • Cor: verde ≥ margem mínima (Base › params.fin.margemMin), amarelo 0 até a mínima, vermelho < 0,
      cinza = sem custo lançado ainda (o valor positivo continua visível).
 
+   06/11 (Bruno — "o cartão mente": 110 propostas, 80 sem valor, +100,0% verde com custo zero) — O CARTÃO CONTA OBRAS:
+   • uma linha do Painel = uma obra; valor da obra = soma das vendas (valor de venda) das propostas vendidas dela.
+   • obra sem venda com valor NUNCA conta como R$ 0: vira a lista com nome "N obras em andamento sem valor de venda na Base
+     (chega com as propostas e o Financeiro)".
+   • enquanto não houver custo lançado: só o valor vendido — sem margem, sem %, sem verde/amarelo/vermelho, sem resultado:
+     "resultado: aguardando custos (produtos entregues e despesas do Financeiro)". Quando a unidade tiver custo real lançado,
+     aparecem custos e resultado SÓ das obras que têm valor e custo, com a ponte dizendo quantas obras isso cobre.
+   • barra = parte do valor vendido (rotulada), não "quanto da obra está pronto".
+   • Focal e Acústica seguem o mesmo desenho (cliente → obra → proposta). As vendas delas sem obra ligada não são valor em
+     andamento: aparecem como "N vendas sem obra ligada" (lista com nome) — nenhuma obra é criada nem ligada (aguarda o Bruno).
+   • ponte: "81 obras = 29 com valor + 52 sem valor · R$ X = soma das vendas de 29 obras".
+   • a mesma honestidade na lista e em Financeiro › Obras: a margem do custo PREVISTO é rotulada como prevista.
+
    Correção de causa (por que tudo dava zero): FN.obra só via propostas com fin.confirmada; o v142 tirou as vendas
    históricas (METAS / Painel / AT, todas fin.historico) de FI.vendasNaoConfirmadas para elas não caírem em
    "a confirmar" — e com isso as obras deixaram de enxergar as próprias vendas. Aqui, SÓ dentro do escopo da obra
@@ -122,18 +135,25 @@ function semObra(){return (S.db.propostas||[]).filter(p=>!p.obra_id&&['vendida',
   return fechar(L)})}
 let MEMO=null;
 function calc(){if(MEMO&&Date.now()-MEMO.t<1500)return MEMO.v;const v=comHist(calc0);MEMO={t:Date.now(),v};return v}
+const totP=p=>r2(T(()=>+M.total(p),+p.valor_venda||0)||0);
+const obrasDoCli=p=>nomeCli(p)||p.nome||'';
 function calc0(){
-  const rows=[];let excl=0;const obs=obrasAnd();obs.forEach(o=>{const d=daObra(o);excl+=d.excl;rows.push(...d.rows)});
-  const so=semObra();rows.push(...so);
-  const U={};UNIS.forEach(u=>U[u]={u,rows:[],contratado:0,custos:0,resultado:0,margem:0,semValor:0,semCusto:0});
-  rows.forEach(L=>{const k=U[L.uni]?L.uni:'TAAG';(U[k].rows).push(L)});
-  UNIS.forEach(u=>{const x=U[u];x.contratado=sum(x.rows,L=>L.contratado);x.custos=sum(x.rows,L=>L.custos);x.resultado=r2(x.contratado-x.custos);x.margem=x.contratado?x.resultado/x.contratado:0;
-    x.semValor=x.rows.filter(L=>!L.contratado).length;x.semCusto=x.rows.filter(L=>L.contratado&&!L.custos).length;
-    x.cor=!x.rows.length?'nd':!x.contratado?'sv':!x.custos?'gr':x.resultado<0?'rd':x.margem<margemMin()?'am':'gn';
-    x.obras=new Set(x.rows.filter(L=>L.o).map(L=>L.o.id));x.nSemObra=x.rows.filter(L=>!L.o).length;
-    x.rows.sort((a,b)=>b.contratado-a.contratado||String(a.cliente).localeCompare(String(b.cliente),'pt'))});
-  const v={U,rows,obras:obs.length,excl,tot:{n:rows.length,contratado:sum(rows,L=>L.contratado),custos:sum(rows,L=>L.custos)}};v.tot.resultado=r2(v.tot.contratado-v.tot.custos);
-  return v}
+  const obs=obrasAnd();const U={};UNIS.forEach(u=>U[u]={u,obras:[],comValor:[],semValor:[],valor:0,custos:0,comCusto:[],valorCusto:0,custoCusto:0,semObra:[],vSemObra:0});
+  const O=obs.map(o=>{const d=daObra(o);const ps=(S.db.propostas||[]).filter(p=>p&&p.obra_id===o.id&&VEND.includes(p.estado)&&real(p));
+    const porU={};ps.forEach(p=>{const k=U[unidadeDe(p)]?unidadeDe(p):'TAAG';const x=porU[k]=porU[k]||{v:0,ps:[]};x.v=r2(x.v+totP(p));x.ps.push(p)});
+    if(!Object.keys(porU).length)porU.TAAG={v:0,ps:[]};
+    const cu={};d.rows.forEach(L=>{const k=U[L.uni]?L.uni:'TAAG';cu[k]=r2((cu[k]||0)+L.custos)});
+    const valor=r2(Object.values(porU).reduce((a,x)=>a+x.v,0)),custos=r2(Object.values(cu).reduce((a,x)=>a+x,0));
+    return {o,porU,cu,valor,custos,cliente:T(()=>(get('clientes',o.cliente_id)||{}).nome,'')||''}});
+  O.forEach(x=>Object.keys(x.porU).forEach(k=>{const X=U[k];const v=x.porU[k].v,c=+(x.cu[k]||0);const e={x,o:x.o,v,c,ps:x.porU[k].ps};
+    X.obras.push(e);(v>0?X.comValor:X.semValor).push(e);X.valor=r2(X.valor+v);if(c>0.009){X.custos=r2(X.custos+c);if(v>0){X.comCusto.push(e);X.valorCusto=r2(X.valorCusto+v);X.custoCusto=r2(X.custoCusto+c)}}}));
+  semObra().forEach(L=>{const k=U[L.uni]?L.uni:'TAAG';U[k].semObra.push(L);U[k].vSemObra=r2(U[k].vSemObra+L.contratado)});
+  UNIS.forEach(k=>{const X=U[k];const by=(a,b)=>b.v-a.v||String(a.o.nome).localeCompare(String(b.o.nome),'pt');X.obras.sort(by);X.comValor.sort(by);X.semValor.sort((a,b)=>String(a.o.nome).localeCompare(String(b.o.nome),'pt'))});
+  const com=O.filter(x=>x.valor>0),sem=O.filter(x=>!(x.valor>0)),cc=com.filter(x=>x.custos>0.009);
+  const so=UNIS.reduce((a,k)=>a.concat(U[k].semObra),[]);
+  const multi=O.filter(x=>Object.keys(x.porU).length>1).length;
+  return {U,O,com,sem,comCusto:cc,semObra:so,multi,obras:O.length,
+    tot:{obras:O.length,com:com.length,sem:sem.length,valor:r2(com.reduce((a,x)=>a+x.valor,0)),custos:r2(O.reduce((a,x)=>a+x.custos,0)),valorCusto:r2(cc.reduce((a,x)=>a+x.valor,0)),custoCusto:r2(cc.reduce((a,x)=>a+x.custos,0)),vSemObra:r2(so.reduce((a,L)=>a+L.contratado,0))}}}
 const V161=window.V161=window.V161||{};
 V161.calc=()=>{MEMO=null;return calc()};V161.comHist=comHist;V161.UNIS=UNIS;
 /* Diretoria › Lucratividade: as mesmas linhas, regrupadas por obra (produto · garantia · despesas · impostos/comissões) */
@@ -162,16 +182,21 @@ const CSS=`<style id="v161css">
 @media(max-width:600px){.vx .v161-row{grid-template-columns:1fr}.vx .v161-row .r{text-align:left}}
 </style>`;
 function css(){if(document.getElementById('v161css'))return;const d=document.createElement('div');d.innerHTML=CSS;const st=d.firstElementChild;if(st)(document.head||document.documentElement).appendChild(st)}
-function tileHTML(){const R=calc();const mm=margemMin();const mx=Math.max(1,...UNIS.map(u=>R.U[u].contratado));
-  const rows=UNIS.map(u=>{const x=R.U[u];const w=x.contratado/mx*100;const wc=x.contratado?Math.min(1,x.custos/x.contratado):0;
-    const cor=x.cor==='rd'?COR.verm:x.cor==='am'?COR.amb:x.cor==='gn'?COR.verde:COR.cinza;
-    const sub=!x.rows.length?'nenhuma em andamento':plural(x.rows.length,'proposta','propostas')+(x.semValor?' · '+N0(x.semValor)+' sem valor':'');
-    return `<div class="v161-row" role="button" tabindex="0" data-uni="${E(u)}" onclick="${op('uni',u)}"><div class="l"><b>${E(u)}</b><span>${sub}</span></div>
-      <div class="t" title="contratado ${E(R$(x.contratado))} · custos lançados ${E(R$(x.custos))}"><i style="width:${(w*(1-wc)).toFixed(1)}%;background:${cor}"></i><i style="width:${(w*wc).toFixed(1)}%;background:${COR.verm};opacity:.55"></i></div>
-      <div class="r"><b class="${x.resultado<0?'v161-neg':x.resultado>0?'v161-pos':''}">${R$(x.resultado)}</b>${x.contratado?' ('+(x.resultado>=0?'+':'')+P1(x.margem)+')':''}<span>${R$(x.contratado)} contratado − ${R$(x.custos)} custos · ${chip(x.cor)}</span></div></div>`}).join('');
-  const u=(t,on)=>`<u role="button" onclick="${on}">${t}</u>`;
-  const pont=`<div class="vx-ponte">Ponte: ${u(R$(R.tot.contratado)+' contratado',op('uni','*'))} = ${UNIS.map(k=>u(R$(R.U[k].contratado)+' '+E(k),op('uni',k))).join(' + ')} · ${u(plural(R.tot.n,'proposta','propostas'),op('uni','*'))} = ${UNIS.map(k=>u(N0(R.U[k].rows.length)+' '+E(k),op('uni',k))).join(' + ')} · resultado ${u(R$(R.tot.resultado),op('uni','*'))} = ${R$(R.tot.contratado)} − ${R$(R.tot.custos)} custos lançados</div>`;
-  css();return `<div class="vx149-box v161" id="v161_tile" data-n="${R.tot.n}" data-total="${R.tot.contratado}"><h4 role="button" style="cursor:pointer" onclick="${op('uni','*')}">Rentabilidade em andamento <span class="v161-mm">contrato cheio − custos lançados · verde ≥ ${P1(mm)} de margem (Base)</span> <span class="vx149-h4go">›</span></h4>${rows}</div>`+pont}
+const AGUARDA='resultado: aguardando custos (produtos entregues e despesas do Financeiro)';
+const lk=(t,on)=>`<u role="button" onclick="event.stopPropagation();${on}">${t}</u>`;
+function tileHTML(){const R=calc();const mx=Math.max(1,R.tot.valor);
+  const rows=UNIS.map(u=>{const x=R.U[u];const w=x.valor/mx*100;
+    const sub=!x.obras.length&&!x.semObra.length?'nenhuma obra em andamento':[x.obras.length?`${plural(x.obras.length,'obra em andamento','obras em andamento')} · ${N0(x.comValor.length)} com valor de venda · ${x.semValor.length?lk(N0(x.semValor.length)+' sem valor na Base',op('sv',u)):'0 sem valor na Base'}`:'nenhuma obra em andamento',x.semObra.length?lk(plural(x.semObra.length,'venda sem obra ligada','vendas sem obra ligada'),op('so',u)):''].filter(Boolean).join(' · ');
+    const res=x.custos>0?`custos lançados ${R$(x.custoCusto)} em ${plural(x.comCusto.length,'obra','obras')} com valor e custo · resultado dessas obras ${R$(r2(x.valorCusto-x.custoCusto))}`:AGUARDA;
+    return `<div class="v161-row" role="button" tabindex="0" data-uni="${E(u)}" data-obras="${x.obras.length}" data-com="${x.comValor.length}" data-sem="${x.semValor.length}" data-semobra="${x.semObra.length}" onclick="${op('uni',u)}"><div class="l"><b>${E(u)}</b><span>${sub}</span></div>
+      <div class="t" title="parte do valor vendido em andamento: ${E(R$(x.valor))} de ${E(R$(R.tot.valor))}"><i style="width:${w.toFixed(1)}%;background:#2a78d6"></i></div>
+      <div class="r">${x.obras.length?`<b>${R$(x.valor)}</b><span>valor vendido${x.comValor.length?' de '+plural(x.comValor.length,'obra','obras'):''} · ${E(res)}</span>`:`<b>—</b><span>nenhuma obra em andamento${x.semObra.length?' · as vendas sem obra não são valor em andamento':''}</span>`}</div></div>`}).join('');
+  const u=(t,on)=>`<u role="button" onclick="${on}">${t}</u>`;const tt=R.tot;
+  const pont=`<div class="vx-ponte" id="v161_ponte" data-obras="${tt.obras}" data-com="${tt.com}" data-sem="${tt.sem}">Ponte: ${u(plural(tt.obras,'obra em andamento','obras em andamento'),op('uni','*'))} = ${u(N0(tt.com)+' com valor',op('uni','*'))} + ${u(N0(tt.sem)+' sem valor',op('sv','*'))} <span class="sub">(sem valor de venda na Base — chega com as propostas e o Financeiro; não conta como R$ 0)</span> · ${R$(tt.valor)} = soma das vendas de ${plural(tt.com,'obra','obras')} = ${UNIS.filter(k=>R.U[k].comValor.length).map(k=>u(R$(R.U[k].valor)+' '+E(k),op('uni',k))).join(' + ')||'—'}`+
+    (R.multi?` <span class="sub">(${plural(R.multi,'obra tem','obras têm')} vendas de duas unidades e aparece${R.multi===1?'':'m'} nas duas linhas)</span>`:'')+
+    (R.semObra.length?` · ${u(plural(R.semObra.length,'venda sem obra ligada','vendas sem obra ligada'),op('so','*'))} (${UNIS.filter(k=>R.U[k].semObra.length).map(k=>N0(R.U[k].semObra.length)+' '+E(k)).join(' + ')} · ${R$(tt.vSemObra)}) fora do valor em andamento — ainda não têm obra`:'')+
+    ` · ${tt.custos>0?`custos lançados ${R$(tt.custoCusto)} em ${plural(R.comCusto.length,'obra','obras')} com valor e custo · resultado dessas obras ${R$(r2(tt.valorCusto-tt.custoCusto))}`:AGUARDA}</div>`;
+  css();return `<div class="vx149-box v161" id="v161_tile" data-obras="${tt.obras}" data-total="${tt.valor}"><h4 role="button" style="cursor:pointer" onclick="${op('uni','*')}">Rentabilidade em andamento <span class="v161-mm">por obra · valor vendido · barra = parte do valor vendido</span> <span class="vx149-h4go">›</span></h4>${rows}</div>`+pont}
 
 /* ───────── 4 · a gaveta (vira o painel curto do v155) ───────── */
 const go=h=>`V130_go('${J(h)}')`;
@@ -182,19 +207,26 @@ V161.ir=(t,id)=>{ST.dr=null;ST.arg=null;try{const o=document.getElementById('v15
   /* venda sem obra: abre Comercial › Propostas já buscando o número (o editor ainda não abre propostas importadas sem itens) */
   if(t==='p'){const p=T(()=>get('propostas',id),null);h='#/propostas';try{S.propF={st:'',fr:'',q:String(p?p.numero:id),cons:'',ym:''}}catch(e){}}
   try{GO0(h)}catch(e){location.hash=h}};
-function gaveta(k,a){if(k!=='uni')return '';const R=calc();const xs=a==='*'?R.rows.slice().sort((x,y)=>y.contratado-x.contratado):(R.U[a]||{rows:[]}).rows;
-  const lb=a==='*'?'todas as unidades':a;const c=sum(xs,L=>L.contratado),cu=sum(xs,L=>L.custos),res=r2(c-cu);
-  const semC=xs.filter(L=>L.contratado&&!L.custos).length,semV=xs.filter(L=>!L.contratado).length;
-  const nObras=new Set(xs.filter(L=>L.o).map(L=>L.o.id)).size,nSem=xs.filter(L=>!L.o).length;
-  const trs=xs.map(L=>`<tr class="click" onclick="${linkL(L)}"><td><b>${E(L.numero)}</b> · ${E(L.cliente||'—')}${L.obraNome&&L.obraNome!==L.cliente?` <span style="opacity:.7">(${E(L.obraNome)})</span>`:''}<div style="margin-top:3px">${chip(L.cor)}${L.contratado&&L.custos?` <span style="font-size:12px;opacity:.75">margem ${P1(L.margem)}</span>`:''}</div></td>${a==='*'?`<td>${E(L.uni)}</td>`:''}<td>contratado ${R$(L.contratado)}</td><td>custos ${R$(L.custos)}</td><td><span class="${L.resultado<0?'v161-neg':''}">${R$(L.resultado)}</span></td></tr>`).join('');
-  return `<button class="x" onclick="V130_close()" aria-label="Fechar">×</button><div class="lead">Empresa toda · posição de hoje</div>`+
-    `<h3>Rentabilidade em andamento · ${E(lb)}<span data-v161="${E(a)}" hidden></span></h3><div class="big">${R$(res)}</div>`+
-    `<div class="lead">${R$(c)} contratado − ${R$(cu)} custos lançados · ${plural(xs.length,'proposta','propostas')} em ${plural(nObras,'obra','obras')}${nSem?' + '+plural(nSem,'venda sem obra','vendas sem obra'):''}${semC?' · '+N0(semC)+' sem custo lançado ainda':''}${semV?' · '+N0(semV)+' sem valor de contrato':''}</div>`+
-    `<div class="vx149-fonte"><b>De onde vem:</b> Financeiro › Obras (FN.obra / FS.obraRow). Contratado = valor cheio do contrato de cada proposta vendida (sem multiplicar pelo avanço). Custos = só o que já foi lançado na Base: equipamentos entregues ao custo de compra, diárias apontadas, viagem 204.x, extras, horas de projeto, garantia do Pós-venda, saídas da planilha ligadas à obra (onde entram também os impostos pagos) e comissões/RT. O imposto planejado da proposta não entra enquanto não é lançado. Em andamento = propostas das obras com situação "Em andamento" + vendas Focal/Acústica sem obra ainda vendidas. Cor: verde ≥ ${P1(margemMin())} (Base › margem mínima), amarelo abaixo dela, vermelho negativo, cinza sem custo lançado.</div>`+
-    (xs.length?`<div class="tw"><table class="no-filter"><thead><tr><th>Proposta · cliente / obra</th>${a==='*'?'<th>Unidade</th>':''}<th>Contratado</th><th>Custos</th><th>Resultado</th></tr></thead><tbody>${trs}<tr class="tot"><td>Total</td>${a==='*'?'<td></td>':''}<td>contratado ${R$(c)}</td><td>custos ${R$(cu)}</td><td>${R$(res)}</td></tr></tbody></table></div>`+
-      (Math.abs(c-(a==='*'?R.tot.contratado:R.U[a].contratado))<0.01?`<div class="note"><span class="ok">✓ a soma das linhas é exatamente o número do cartão</span></div>`:`<div class="note"><span class="bad">A soma das linhas difere do cartão.</span></div>`)
-      :`<div class="note">Nenhuma proposta em andamento nesta unidade.</div>`)+
-    `<a class="btnl" href="javascript:void 0" onclick="V161.abrir('${J(a)}')/* V130_go('#/fobras') */">Abrir Financeiro › Obras ›</a>`}
+function gaveta(k,a){if(!['uni','sv','so'].includes(k))return '';const R=calc();const all=a==='*';const lb=all?'todas as unidades':a;
+  const X=all?null:R.U[a];if(!all&&!X)return '';
+  const com=all?R.com.map(x=>({x,o:x.o,v:x.valor,c:x.custos,ps:Object.values(x.porU).reduce((q,y)=>q.concat(y.ps),[])})):X.comValor;
+  const sem=all?R.sem.map(x=>({x,o:x.o,v:0,c:x.custos,ps:Object.values(x.porU).reduce((q,y)=>q.concat(y.ps),[])})):X.semValor;
+  const so=all?R.semObra:X.semObra;const temCusto=com.some(e=>e.c>0.009);
+  const vt=r2(com.reduce((s_,e)=>s_+e.v,0));const cc=com.filter(e=>e.c>0.009);
+  const nums=e=>e.ps.map(p=>E(p.numero)).join(', ')||'—';
+  const tCom=com.map(e=>`<tr class="click" onclick="V161.ir('o','${J(e.o.id)}')"><td><b>${E(e.o.nome)}</b><div style="font-size:12px;opacity:.75">${E(e.x.cliente||'')} · propostas ${nums(e)}</div></td><td>${R$(e.v)}</td>${temCusto?`<td>${e.c>0.009?R$(e.c):'—'}</td><td>${e.c>0.009?R$(r2(e.v-e.c)):'aguardando custos'}</td>`:''}</tr>`).join('');
+  const tSem=sem.map(e=>`<tr class="click" onclick="V161.ir('o','${J(e.o.id)}')"><td><b>${E(e.o.nome)}</b><div style="font-size:12px;opacity:.75">${E(e.x.cliente||'')} · ${e.ps.length?'propostas '+nums(e)+' sem valor de venda':'nenhuma proposta vendida ligada'}</div></td><td>sem valor de venda na Base</td></tr>`).join('');
+  const tSo=so.map(L=>`<tr class="click" onclick="V161.ir('p','${J(L.p.id)}')"><td><b>${E(L.numero)}</b> · ${E(L.cliente||'—')}</td><td>${E(L.uni)}</td><td>${R$(L.contratado)}</td></tr>`).join('');
+  const secCom=`<h4 style="margin-top:14px">${plural(com.length,'obra com valor de venda','obras com valor de venda')} · ${R$(vt)}</h4>`+(com.length?`<div class="tw"><table class="no-filter"><thead><tr><th>Obra · cliente · propostas</th><th>Valor vendido</th>${temCusto?'<th>Custos lançados</th><th>Resultado</th>':''}</tr></thead><tbody>${tCom}<tr class="tot"><td>Total</td><td>${R$(vt)}</td>${temCusto?`<td>${R$(cc.reduce((s_,e)=>s_+e.c,0))}</td><td>${plural(cc.length,'obra com custo','obras com custo')}</td>`:''}</tr></tbody></table></div>`:'<div class="note">Nenhuma.</div>');
+  const secSem=`<h4 style="margin-top:14px" id="v161_sv">${plural(sem.length,'obra em andamento sem valor de venda na Base','obras em andamento sem valor de venda na Base')} <span style="font-weight:400;font-size:12px;opacity:.75">(chega com as propostas e o Financeiro — não conta como R$ 0)</span></h4>`+(sem.length?`<div class="tw"><table class="no-filter"><thead><tr><th>Obra · cliente</th><th>Valor</th></tr></thead><tbody>${tSem}</tbody></table></div>`:'<div class="note">Nenhuma.</div>');
+  const secSo=so.length?`<h4 style="margin-top:14px" id="v161_so">${plural(so.length,'venda sem obra ligada','vendas sem obra ligada')} · ${R$(so.reduce((s_,L)=>s_+L.contratado,0))} <span style="font-weight:400;font-size:12px;opacity:.75">(METAS 2026 sem obra — fora do valor em andamento; nenhuma obra foi criada nem ligada)</span></h4><div class="tw"><table class="no-filter"><thead><tr><th>Proposta · cliente</th><th>Unidade</th><th>Valor da venda</th></tr></thead><tbody>${tSo}</tbody></table></div>`:'';
+  const obrasN=com.length+sem.length;
+  const head_=`<button class="x" onclick="V130_close()" aria-label="Fechar">×</button><div class="lead">Empresa toda · posição de hoje</div>`+
+    `<h3>Rentabilidade em andamento · ${E(k==='sv'?'sem valor de venda':k==='so'?'vendas sem obra':lb)}${k==='uni'?`<span data-v161="${E(a)}" hidden></span>`:''}</h3><div class="big">${k==='sv'?plural(sem.length,'obra','obras'):k==='so'?plural(so.length,'venda','vendas'):R$(vt)}</div>`+
+    `<div class="lead">valor vendido · ${plural(obrasN,'obra em andamento','obras em andamento')} = ${N0(com.length)} com valor + ${N0(sem.length)} sem valor · ${R$(vt)} = soma das vendas de ${plural(com.length,'obra','obras')}${so.length?' · '+plural(so.length,'venda sem obra ligada','vendas sem obra ligada')+' fora':''} · ${temCusto?`custos lançados em ${plural(cc.length,'obra','obras')} com valor e custo`:E(AGUARDA)}</div>`+
+    `<div class="vx149-fonte"><b>De onde vem:</b> uma linha do Painel de Controle = uma obra (situação Em andamento, a mesma lista do Início › Operações). Valor da obra = soma do valor de venda das propostas vendidas dela (METAS 2026, Painel de Controle, Controle de AT). Obra sem venda com valor fica na lista com nome — não é R$ 0. Custos = só o que já foi lançado na Base (equipamentos entregues ao custo de compra, diárias apontadas, viagem 204.x, extras, projeto, garantia, saídas da planilha ligadas à obra, comissões); enquanto não há custo lançado, não há margem nem resultado.</div>`;
+  const ordem=k==='sv'?secSem+secCom+secSo:k==='so'?secSo+secCom+secSem:secCom+secSem+secSo;
+  return head_+ordem+(k==='uni'?`<a class="btnl" href="javascript:void 0" onclick="V161.abrir('${J(a)}')">Abrir Financeiro › Obras (estas obras) ›</a>`:'')}
 
 /* plumbing: chaves "v161:…" no V130_open */
 const OPEN0=window.V130_open,CLOSE0=window.V130_close,GO0=window.V130_go;
@@ -217,17 +249,17 @@ V161.abrir=function(a){ST.f={uni:a,t:Date.now()};ST.dr=null;ST.arg=null;
 window.addEventListener('hashchange',()=>{if(ST.f&&!/^#\/fobras(\/|$)/.test(location.hash))ST.f=null});
 const _obras=FS.obras;
 FS.obras=function(){const all=_obras.apply(FS,arguments);if(!ST.f||!/^#\/fobras$/.test(location.hash||''))return all;
-  const R=calc();const xs=ST.f.uni==='*'?R.rows:(R.U[ST.f.uni]||{rows:[]}).rows;const ids=new Set(xs.filter(L=>L.o).map(L=>L.o.id));return all.filter(o=>ids.has(o.id))};
-function banner(){const R=calc();const a=ST.f.uni;const xs=a==='*'?R.rows:(R.U[a]||{rows:[]}).rows;const lb=a==='*'?'todas as unidades':a;
-  const ob=xs.filter(L=>L.o),sem=xs.filter(L=>!L.o);const ids=new Set(ob.map(L=>L.o.id));
-  const cObra=comHist(()=>sum([...ids].map(id=>T(()=>FS.obraRow(get('obras',id)),{contratado:0})),x=>x.contratado));const cU=sum(ob,L=>L.contratado);const outras=r2(cObra-cU);
-  const lk=L=>`<a href="javascript:void 0" onclick="V161.ir('p','${J(L.p.id)}')" style="color:inherit;text-decoration:underline">${E(L.numero)} · ${E(L.cliente)}</a>`;
-  return `<div class="card p-3 mb-3" id="v161_ban" data-n="${ids.size}" style="background:rgba(0,113,227,.10);display:flex;gap:12px;align-items:center;flex-wrap:wrap"><span style="flex:1;min-width:240px"><b>Filtrado pela Rentabilidade em andamento · ${E(lb)}</b>: ${plural(xs.length,'proposta','propostas')} = ${N0(ob.length)} em ${plural(ids.size,'obra','obras')} desta lista${sem.length?` + ${plural(sem.length,'venda sem obra','vendas sem obra')} (não aparecem aqui): ${sem.slice(0,10).map(lk).join(' · ')}${sem.length>10?' · + '+N0(sem.length-10):''}`:''}.`+
-    ` Contratado nas obras ${R$(cObra)} = ${R$(cU)} de ${E(lb)}${outras>=0.01?` + ${R$(outras)} de outras unidades nas mesmas obras`:''}${sem.length?` · fora da lista: ${R$(sum(sem,L=>L.contratado))}`:''}.</span><button type="button" class="btn-soft" onclick="V161.limpar()">Mostrar tudo ✕</button></div>`}
+  const R=calc();const ids=new Set(ST.f.uni==='*'?R.O.map(x=>x.o.id):((R.U[ST.f.uni]||{obras:[]}).obras.map(e=>e.o.id)));return all.filter(o=>ids.has(o.id))};
+function banner(){const R=calc();const a=ST.f.uni;const all=a==='*';const lb=all?'todas as unidades':a;const X=all?null:R.U[a]||{obras:[],comValor:[],semValor:[],semObra:[],valor:0};
+  const nO=all?R.obras:X.obras.length,nC=all?R.com.length:X.comValor.length,nS=all?R.sem.length:X.semValor.length,v=all?R.tot.valor:X.valor,so=all?R.semObra:X.semObra;
+  const lkp=L=>`<a href="javascript:void 0" onclick="V161.ir('p','${J(L.p.id)}')" style="color:inherit;text-decoration:underline">${E(L.numero)} · ${E(L.cliente)}</a>`;
+  return `<div class="card p-3 mb-3" id="v161_ban" data-n="${nO}" style="background:rgba(0,113,227,.10);display:flex;gap:12px;align-items:center;flex-wrap:wrap"><span style="flex:1;min-width:240px"><b>Filtrado pela Rentabilidade em andamento · ${E(lb)}</b>: ${plural(nO,'obra em andamento','obras em andamento')} = ${N0(nC)} com valor de venda + ${N0(nS)} sem valor na Base · ${R$(v)} = soma das vendas de ${plural(nC,'obra','obras')}${so.length?` · ${plural(so.length,'venda sem obra ligada','vendas sem obra ligada')} (não aparecem aqui): ${so.slice(0,10).map(lkp).join(' · ')}${so.length>10?' · + '+N0(so.length-10):''}`:''}. A coluna Margem desta tabela é a PREVISTA (custo previsto); o resultado real aguarda os custos lançados.</span><button type="button" class="btn-soft" onclick="V161.limpar()">Mostrar tudo ✕</button></div>`}
 V161.limpar=()=>{ST.f=null;try{render()}catch(e){}};
 const _fob=SCREENS.fobras;
 SCREENS.fobras=function(arg){const self=this,args=arguments;let h=comHist(()=>_fob.apply(self,args));if(typeof h!=='string')return h;
   try{if(!arg){h=h.replace('Lucro real = receita reconhecida (avanço) − custo real.','Lucro real = contratado (valor cheio do contrato, sem multiplicar pelo avanço) − custo real lançado.').replace('Contratado = propostas confirmadas pelo Financeiro','Contratado = propostas vendidas (confirmadas pelo Financeiro ou vindas da METAS 2026 / Painel de Controle / Controle de AT), valor cheio');
+      h=h.replace('<th class="text-end">Margem</th>','<th class="text-end" title="Lucro previsto ÷ contratado — calculada com o custo PREVISTO, não com custos lançados">Margem prevista</th>').replace('<th class="text-end">Lucro previsto</th>','<th class="text-end" title="contratado − custo previsto">Lucro previsto</th>').replace('<th class="text-end">Lucro real</th>','<th class="text-end" title="contratado − custos já lançados (sem custo lançado = o próprio contratado: ainda não é resultado)">Lucro real (só lançados)</th>');
+      h=h.replace('o custo previsto × real e a margem.','o custo previsto × real e a margem PREVISTA (com o custo previsto). Lucro real só desconta o que já foi lançado — sem custo lançado ainda não é resultado.');
       if(ST.f){const i=h.indexOf('<div class="card p-3 mb-3" id="fs_obras_ponte"');const b=banner();h=i>=0?h.slice(0,i)+b+h.slice(i):b+h}}
     else{const o=T(()=>get('obras',arg),null);if(o){h=h.replace(/recebido − custo real/g,'contratado − custo real');const c=comHist(()=>cardObra(o));if(c){const i=h.indexOf('<div class="card');h=i>=0?h.slice(0,i)+c+h.slice(i):h+c}}}
   }catch(e){console.error('v161 fobras',e)}return h};
@@ -244,9 +276,9 @@ function cardObra(o){css();const d=daObra(o);if(!d.rows.length)return '';const k
   ${tr('Contratado (valor cheio)',(L,raw)=>raw?L.contratado:R$(L.contratado),true)}
   ${ks.map(k=>tr('− '+E(LINHAS_LB[k]),num(k))).join('')}
   ${tr('Custos lançados',(L,raw)=>raw?L.custos:R$(L.custos),true)}
-  ${tr('Resultado',(L,raw)=>raw?L.resultado:`<span class="${L.resultado<0?'v161-neg':'v161-pos'}">${R$(L.resultado)}</span>`,true)}
-  <tr><td>Situação</td>${d.rows.map(L=>`<td class="text-end">${chip(L.cor)}${L.contratado?`<div class="sub">${P1(L.margem)}</div>`:''}</td>`).join('')}${d.rows.length>1?'<td></td>':''}</tr>
-  </tbody></table></div><div class="sub mt-1" style="font-size:12px">Ponte: ${R$(c)} contratado − ${R$(cu)} custos = ${R$(r2(c-cu))} · o mesmo Contratado e Custo real da linha desta obra em Financeiro › Obras.</div></div>`}
+  ${tr('Resultado',(L,raw)=>raw?(L.custos>0.009?L.resultado:0):(L.custos>0.009?`<span class="${L.resultado<0?'v161-neg':'v161-pos'}">${R$(L.resultado)}</span>`:'<span class="sub">aguardando custos</span>'),true)}
+  <tr><td>Situação</td>${d.rows.map(L=>`<td class="text-end">${L.custos>0.009?chip(L.cor)+(L.contratado?`<div class="sub">${P1(L.margem)}</div>`:''):`<span class="v161-chip v161-gr">${L.contratado?'aguardando custos':'sem valor de venda na Base'}</span>`}</td>`).join('')}${d.rows.length>1?'<td></td>':''}</tr>
+  </tbody></table></div><div class="sub mt-1" style="font-size:12px">Ponte: ${R$(c)} contratado${cu>0.009?` − ${R$(cu)} custos lançados = ${R$(r2(c-cu))}`:` · ${E(AGUARDA)}`} · o mesmo Contratado e Custo real da linha desta obra em Financeiro › Obras.</div></div>`}
 
 /* ───────── 6 · Início: o cartão pequeno dentro do bloco Financeiro + a gaveta ───────── */
 const can=()=>T(()=>{const AC=(window.V130API||{}).AC||{};return AC.fin?AC.fin():true},true);

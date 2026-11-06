@@ -5,7 +5,8 @@
           e o erro jogava a tela para o Início. Agora o editor tem uma guarda: proposta sem itens → "ficha da proposta"
           com o que a Base sabe; e qualquer outro erro do editor também cai na ficha, nunca no Início.
           A gaveta da negociação (Pipeline) ganhou a mesma guarda e mostra as propostas do mesmo cliente.
-   §2 V2  Pipeline sem valor: a aba Pipeline da To Do Comercial não tem coluna de valor (A..Q, conferido no Drive em
+   §2 V2  (06/11: texto do Bruno — sem valor porque os rascunhos das propostas ainda não foram criados no protótipo)
+          Pipeline sem valor: a aba Pipeline da To Do Comercial não tem coluna de valor (A..Q, conferido no Drive em
           05/11) e nenhuma negociação está ligada a uma proposta aberta com valor. Nada é inventado: o "N sem valor"
           vira uma lista com nome, e a ponte "Previsto = Σ valor × chance de N com valor · M sem valor" fica à vista.
    §3 V3  Filtro de estado (UF) em Comercial › Propostas: Painel de Controle (coluna CIDADE) → endereço da obra →
@@ -197,16 +198,16 @@ UI.fechar=()=>{const el=document.getElementById('v161-modal');if(el)el.remove()}
 UI.abrirNeg=id=>{UI.fechar();S.deal=id;S.dealTab='comercial';if(location.hash!=='#/pipeline')location.hash='#/pipeline';else T(()=>render())};
 UI.semValor=()=>{UI.fechar();const xs=UI.semValorLista().slice().sort((a,b)=>String(a.consultor||'').localeCompare(String(b.consultor||''))||String(a.cliente_nome||'').localeCompare(String(b.cliente_nome||'')));
   const d=document.createElement('div');d.id='v161-modal';d.className='v161-modal';d.onclick=e=>{if(e.target===d)UI.fechar()};
-  d.innerHTML=`<div class="card p-3 v161-mcard"><div class="d-flex justify-content-between align-items-start"><div><div class="sub" style="font-size:11px;letter-spacing:.1em">NEGOCIAÇÕES ABERTAS SEM VALOR</div><b style="font-size:26px">${N0(xs.length)}</b><div class="sub" style="font-size:12px">A aba Pipeline da To Do Comercial não tem coluna de valor, e estas negociações não estão ligadas a uma proposta aberta com valor. Clique numa linha para abrir a negociação no Pipeline.</div></div><button class="iconbtn" onclick="V161.fechar()"><i class="bi bi-x-lg"></i></button></div>
+  d.innerHTML=`<div class="card p-3 v161-mcard"><div class="d-flex justify-content-between align-items-start"><div><div class="sub" style="font-size:11px;letter-spacing:.1em">NEGOCIAÇÕES ABERTAS SEM VALOR</div><b style="font-size:26px">${N0(xs.length)}</b><div class="sub" style="font-size:12px">Ainda não há valor porque as propostas destas negociações não foram criadas (rascunhos) dentro do protótipo. Quando o rascunho da proposta for montado na negociação, o valor dele entra no Previsto sozinho. Clique numa linha para abrir a negociação no Pipeline.</div></div><button class="iconbtn" onclick="V161.fechar()"><i class="bi bi-x-lg"></i></button></div>
    <div class="tblwrap mt-2" style="max-height:60vh;overflow:auto"><table class="tbl" style="font-size:12.5px"><thead><tr><th>Linha</th><th>Cliente</th><th>Consultor</th><th>Status na planilha</th><th class="text-end">Chance</th></tr></thead><tbody>${xs.map(n=>`<tr class="rowlink" onclick="V161.abrirNeg('${J(n.id)}')"><td class="sub">${n.planilha?N0(n.planilha.linha):'—'}</td><td><b>${E(n.cliente_nome||n.id)}</b></td><td>${E(n.consultor||'—')}</td><td>${E(n.status_pipeline||'—')}</td><td class="text-end">${n.chance==null?'—':N0(n.chance)+'%'}</td></tr>`).join('')}</tbody></table></div></div>`;document.body.appendChild(d)};
 function conferePlanilha(){const D=window.V159_PIPE;if(!D||!Array.isArray(D.rows))return null;const c={fechado:0,perdido:0,futuro:0,aberta:0,vazio:0};
   D.rows.forEach(r=>{const s=nz(r.c[10]);if(!s)c.vazio++;else if(c[s]!=null&&s!=='aberta')c[s]++;else c.aberta++});return c}
 UI.conferePlanilha=conferePlanilha;
 function telaHome(h){if(h.indexOf('Previsto · negociações abertas × chance')<0)return h;
   const N=S.db.negociacoes||[];const ab=abertas();const comV=ab.filter(n=>negV(n));const semV=ab.length-comV.length;const prev=comV.reduce((a,n)=>a+negV(n)*(+n.chance||0)/100,0);
-  h=h.replace(/(\d[\d.]*) sem valor cadastrado/,(m,x)=>`<u role="button" onclick="event.stopPropagation();V161.semValor()">${x} sem valor cadastrado</u>`);
+  h=h.replace(/(\d[\d.]*) sem valor cadastrado/,(m,x)=>`<u role="button" onclick="event.stopPropagation();V161.semValor()" title="Ainda não há valor porque as propostas (rascunhos) não foram criadas dentro do protótipo">${x} sem valor — rascunhos ainda não criados</u>`);
   const ix=h.indexOf('Previsto · negociações abertas × chance');const ini=h.lastIndexOf('<div class="vx-tiles',ix);const fim=ini>=0?fimDiv(h,ini):-1;
-  if(fim>0){const pt=`<div class="vx-ponte v161-prev">Ponte: Previsto <b>${R0(prev)}</b> = Σ valor × chance de ${plural(comV.length,'negociação com valor','negociações com valor')} · <u role="button" onclick="V161.semValor()">${plural(semV,'sem valor','sem valor')}</u> <span class="sub">(a aba Pipeline da To Do Comercial não tem coluna de valor; o valor chega quando a negociação tiver uma proposta aberta com valor)</span></div>`;h=h.slice(0,fim)+pt+h.slice(fim)}
+  if(fim>0){const pt=`<div class="vx-ponte v161-prev">Ponte: Previsto <b>${R0(prev)}</b> = Σ valor × chance de ${plural(comV.length,'negociação com valor','negociações com valor')} · <u role="button" onclick="V161.semValor()">${plural(semV,'sem valor','sem valor')}</u> <span class="sub">(ainda não há valor porque as propostas destas negociações não foram criadas — rascunhos — dentro do protótipo; o Previsto sobe quando o rascunho for montado)</span></div>`;h=h.slice(0,fim)+pt+h.slice(fim)}
   /* conversão: de onde vem */
   const k={fech:N.filter(n=>resOf(n)==='fechada').length,perd:N.filter(n=>resOf(n)==='perdida').length,fut:N.filter(n=>resOf(n)==='futuro').length,ab:ab.length,sem:N.filter(n=>resOf(n)==='sem_status').length};
   const pl=conferePlanilha();const ok=pl&&pl.fechado===k.fech&&pl.perdido===k.perd;
@@ -215,8 +216,8 @@ function telaHome(h){if(h.indexOf('Previsto · negociações abertas × chance')
       h=h.slice(0,bf-6)+txt+h.slice(bf-6)}}
   return h}
 function telaPipeline(h){
-  /* "Fechadas R$ 0": nenhuma negociação fechada tem proposta ligada — não é R$ 0, é valor não cadastrado */
-  return h.replace(/(<div class="sub" style="font-size:12px">Fechadas<\/div><div style="font-size:26px;font-weight:800">\d+<\/div><div class="sub" style="font-size:11px">)R\$ 0(<\/div>)/,'$1<span title="A aba Pipeline da To Do Comercial não tem coluna de valor e nenhuma negociação fechada está ligada a uma proposta">valor não cadastrado</span>$2')}
+  /* "Fechadas R$ 0": desde 06/11 (Bruno) a fechada empresta o valor da venda METAS do cliente — v161d-regras.js (R1) */
+  return h}
 function ligaTelas(){let ok=true;
   if(typeof SCREENS==='object'&&typeof SCREENS.home==='function'){if(!SCREENS.home.__v161){const _h=SCREENS.home;SCREENS.home=function(){const h=_h.apply(this,arguments);if(typeof h!=='string')return h;try{return telaHome(h)}catch(e){console.warn('v161 home',e);return h}};SCREENS.home.__v161=true}}else ok=false;
   if(typeof SCREENS==='object'&&typeof SCREENS.pipeline==='function'){if(!SCREENS.pipeline.__v161){const _q=SCREENS.pipeline;SCREENS.pipeline=function(){const h=_q.apply(this,arguments);if(typeof h!=='string')return h;try{return telaPipeline(h)}catch(e){return h}};SCREENS.pipeline.__v161=true}}else ok=false;
