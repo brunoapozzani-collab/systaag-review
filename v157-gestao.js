@@ -87,8 +87,8 @@ function insightsHTML(h){
   /* as lacunas por linha: "Acústica (5%)" → as propostas vendidas da linha */
   [['acustica','Acústica'],['focal','Focal (FPBN)'],['focal','Focal'],['posvenda','Pós-venda (AT)'],['posvenda','Pós-venda']].forEach(([k,l])=>{
     const re=new RegExp('(\\s|, |>)('+l.replace(/[()]/g,'\\$&')+') \\((-?[\\d.,]+|NaN|Infinity)%\\)');h=h.replace(re,(m,pre,lb,v)=>{const n=subProps().filter(p=>vendidaP(p)&&String(p.vendida_em||'').startsWith(ano())&&linhaK(p)===k).length;return n?`${pre}${door(`V156.gestaoProp('${k}')`,`${lb} (${v}%)`,'abrir as '+n+' propostas vendidas de '+lb)}`:m})});
-  /* conversão = ganhas ÷ decididas */
-  h=h.replace(/Conversão do pipeline <b>([^<]*)<\/b> \((\d+) ganhas, (\d+) perdidas\)/,(m,p,g,pd)=>`Conversão do pipeline ${door(`V156.negF({res:'decidida'})`,`<b>${p}</b>`,`abrir as ${N0(fech+perd)} negociações decididas (${g} ganhas + ${pd} perdidas)`)} (${door(`V156.negF({res:'fechada'})`,`${g} ganhas`)}, ${door(`V156.negF({res:'perdida'})`,`${pd} perdidas`)} · ${N0(fech+perd)} decididas = ${g} + ${pd})`);
+  /* conversão = ganhas ÷ perdidas (Bruno, 07/11/2026) */
+  h=h.replace(/Conversão do pipeline <b>([^<]*)<\/b> \((\d+) ganhas, (\d+) perdidas\)/,(m,p,g,pd)=>`Conversão do pipeline ${door(`V156.negF({res:'decidida'})`,`<b>${p}</b>`,`abrir as ${N0(fech+perd)} negociações decididas (${g} ganhas + ${pd} perdidas)`)} (${door(`V156.negF({res:'fechada'})`,`${g} ganhas`)}, ${door(`V156.negF({res:'perdida'})`,`${pd} perdidas`)} · conversão = ${g} ganhas ÷ ${pd} perdidas)`);
   /* "Carteira concentrada: Edson (291) e Renata (253)" → as negociações de cada um */
   const top=T(()=>count(N,n=>n.consultor),[]).slice(0,2);
   top.forEach(([c,v])=>{const s=`${E(c)} (${v})`;const i=h.indexOf(s);const j=h.indexOf(c+' ('+v+')');const at=i>=0?i:j;const raw=i>=0?s:c+' ('+v+')';if(at<0)return;
