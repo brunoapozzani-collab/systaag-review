@@ -250,6 +250,9 @@ function irFiltrado(D){
   const subT=txt(Object.assign(document.createElement('div'),{innerHTML:D.sub||''}));const subU=/^(\d[\d.]*) unidades\b/.exec(subT);
   const ponte=recs.length&&(/un\.$/.test(bigT)||(bigN!=null&&bigN!==recs.length))?`${bigT} em ${N0(recs.length)} ${unid||'linhas'}`:(recs.length&&subU?`${subU[1]} un. em ${N0(recs.length)} ${unid||'linhas'}`:'');
   ST.sp=(k.ids.length||k.names.length)&&n?{path:h,ids:k.ids,names:k.names,recs,unid,ponte,n:recs.length||n,lb:txt(Object.assign(document.createElement('div'),{innerHTML:D.big}))+' · '+txt(Object.assign(document.createElement('div'),{innerHTML:D.lb})),t:Date.now(),t0:Date.now(),fixed:false}:null;
+  /* v166 (Bruno 07/11): número ZERO também abre a tela filtrada — vazia, dizendo "0" — e não a lista inteira */
+  if(!ST.sp&&!n&&/^(R\$\s*)?0(,00)?(\s*(un\.|%))?$/.test(txt(Object.assign(document.createElement('div'),{innerHTML:D.big})).trim()))
+    ST.sp={path:h,ids:[],names:[],recs:[],unid,ponte:'',n:0,zero:true,lb:txt(Object.assign(document.createElement('div'),{innerHTML:D.big}))+' · '+txt(Object.assign(document.createElement('div'),{innerHTML:D.lb})),t:Date.now(),t0:Date.now(),fixed:false};
   try{const base=h.split('?')[0];if(ST.sp&&ZERA[base])ZERA[base]()}catch(e){}
   try{if(ST.sp&&window.V156&&typeof V156.ajusta==='function')V156.ajusta(ST.sp)}catch(e){}
   if(window.V161F){try{V161F.arm(ST.sp)}catch(e){console.error('v161 arm',e)}}
@@ -330,7 +333,7 @@ const TOKRE=/[\w.-]{3,}/g;
 function casar(recs,items){
   const at=items.map(r=>{let s=(r.getAttribute('onclick')||'')+' '+(r.getAttribute('href')||'')+' '+(r.getAttribute('data-v155')||'');
     r.querySelectorAll('[onclick],[href],[data-v155]').forEach(e=>{s+=' '+(e.getAttribute('onclick')||'')+' '+(e.getAttribute('href')||'')+' '+(e.getAttribute('data-v155')||'')});return s});
-  const idx=new Map();at.forEach((s,i)=>{const seen=new Set();s.split(/[^\w.-]+/).forEach(tk=>{if(tk.length<2||seen.has(tk))return;seen.add(tk);let l=idx.get(tk);if(!l)idx.set(tk,l=[]);l.push(i)})});
+  const idx=new Map();at.forEach((s,i)=>{const seen=new Set();s.split(/[^\w.-]+/).forEach(tk=>{if(!tk||(tk.length<2&&!/^\d$/.test(tk))||seen.has(tk))return; /* v166: a proposta nº 1 também casa */seen.add(tk);let l=idx.get(tk);if(!l)idx.set(tk,l=[]);l.push(i)})});
   /* os ids do destino podem vir codificados (#/produto/c%201) */
   const tx=items.map(r=>nz(r.textContent));const bs=items.map(r=>{const b=r.querySelector('b,strong');return b?nz(b.textContent):''});
   const used=new Array(items.length).fill(false);const ok=new Array(items.length).fill(false);const miss=[];let n=0;
@@ -339,7 +342,7 @@ function casar(recs,items){
     if(hit<0&&r.nn){/* a lista não carrega o id: cai para o nome */hit=melhor(r,true);if(hit<0)hit=melhor(r,false)}
     if(hit>=0){used[hit]=ok[hit]=true;n++}else miss.push(r)});
   function melhor(r,soExato){let bi=-1,bsc=-1;for(let i=0;i<items.length;i++){if(used[i])continue;const t=tx[i];
-      const exato=bs[i]===r.nn||(!!r.nn2&&bs[i]===r.nn2);if(soExato&&!exato)continue;if(!exato&&!(r.nn.length>=2&&t.includes(r.nn))&&!(r.nn2&&r.nn2.length>=4&&t.includes(r.nn2)))continue;
+      const exato=bs[i]===r.nn||(!!r.nn2&&bs[i]===r.nn2)||(/^\d+$/.test(r.nn)&&bs[i].startsWith(r.nn+' ')); /* v166: "1 · Verificar…" é a proposta nº 1 */if(soExato&&!exato)continue;if(!exato&&!(r.nn.length>=2&&t.includes(r.nn))&&!(r.nn2&&r.nn2.length>=4&&t.includes(r.nn2)))continue;
       let sc=(exato?100:0);r.toks.forEach(k=>{if(t.includes(k))sc+=10});if(sc>bsc){bsc=sc;bi=i}}return bi}
   /* 1º quem tem o nome exato na linha; depois os outros, do mais restrito (menos linhas possíveis) ao mais solto */
   const resto=[];porNome.forEach(r=>{const hit=r.nn?melhor(r,true):-1;if(hit>=0){used[hit]=ok[hit]=true;n++}else resto.push(r)});

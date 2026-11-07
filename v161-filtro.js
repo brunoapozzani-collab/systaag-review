@@ -72,6 +72,8 @@ function crmStatus(g){const all=fval('STATUS.slice()')||[];if(g==='*')return nul
 const qs=a=>{const o={};String(a||'').split('&').forEach(kv=>{if(!kv)return;const i=kv.indexOf('=');const k=i<0?kv:kv.slice(0,i);o[k]=i<0?'':decodeURIComponent(kv.slice(i+1))});return o};
 /* devolve {crm:{params do CRM}} ou {set(),clear(),still()} para o estado da tela principal */
 function nativo(base,key){const k=key&&key.k,a=key&&key.a;
+  /* v166: telas que mostram só os primeiros 30 cartões ("carregar mais") abrem com todos, para o número caber inteiro */
+  if(base==='#/posobras')return {set(){COP.ui.posobras=Object.assign({},COP.ui.posobras||{},{lim:100000})},clear(){try{const o=Object.assign({},COP.ui.posobras||{});delete o.lim;COP.ui.posobras=o}catch(e){}},still(){return true},desc:'todas as obras finalizadas na tela'};
   if(base==='#/crmparceiros'){
     /* os status vêm da configuração do CRM: lidos quando o iframe estiver pronto (na 1ª abertura ele ainda não existe) */
     if(k==='v149:parc'&&a&&a!=='*'){const N={desc:'status do grupo '+a};let cache=null;
@@ -140,7 +142,7 @@ V.depois=function(){if(!L)return;if(cur()!==L.base)return;
 const RESET={'#/propostas':()=>{S.propF={}},'#/negs':()=>{S.negF={}},'#/estoque':()=>{S.estCat=null;S.estSit=null},'#/obras':()=>{COP.ui.obras={}},'#/prjobras':()=>{COP.ui.prjobras={}}};
 /* termina a chegada. restaura=true (×): devolve a lista inteira já redesenhada; false: só solta (foi para outro lugar) */
 function fim(restaura){const l=L;if(!l)return;L=null;if(ST.sp===l.sp)ST.sp=null;dlog('fim '+l.base+' '+(restaura?'×':'solto'));
-  [document,FD()].forEach(d=>{if(!d)return;try{d.querySelectorAll('.v161-hid').forEach(x=>x.classList.remove('v161-hid'));d.querySelectorAll('[data-v161chip]').forEach(x=>x.remove());
+  [document,FD()].forEach(d=>{if(!d)return;try{d.querySelectorAll('.v161-hid').forEach(x=>x.classList.remove('v161-hid'));d.querySelectorAll('[data-v161chip],[data-v161vz]').forEach(x=>x.remove());
     d.querySelectorAll('[data-v161t]').forEach(x=>{if(x.__v161o!=null){x.data=x.__v161o;x.__v161o=null}x.removeAttribute&&x.removeAttribute('data-v161t')})}catch(e){}});
   (l.txt||[]).forEach(n=>{try{if(n.__v161o!=null){n.data=n.__v161o;n.__v161o=null}}catch(e){}});
   if(l.nat&&l.nat.clear)try{l.nat.clear()}catch(e){}
@@ -155,7 +157,7 @@ V.tirar=function(){fim(true)};
 V.ativo=()=>L?{base:L.base,lb:L.sp.lb,n:L.n,M:L.M,ins:L.ins,nat:L.nat?L.nat.desc:null,active:L.active}:null;
 
 /* ───────── aplicar: síncrono, idempotente, chamado pelo observador antes da pintura ───────── */
-const EXC='#v155-ov,.vd-ov,.v155-hid,#modal,.modal-bg,[data-v161chip],[data-v155ban]';
+const EXC='#v155-ov,.vd-ov,.v155-hid,#modal,.modal-bg,[data-v161chip],[data-v155ban],[data-v161vz]';
 function raiz(){if(L.crm){const d=FD();return d&&d.body?d.body:null}return document.getElementById('main')}
 function candidatos(root,recs){const out=[];
   root.querySelectorAll('table').forEach(t=>{if(t.closest(EXC))return;if(t.parentElement&&t.parentElement.closest('table'))return;
@@ -169,7 +171,7 @@ function candidatos(root,recs){const out=[];
    inteiro — o ancestral de cada registro que é filho direto do contêiner da lista — para esconder/mostrar o cartão todo */
 const IDRE=/#\/[a-z0-9_]+\/([^'"\s)?&]+)/i;
 function cartoes(xs){const by=new Map();let semId=0;
-  xs.forEach(e=>{const m=IDRE.exec(e.getAttribute('onclick')||'');if(!m){semId++;return}const k=m[1];let l=by.get(k);if(!l)by.set(k,l=[]);l.push(e)});
+  xs.forEach(e=>{const oc=e.getAttribute('onclick')||'';const m=IDRE.exec(oc)||/\('([A-Za-z]{2,}[-_][\w.-]+)'/.exec(oc);if(!m){semId++;return} /* v166: cartões cujo clique é uma função com o id ('OBR-…'), não um #/endereço */const k=m[1];let l=by.get(k);if(!l)by.set(k,l=[]);l.push(e)});
   if(semId||by.size===xs.length||by.size<2)return xs;
   const lcas=[...by.values()].map(l=>l.length===1?l[0]:comum(l));const C=comum(lcas);if(!C)return xs;
   const rows=lcas.map(e=>{let x=e;while(x&&x.parentElement!==C)x=x.parentElement;return x});
@@ -211,7 +213,17 @@ function sync(){
     /* registros lidos da própria tela de destino (quando a regra do número só existe nela) */
     if((!sp.recs||!sp.recs.length)&&L.recsAt){const r=T(()=>L.recsAt(),null);if(!r||!r.length)return;
       sp.recs=r.map(x=>({ids:(x.ids||[]).map(String),name:x.name||'',nn:nz(x.name||''),toks:x.toks||[],h:x.h||''}));sp.n=sp.recs.length;if(L.ponteF)sp.ponte=L.ponteF(r);L.recsAt=null}
-    const recs=sp.recs||[];if(!recs.length){return}
+    const recs=sp.recs||[];
+    if(!recs.length){if(!sp.zero)return;
+      /* v166: o número é 0 → a lista principal da tela fica vazia (não a lista inteira), com "Mostrando 0 de M" e a etiqueta */
+      const cz=candidatos(root,[]).filter(c=>!c.cards||c.rows.length>=3).sort((a,b)=>(b.table?1:0)-(a.table?1:0)||b.rows.length-a.rows.length);
+      const bz=cz[0];if(!bz){if(!L.active&&agora-L.t0<1500)return;L.active=true;return}
+      L.active=true;bz.n=0;bz.ok=bz.rows.map(()=>false);bz.miss=[];
+      bz.rows.forEach(r=>r.classList.add('v161-hid'));
+      if(bz.table){const tb=bz.table.querySelector(':scope > tbody');if(tb&&!tb.querySelector('[data-v161vz]')){const cols=Math.max(1,(bz.rows[0]&&bz.rows[0].children.length)||1);
+        const tr=root.ownerDocument.createElement('tr');tr.setAttribute('data-v161vz','1');tr.innerHTML='<td colspan="'+cols+'" style="text-align:center;padding:18px;opacity:.7">Nenhum registro — o número clicado é 0 ('+E(rotulo(sp))+')</td>';tb.appendChild(tr)}}
+      L.M=bz.rows.length;L.n=0;L.host=bz.host;L.miss=[];contadores(root,bz,L.M,0);mostrando(root,bz,0);etiqueta(root,bz);
+      window.__V161_last={n:0,M:L.M,lb:sp.lb,path:L.base,zero:true};return}
     const cs=candidatos(root,recs);if(!cs.length)return;
     let best=null;
     cs.forEach(c=>{const as=window.V155D.casar(recs,c.rows);c.ok=as.ok;c.n=as.n;c.miss=as.miss;if(!best||c.n>best.n||(c.n===best.n&&c.n>0&&c.rows.length>best.rows.length))best=c});
@@ -234,7 +246,7 @@ V.sync=sync;
 function contadores(root,best,M,n){
   const fm=[String(M),N0(M)].filter((x,i,a)=>a.indexOf(x)===i).map(x=>x.replace(/\./g,'\\.')).join('|');
   const re1=new RegExp('(^|[^\\d.,])('+fm+')( de )(\\d[\\d.]*)');
-  const re2=new RegExp('(^|[^\\d.,])('+fm+')(\\s+(?:itens|item|obra\\(s\\)|obras|propostas?|negocia[çc][õo]es|produtos?|registros?|parceiros?|linhas?|resultados?|a[çc][õo]es|unidades|pessoas|chamados))(?![\\w])','i');
+  const re2=new RegExp('(^|[^\\d.,])('+fm+')(\\s+(?:itens|item|obra\\(s\\)|obras|ordem\\(ns\\)|ordens|propostas?|negocia[çc][õo]es|produtos?|registros?|parceiros?|linhas?|resultados?|a[çc][õo]es|unidades|pessoas|chamados))(?![\\w])','i');
   const reS=new RegExp('^\\s*('+fm+')\\s*$');
   const d=root.ownerDocument;const w=d.createTreeWalker(root,NodeFilter.SHOW_TEXT,null);let t;const mexi=L.txt=L.txt||[];let k=0;
   /* a lista em cartões pode ser a tela inteira: o limite é o 1º cartão */
@@ -243,6 +255,8 @@ function contadores(root,best,M,n){
     const p=t.parentElement;if(!p||ref.contains(t)||p.closest(EXC+',script,style,option,select,textarea'))continue;
 
     const s0=t.__v161o!=null?t.__v161o:t.data;let s=s0;
+    /* v166: frase com valor ("R$ 779.042 = resultado das 769 propostas") fala do total — trocar só a contagem a deixaria falsa */
+    {const blk=p.closest('p,li,td,div,span')||p;const bt=txt(blk);if(/R\$/.test(bt)&&bt.length<500&&!/^\s*Mostrando /.test(s0))continue}
     const rm=/^(\s*Mostrando )(\d[\d.]*)( de )/.exec(s);
     if(rm&&+rm[2].replace(/\./g,'')>n)s=s.replace(rm[0],rm[1]+N0(n)+rm[3]);
     else if(re1.test(s))s=s.replace(re1,(m,a,b,c,dd)=>a+N0(n)+c+dd);
