@@ -35,6 +35,7 @@ const sum=(xs,f)=>r2((xs||[]).reduce((a,x)=>a+(+(f?f(x):x)||0),0));
 const plural=(n,a,b)=>N0(n)+' '+(+n===1?a:b);
 const getRow=(t,id)=>T(()=>get(t,id),null)||T(()=>(S.db[t]||[]).find(x=>x.id===id),null);
 const AC=API.AC||{};const can=k=>T(()=>AC[k]?AC[k]():true,true);
+window.V149_ANY=()=>['rel','com','obr','est','fin','pos'].some(can); /* v166: o perfil vê algum bloco → o Início monta o painel */
 const COR={azul:'#2a78d6',verde:'#12a150',verm:'#d03b3b',amb:'#e0a400',roxo:'#6f42c1',cinza:'#a3a29c',lar:'#f0702a',teal:'#0ea5a5',preto:'#151821'};
 const MY=window.__V149S=window.__V149S||{dr:null,arg:null,exp:{}};
 

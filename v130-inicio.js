@@ -941,7 +941,7 @@ function build(){topVar();
   const exec=EXEC();
   const P=T(ceoParts,{css:''});tipOn();
   const b=[T(bloco1,''),T(bloco4,''),T(bloco2,''),T(bloco3,'')];
-  if(!b.some(Boolean))return null; /* sem nenhum bloco para este perfil: só a entrada */
+  if(!b.some(Boolean)&&!(typeof window.V149_ANY==='function'&&window.V149_ANY()))return null; /* sem nenhum bloco para este perfil: só a entrada (v166: os blocos v149 do perfil também contam) */
   const hh=new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
   const dr=V.dr?T(()=>gaveta4(V.dr,V.arg)||gaveta(V.dr,V.arg),''):'';
   return `${P?P.css:''}${CSS}<div class="vd vx fx2-wrapped" id="v130_root">
