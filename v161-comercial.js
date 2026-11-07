@@ -46,15 +46,19 @@ function ufTxt(s){s=String(s||'');let last='';const re=/(?:^|[^A-Za-z])([A-Z]{2}
   if(last)return last;const k=nz(s);for(const c in CID)if(k.includes(c))return CID[c];return ''}
 function ufCidade(c){c=String(c||'').trim();if(!c)return '';if(UFS.has(c.toUpperCase()))return c.toUpperCase();return CID[nz(c)]||''}
 let MESTRA_UF=null;
-function mestraUF(){if(MESTRA_UF)return MESTRA_UF;MESTRA_UF={};const R=T(()=>window.V150_MESTRA.rows,[])||[];
-  R.forEach(r=>{const uf=ufCidade(r.cidade)||ufTxt(r.endereco)||ufCep(r.endereco);if(!uf)return;String(r.propostas||'').split(/[\/,;e]+/).forEach(x=>{const n=x.replace(/\D/g,'');if(n.length>=4&&!MESTRA_UF[n])MESTRA_UF[n]=uf})});return MESTRA_UF}
+function mestraUF(){if(MESTRA_UF)return MESTRA_UF;MESTRA_UF={};const R=T(()=>window.V150_MESTRA.rows,[])||[];const tudo={};
+  R.forEach(r=>{const uf=ufCidade(r.cidade)||ufTxt(r.endereco)||ufCep(r.endereco);if(!uf)return;String(r.propostas||'').split(/[\/,;e]+/).forEach(x=>{const n=x.replace(/\D/g,'');if(n.length>=4)(tudo[n]=tudo[n]||new Set()).add(uf)})});
+  /* v163: um número que aparece no Painel em linhas de estados diferentes (ex.: 12881 em Monte Mor-SP e no Flamengo-RJ) não decide o estado — cai para a venda/obra/filial */
+  for(const n in tudo)if(tudo[n].size===1)MESTRA_UF[n]=[...tudo[n]][0];return MESTRA_UF}
 function ufDe(p){if(!p)return {uf:'',de:''};
+  /* v163 · a VENDA decide o estado: a aba da METAS 2026 onde a venda está e, para proposta vendida, a filial da venda — o mesmo que o filtro "filial" usa, então os dois sempre dizem a mesma coisa */
+  const fl=nz(p.fonte_linha);if(/^sao paulo/.test(fl))return {uf:'SP',de:'aba São Paulo da METAS 2026 (onde a venda está)'};if(/^rio de janeiro/.test(fl))return {uf:'RJ',de:'aba Rio de Janeiro da METAS 2026 (onde a venda está)'};
+  if(VEND.includes(p.estado)){const fv=String(T(()=>FIL.daProposta(p),'')||'').toUpperCase();if(UFS.has(fv))return {uf:fv,de:'filial da venda'}}
   const num=String(p.numero||'').replace(/\D/g,'');const mu=mestraUF()[num];if(mu)return {uf:mu,de:'Painel de Controle (CIDADE)'};
   const o=p.obra_id?T(()=>get('obras',p.obra_id),null):null;
   if(o){const u=ufTxt(o.endereco)||ufCep(o.endereco)||ufCidade(o.cidade)||ufCidade(o.uf);if(u)return {uf:u,de:'endereço da obra'}}
   const at=p.at||{};const ua=ufTxt(at.address)||ufCep(at.postal_code)||ufCep(at.address);if(ua)return {uf:ua,de:'endereço do atendimento'};
-  const fl=nz(p.fonte_linha);if(/^sao paulo/.test(fl))return {uf:'SP',de:'aba São Paulo da METAS 2026'};if(/^rio de janeiro/.test(fl))return {uf:'RJ',de:'aba Rio de Janeiro da METAS 2026'};
-  const f=String(p.filial||'').toUpperCase();if(UFS.has(f))return {uf:f,de:'filial da proposta'};
+  const f=String(T(()=>FIL.daProposta(p),'')||p.filial||'').toUpperCase();if(UFS.has(f))return {uf:f,de:'filial da proposta'};
   return {uf:'',de:''}}
 UI.ufDe=ufDe;
 
@@ -119,7 +123,7 @@ function telaPropostas(h){const f=S.propF||{};const P=(S.db.propostas||[]);
   const selUf=`<div class="col-md-2"><label class="sub" style="font-size:10px;letter-spacing:.08em">ESTADO (UF)</label><select class="form-select form-select-sm" onchange="V161.selUf(this.value)"><option value="">Todos os estados</option>${ufs.map(([u,n])=>`<option value="${E(u)}"${f.uf===u?' selected':''}>${E(u==='_sem'?'Sem estado':u+(UF_NOME[u]?' · '+UF_NOME[u]:''))} (${N0(n)})</option>`).join('')}</select></div>`;
   h=h.replace('<div class="col-md-4"><label class="sub" style="font-size:10px;letter-spacing:.08em">NOME DA OBRA</label>','<div class="col-md-3"><label class="sub" style="font-size:10px;letter-spacing:.08em">NOME DA OBRA</label>');
   h=h.replace('<div class="col-md-2 d-flex align-items-end"><button class="btn-soft w-100" onclick="S.propF={};render()">',selUf+'<div class="col-md-1 d-flex align-items-end"><button class="btn-soft w-100" onclick="S.propF={};render()">');
-  const ponteUf=`<div class="v161-ponte mb-3">Estado: <b>${N0(baseUf.length)}</b> = ${ufs.map(([u,n])=>`<u role="button" onclick="V161.uf('${J(u)}')"${f.uf===u?' style="font-weight:700"':''}>${N0(n)} ${E(ufLb(u))}</u>`).join(' + ')} <span class="sub">(estado vem da coluna CIDADE do Painel de Controle, do endereço da obra, do CEP, da aba da METAS ou da filial)</span></div>`;
+  const ponteUf=`<div class="v161-ponte mb-3">Estado: <b>${N0(baseUf.length)}</b> = ${ufs.map(([u,n])=>`<u role="button" onclick="V161.uf('${J(u)}')"${f.uf===u?' style="font-weight:700"':''}>${N0(n)} ${E(ufLb(u))}</u>`).join(' + ')} <span class="sub">(proposta vendida: o estado é o da venda — aba da METAS 2026 / filial da venda; as demais: coluna CIDADE do Painel de Controle, endereço da obra, CEP ou filial)</span></div>`;
   const ix=h.indexOf('ESTADO (UF)');if(ix>0){const ini=h.lastIndexOf('<div class="card p-3 mb-3">',ix);const fim=ini>=0?fimDiv(h,ini):-1;if(fim>0)h=h.slice(0,fim)+ponteUf+h.slice(fim)}
   /* linhas fora do estado escolhido ficam escondidas (o "Mostrando N de M" conta só as visíveis) */
   if(f.uf){h=h.replace(/<tr class="rowlink" onclick="location\.hash='#\/editor\/([^']+)'"/g,(m,id)=>{const p=T(()=>get('propostas',id),null);return p&&(ufDe(p).uf||'_sem')!==f.uf?m+' style="display:none" data-v161-fora="1"':m})}
