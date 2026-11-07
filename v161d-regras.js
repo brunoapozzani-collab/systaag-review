@@ -276,7 +276,13 @@ function ligaVendas(db){if(!db||db.af113_zero)return 0;const F=db._v161d=db._v16
   const res={ligadas:[],amb:[],sem:[],manual:[]};
   (db.propostas||[]).filter(p=>p&&p.fonte==='METAS 2026'&&!p.demo&&!p.excluida).forEach(p=>{
     const lg=p.obra_ligada;
-    if(p.obra_id&&!(lg&&lg.obra===p.obra_id))return; /* obra posta pela importação (Painel) ou no app: não se mexe */
+    if(p.obra_id&&!(lg&&lg.obra===p.obra_id)){
+      /* v163: o MESMO número em várias linhas do Painel (ex.: 12881 em Haras Larissa, Hotel Unique e ISP RJ - Irene Silva) — a importação pegou a primeira linha.
+         A venda da METAS vai para a obra desse número cujo cliente é o cliente da venda (só quando há exatamente uma). Uma troca feita no app não é desfeita. */
+      if(!(lg&&lg.desligadaNoApp)){const num=String(p.numero||'');const ids=new Set((db.propostas||[]).filter(x=>x&&x!==p&&String(x.numero||'')===num&&x.obra_id).map(x=>x.obra_id));ids.add(p.obra_id);
+        if(ids.size>1){const cs=candidatas(p,obras.filter(o=>ids.has(o.id)));if(cs.length===1&&cs[0].id!==p.obra_id){const o=cs[0];const de=T(()=>get('obras',p.obra_id).nome,p.obra_id);p.obra_id=o.id;if(o.cliente_id)p.cliente_id=o.cliente_id;
+          p.obra_ligada={obra:o.id,via:'mesmo número em várias linhas do Painel — ligada pela obra do cliente da venda (antes: '+de+')',regra:'Bruno 07/11/2026',em:hoje(),obraNome:o.nome};res.ligadas.push({p,o});n++;return}}}
+      return} /* obra posta pela importação (Painel) ou no app: não se mexe */
     if(p.obra_id&&lg){const o=obras.find(x=>x.id===p.obra_id);if(o){res.ligadas.push({p,o});return}delete p.obra_ligada;p.obra_id=null;n++}
     if(lg&&lg.desligadaNoApp)return;
     const cs=candidatas(p,obras);
