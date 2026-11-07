@@ -33,7 +33,7 @@ for(const f of readdirSync('.')){
   if(st.isDirectory()){mkdirSync(join(OUT,f),{recursive:true});for(const g of readdirSync(f))copyFileSync(join(f,g),join(OUT,f,g));continue}
   if(f==='index.html'){const s=readFileSync(f,'utf8');let o=await html(s);
     /* 07/11/2026: cada publicação carimba os scripts locais (?v=commit) — o navegador nunca roda uma cópia velha depois de um deploy */
-    const V=String(process.env.VERCEL_GIT_COMMIT_SHA||Date.now()).slice(0,10);o=o.replace(/(<script\b[^>]*\bsrc=")(v[0-9][^"?]*\.js)"/g,(m,a,b)=>a+b+'?v='+V+'"');writeFileSync(join(OUT,f),o);saved+=s.length-o.length;console.log('index.html',s.length,'→',o.length)}
+    const V=String(process.env.VERCEL_GIT_COMMIT_SHA||Date.now()).slice(0,10);o=o.replace(/(<script\b[^>]*\bsrc=")(v[0-9][^"?]*\.js)(?:\?[^"]*)?"/g,(m,a,b)=>a+b+'?v='+V+'"');writeFileSync(join(OUT,f),o);saved+=s.length-o.length;console.log('index.html',s.length,'→',o.length)}
   else if(/\.js$/.test(f)){const s=readFileSync(f,'utf8');const o=await js(s,f);writeFileSync(join(OUT,f),o);saved+=s.length-o.length}
   else copyFileSync(f,join(OUT,f));
 }
