@@ -80,9 +80,11 @@ const COR={rascunho:'#6c757d',em_prevendas:'#6f42c1',enviada:'#0d6efd',revisao:'
 function porEstado(xs){const g={};xs.forEach(p=>{const k=p.estado||'_sem';const o=g[k]=g[k]||{k,n:0,v:0,sv:0};o.n++;const v=tot(p);o.v+=v;if(!v)o.sv++});
   return Object.values(g).sort((a,b)=>{const ia=ORDEM.indexOf(a.k),ib=ORDEM.indexOf(b.k);return (ia<0?99:ia)-(ib<0?99:ib)})}
 const setF=(k,v)=>{S.propF=Object.assign({},S.propF||{});S.propF[k]=S.propF[k]===v?'':v;T(()=>renderMain())};
-UI.est=v=>setF('estado',v);UI.uf=v=>setF('uf',v);
+UI.est=v=>setF('estado',v);UI.uf=v=>{const F=S.propF||{};const nv=F.uf===v?'':v;S.propF=ufFil(F,nv);T(()=>renderMain())};
 UI.selEst=v=>{S.propF=Object.assign({},S.propF||{},{estado:v});T(()=>renderMain())};
-UI.selUf=v=>{S.propF=Object.assign({},S.propF||{},{uf:v});T(()=>renderMain())};
+/* v165 (Bruno 07/11): filial RJ/SP e Estado são a mesma escolha — trocar o Estado troca a filial junto (senão "Todos os estados" continuaria preso na filial) */
+const ufFil=(F,v)=>{F=Object.assign({},F||{},{uf:v});if(F.fil&&UFS.has(String(F.fil).toUpperCase())&&F.fil!==v)delete F.fil;return F};
+UI.selUf=v=>{S.propF=ufFil(S.propF,v);T(()=>renderMain())};
 
 /* ═════════════ §5 vendas por mês, sem fuso e sem mês inventado ═════════════ */
 const MES=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
@@ -104,7 +106,8 @@ function cardHist(xs){const meta=S.db.meta||{};const ano=meta.ano||new Date().ge
    <div class="v161-ponte">Ponte: ${R0(vm.total)} vendidos em ${E(ano)} = ${termos||'—'}${vm.sem.n?` + <b>sem data ${R0(vm.sem.v)}</b> (${plural(vm.sem.n,'venda','vendas')} da METAS 2026 sem dia na planilha${vm.sem.fut?` · ${N0(vm.sem.fut)} com data futura`:''} — contam no ano, em nenhum mês)`:''}</div></div>`}
 
 /* ═════════════ §4 + §3 + §5 na tela Comercial › Propostas ═════════════ */
-function telaPropostas(h){const f=S.propF||{};const P=(S.db.propostas||[]);
+function telaPropostas(h){if(S.propF&&S.propF.fil&&UFS.has(String(S.propF.fil).toUpperCase())&&!S.propF.uf)S.propF.uf=String(S.propF.fil).toUpperCase(); /* v165: veio pela filial (ex.: meta RJ) → o Estado já mostra RJ */
+  const f=S.propF||{};const P=(S.db.propostas||[]);
   const base=P.filter(p=>passa(p,f,true));const g=porEstado(base);const nB=base.length;
   /* cartões de status = estado real */
   const cards=`<div class="row g-2 mb-1 v161-cards">${g.map(s=>`<div class="col-6 col-md-4 col-lg-2"><div class="card p-3 rowlink${f.estado===s.k?' v161-on':''}" style="border-top:4px solid ${COR[s.k]||'#6c757d'}" onclick="V161.est('${J(s.k)}')" title="Clique para ver só estas propostas"><div class="sub" style="font-size:10px;letter-spacing:.08em">${E(estLb(s.k).toUpperCase())}</div><div style="font-size:28px;font-weight:800;color:${COR[s.k]||'#6c757d'}">${N0(s.n)}</div><div class="sub" style="font-size:11px">${R0(s.v)}</div>${s.sv?`<div class="sub" style="font-size:10.5px">${N0(s.sv)} sem valor na Base</div>`:''}</div></div>`).join('')}</div>`;
