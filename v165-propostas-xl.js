@@ -19,7 +19,7 @@
 if(window.__v165)return;window.__v165=true;
 if(typeof S==='undefined'||!S.db)return;
 const D=window.V165_XL;if(!D||!Array.isArray(D.props)){console.error('v165: v165-propostas-xl-data.js não carregou');return}
-const REV='a';
+const REV='b';
 const T=(f,d)=>{try{const v=f();return v===undefined?d:v}catch(e){return d}};
 const E=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const R2=v=>'R$ '+(+v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
