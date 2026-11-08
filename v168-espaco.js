@@ -35,7 +35,7 @@ function chaves(){return abre().then(function(db){return new Promise(function(ok
 var LISTA=[];                                                         /* [{k,ts,label,n,mb}] — o que há no arquivo, para a Zona de risco */
 function meta(k,v){var o={k:k,ts:0,label:'',n:'',mb:MB(String(v==null?'':v).length)};
   var m=k.match(/systaag_snap_(\d+)$/);if(m){o.ts=+m[1];try{var j=JSON.parse(v);o.label=j.label||'';o.n=j.n||''}catch(e){}}
-  else{var b=k.match(/^(treino:)?(systaag_[a-z0-9]+)__bak(\d{4})(\d{2})(\d{2})$/);if(b){o.ts=new Date(+b[3],+b[4]-1,+b[5]).getTime();o.label='backup antigo de '+b[2].replace('systaag_','')+' ('+b[5]+'/'+b[4]+'/'+b[3]+')';o.n='só esta chave'}}
+  else{var b=k.match(/^(treino:)?(systaag_.+?)__bak(\d{4})(\d{2})(\d{2})$/);if(b){o.ts=new Date(+b[3],+b[4]-1,+b[5]).getTime();o.label='backup antigo de '+b[2].replace('systaag_','')+' ('+b[5]+'/'+b[4]+'/'+b[3]+')';o.n='só esta chave'}}
   return o}
 function migra(){var ks=RAW.keys().filter(function(k){return ARQ.test(k)});if(!ks.length)return Promise.resolve(0);
   var n=0;return ks.reduce(function(p,k){return p.then(function(){var v=RAW.get(k);if(v==null)return;return put(k,v).then(function(){RAW.rm(k);n++})})},Promise.resolve()).then(function(){if(n)console.log('v168: '+n+' cópia(s) de segurança movida(s) do localStorage para o arquivo');return n})}
