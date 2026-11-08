@@ -135,7 +135,7 @@ function entrar(login){
   try{if(window.COP&&COP.ui){delete COP.ui.meudia;delete COP.ui.posfield}}catch(e){}
   var el=document.getElementById('qv');if(el)el.remove();
   if(location.hash&&location.hash!=='#/home'&&location.hash!=='#/'&&!podeVerRota((location.hash.replace(/^#\/?/,'').split('/')[0])))location.hash='#/home';
-  try{renderNav()}catch(e){}try{render()}catch(e){}
+  try{renderNav()}catch(e){}try{pintarPilula()}catch(e){}try{render()}catch(e){}
   try{toast('Olá, '+E(nomeCurto(u).split(' ')[0])+' · perfil '+E((perfilDe(u)||{}).nome||u.perfil))}catch(e){}
 }
 var podeVerRota=function(k){if(!k||k==='home')return true;if(k==='equipe')return isGestor();try{return UQ.nivel(k)>=1}catch(e){return true}};
@@ -223,6 +223,6 @@ var _rn=window.renderNav;window.renderNav=function(){var r=_rn.apply(this,argume
 try{migrar();ligarPessoas()}catch(e){console.error('v166',e)}
 var lembrado=null;try{lembrado=localStorage.getItem(KEY)}catch(e){}
 if(lembrado&&usr(lembrado)&&usr(lembrado).ativo!==false){if(S.user!==lembrado){S.user=lembrado;save_()}}
-try{pilula();observar();renderNav();render()}catch(e){}
+try{pilula();observar();renderNav();pintarPilula();render()}catch(e){}
 if(!window.__TREINO&&!(lembrado&&usr(lembrado)&&usr(lembrado).ativo!==false))abrir(false);
 })();
