@@ -24,19 +24,23 @@ var pessoaDe=function(u){if(!u)return null;var L=S.db.pessoas||[];return L.find(
 
 /* ───────── 1. a tabela de acesso aprovada (uma vez por base) ───────── */
 function migrar(){
+  var P0=function(id){return (S.db.perfisAcesso||[]).find(function(p){return p.id===id})};
   if(!Array.isArray(S.db.perfisAcesso)||!S.db.perfisAcesso.length)return;
-  if(S.db.__acesso166)return;
+  if(S.db.__acesso166){
+    /* 08/11: uma camada antiga dá Pessoas & Cultura a quem não tem o valor escrito — a tabela aprovada não inclui; fica 0 */
+    if(!S.db.__acesso166c){['comercial','estoque','financeiro','chefetec','tecnico','adefinir'].forEach(function(id){var p=P0(id);if(p&&p.regra&&p.regra.dep){p.regra.dep.pes=0;p.regra.dep.dir=0}});S.db.__acesso166c=1;save_()}
+    return}
   var P=S.db.perfisAcesso,get=function(id){return P.find(function(p){return p.id===id})};
   var set=function(id,nome,desc,dep,tela,esc){var p=get(id);if(!p){p={id:id};P.push(p)}p.nome=nome||p.nome;if(desc)p.desc=desc;p.regra={dep:dep,tela:tela||{},escopo:esc||'todos'}};
   var all3={'*':3};
   var d=get('diretoria');if(d){d.nome='Gestor · Diretoria';d.desc='Vê e aprova tudo. Muda os acessos de todos.';d.regra.escopo='todos'}
   var t=get('ti');if(t){t.nome='Gestor · Tecnologia';t.desc='Administrador do sistema: tudo, inclusive Usuários e permissões.';t.regra.escopo='todos'}
-  set('comercial','Comercial','CRM e Comercial (Pipeline, Gestão, Propostas). Vê o departamento inteiro.',{'*':0,com:2,crm:2},{gestao:2,focal:1,rettroc:1},'todos');
-  set('estoque','Estoque e compras','Estoque completo (entradas, saídas, cotações) e as obras da Operação que precisam de material.',{'*':0,est:3,ope:1},{baixas:2,dbprodutos:2,fornecedores:2},'todos');
-  set('financeiro','Financeiro','Financeiro completo, mais os números de venda do Comercial só para consulta.',{'*':0,fin:3,com:1},{rh:3,impostos:3,nf:3,finconfig:3},'todos');
-  set('chefetec','Chefe dos técnicos','Operação completa e a agenda de todos os técnicos; Projetos para consulta.',{'*':0,ope:3,prj:1},{},'todos');
-  set('tecnico','Técnico','Só o que é seu: Meu dia (agenda e jornada) e os seus atendimentos de Pós-venda.',{'*':0},{meudia:2,posfield:2,ajuda:1},'meus');
-  set('adefinir','A definir','Ainda sem acesso: só o Início. Um Gestor escolhe o perfil.',{'*':0},{},'todos');
+  set('comercial','Comercial','CRM e Comercial (Pipeline, Gestão, Propostas). Vê o departamento inteiro.',{'*':0,com:2,crm:2,pes:0,dir:0},{gestao:2,focal:1,rettroc:1},'todos');
+  set('estoque','Estoque e compras','Estoque completo (entradas, saídas, cotações) e as obras da Operação que precisam de material.',{'*':0,est:3,ope:1,pes:0,dir:0},{baixas:2,dbprodutos:2,fornecedores:2},'todos');
+  set('financeiro','Financeiro','Financeiro completo, mais os números de venda do Comercial só para consulta.',{'*':0,fin:3,com:1,pes:0,dir:0},{rh:3,impostos:3,nf:3,finconfig:3},'todos');
+  set('chefetec','Chefe dos técnicos','Operação completa e a agenda de todos os técnicos; Projetos para consulta.',{'*':0,ope:3,prj:1,pes:0,dir:0},{},'todos');
+  set('tecnico','Técnico','Só o que é seu: Meu dia (agenda e jornada) e os seus atendimentos de Pós-venda.',{'*':0,pes:0,dir:0},{meudia:2,posfield:2,ajuda:1},'meus');
+  set('adefinir','A definir','Ainda sem acesso: só o Início. Um Gestor escolhe o perfil.',{'*':0,pes:0,dir:0},{},'todos');
   P.forEach(function(p){p.regra=p.regra||{dep:{},tela:{}};if(!p.regra.escopo)p.regra.escopo='todos'});
   S.db.__acesso166=new Date().toISOString();
   try{log('perfis','v166','tabela de acesso por pessoa aplicada (Gestor, Comercial, Estoque, Financeiro, Chefe dos técnicos, Técnico)')}catch(e){}
@@ -136,6 +140,7 @@ function entrar(login){
   var el=document.getElementById('qv');if(el)el.remove();
   if(location.hash&&location.hash!=='#/home'&&location.hash!=='#/'&&!podeVerRota((location.hash.replace(/^#\/?/,'').split('/')[0])))location.hash='#/home';
   try{renderNav()}catch(e){}try{pintarPilula()}catch(e){}try{render()}catch(e){}
+  setTimeout(function(){try{pintarPilula();render()}catch(e){}},0); /* o Início guarda o desenho do mesmo instante — redesenha já com a pessoa nova */
   try{toast('Olá, '+E(nomeCurto(u).split(' ')[0])+' · perfil '+E((perfilDe(u)||{}).nome||u.perfil))}catch(e){}
 }
 var podeVerRota=function(k){if(!k||k==='home')return true;if(k==='equipe')return isGestor();try{return UQ.nivel(k)>=1}catch(e){return true}};
