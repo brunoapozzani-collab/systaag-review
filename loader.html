@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="pt-BR" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SYSTAAG</title>
+<style>html,body{margin:0;height:100%;background:#f4f5f7;font:600 15px/1.4 "Plus Jakarta Sans",system-ui,-apple-system,sans-serif;color:#1f2430}#ld{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px}#ld .w{font:300 44px/1 "Plus Jakarta Sans",system-ui,sans-serif;letter-spacing:.06em}#ld .s{opacity:.6;font-weight:500}#ld .b{width:160px;height:4px;border-radius:999px;background:rgba(0,0,0,.08);overflow:hidden}#ld .b i{display:block;height:100%;width:40%;background:#1f2430;border-radius:999px;animation:ld 1.1s ease-in-out infinite}@keyframes ld{0%{transform:translateX(-100%)}100%{transform:translateX(400%)}}</style>
+</head>
+<body>
+<div id="ld"><div class="w">taag</div><div class="s">Abrindo o sistema…</div><div class="b"><i></i></div></div>
+<script>
+/* v169 — A BASE NO ARMAZENAMENTO GRANDE (Bruno, 08-Nov-2026)
+   O localStorage do navegador tem um teto duro de ~10 MB — e a base do SYSTAAG só cresce (cada carga nova de dados
+   chegava mais perto do teto; o treino, que copia a base, foi o primeiro a bater). Esta página é a porta de entrada:
+   ela abre o IndexedDB (centenas de MB, cresce com o disco), carrega a base para a memória e, só então, escreve o
+   sistema (app.html) na página. O sistema inteiro continua falando com "localStorage" como sempre — por baixo, toda
+   chave systaag_* (e treino:systaag_*) vive na memória + IndexedDB; o resto (tema, fundo…) segue no localStorage normal.
+   Segurança: cada gravação vai para o IndexedDB na hora; ao fechar a aba, o que ainda não tiver sido confirmado é
+   gravado em síncrono numa cópia de reserva (fb:*) e reaplicado na próxima abertura. Na primeira abertura, a base que
+   estava no localStorage é levada para o IndexedDB e só é tirada de lá depois de confirmada. */
+(async function(){
+'use strict';
+var RE=/^(treino:)?systaag_/, FB='fb:', TS='fb:__ts', DBN='systaag_base', ST='kv';
+var sp=Storage.prototype, g0=sp.getItem, s0=sp.setItem, r0=sp.removeItem, k0=sp.key, c0=sp.clear, ld=Object.getOwnPropertyDescriptor(sp,'length'), l0=ld&&ld.get;
+var LS=window.localStorage;
+function realKeys(){var o=[],n=l0.call(LS);for(var i=0;i<n;i++)o.push(k0.call(LS,i));return o}
+var APP='app.html'+(location.search?location.search:'');
+function abreApp(){return fetch(APP,{cache:'no-store'}).then(function(r){if(!r.ok)throw new Error('app.html '+r.status);return r.text()}).then(function(h){
+  /* document.open() apaga os ouvintes da janela — os nossos entram depois dele */
+  document.open();if(window.__BIGSTORE)escuta();document.write(h);document.close()})}
+
+/* ───── IndexedDB ───── */
+var db=null;
+function open(){return new Promise(function(ok,ko){if(!window.indexedDB)return ko(new Error('sem IndexedDB'));var r=indexedDB.open(DBN,1);r.onupgradeneeded=function(){r.result.createObjectStore(ST)};r.onsuccess=function(){db=r.result;db.onversionchange=function(){try{db.close()}catch(e){}};ok(db)};r.onerror=function(){ko(r.error||new Error('IndexedDB'))};r.onblocked=function(){ko(new Error('IndexedDB bloqueado'))}})}
+function lerTudo(){return new Promise(function(ok,ko){var m=new Map(),t=db.transaction(ST),st=t.objectStore(ST),rq=st.openCursor();rq.onsuccess=function(){var c=rq.result;if(c){m.set(String(c.key),c.value);c.continue()}else ok(m)};rq.onerror=function(){ko(rq.error)}})}
+function grava(pares,remove){return new Promise(function(ok,ko){var t=db.transaction(ST,'readwrite'),st=t.objectStore(ST);pares.forEach(function(v,k){st.put(v,k)});(remove||[]).forEach(function(k){st.delete(k)});t.oncomplete=function(){ok()};t.onerror=function(){ko(t.error)};t.onabort=function(){ko(t.error||new Error('abort'))}})}
+
+var M=new Map();                  /* a base, em memória: chave → texto */
+var pend=new Map(), pendRm=new Set(), agendado=false, falhas=0;
+function agenda(){if(agendado)return;agendado=true;setTimeout(flush,0)}
+function flush(){agendado=false;if(!pend.size&&!pendRm.size)return;var p=pend,r=pendRm;pend=new Map();pendRm=new Set();
+  grava(p,Array.from(r)).then(function(){falhas=0},function(e){falhas++;console.error('v169 gravar no IndexedDB',e);p.forEach(function(v,k){if(!pend.has(k))pend.set(k,v)});r.forEach(function(k){pendRm.add(k)});if(falhas<5)setTimeout(flush,500*falhas);else reserva()})}
+/* ao fechar: o que não foi confirmado vai para a reserva síncrona */
+function reserva(){try{if(!pend.size&&!pendRm.size)return;pend.forEach(function(v,k){s0.call(LS,FB+k,v)});pendRm.forEach(function(k){s0.call(LS,FB+'rm:'+k,'1')});s0.call(LS,TS,String(Date.now()))}catch(e){console.error('v169 reserva',e)}}
+/* "saindo" liga no primeiro sinal de fecho (ouvintes em captura, registados antes dos do sistema) e, enquanto estiver ligado,
+   toda gravação da base vai TAMBÉM, em síncrono, para a reserva — assim a gravação de fecho do próprio sistema (v154
+   garanteSync, v148 congela…) nunca depende de um IndexedDB que a aba vai matar */
+var saindo=false;
+function escuta(){['pagehide','beforeunload'].forEach(function(ev){window.addEventListener(ev,function(){saindo=true;reserva()},{capture:true})});
+  document.addEventListener('visibilitychange',function(){if(document.visibilityState==='hidden'){saindo=true;reserva()}else saindo=false},{capture:true})}
+
+/* ───── o localStorage que o sistema vê ───── */
+function instala(){
+  sp.getItem=function(k){k=String(k);if(this===LS&&RE.test(k))return M.has(k)?M.get(k):null;return g0.call(this,k)};
+  sp.setItem=function(k,v){k=String(k);v=String(v);if(this===LS&&RE.test(k)){M.set(k,v);pend.set(k,v);pendRm.delete(k);if(saindo){try{s0.call(LS,FB+k,v);s0.call(LS,TS,String(Date.now()))}catch(e){console.error('v169 reserva',e)}}agenda();return}return s0.call(this,k,v)};
+  sp.removeItem=function(k){k=String(k);if(this===LS&&RE.test(k)){if(M.has(k)){M.delete(k);pend.delete(k);pendRm.add(k);if(saindo){try{r0.call(LS,FB+k);s0.call(LS,FB+'rm:'+k,'1');s0.call(LS,TS,String(Date.now()))}catch(e){}}agenda()}return}return r0.call(this,k)};
+  var lista=function(st){var o=[];var n=l0.call(st);for(var i=0;i<n;i++){var kk=k0.call(st,i);if(kk!=null&&!(st===LS&&(RE.test(kk)||kk.indexOf(FB)===0)))o.push(kk)}if(st===LS)M.forEach(function(v,k){o.push(k)});return o};
+  sp.key=function(i){var a=lista(this);return i<a.length?a[i]:null};
+  Object.defineProperty(sp,'length',{configurable:true,get:function(){return lista(this).length}});
+  sp.clear=function(){if(this===LS){Array.from(M.keys()).forEach(function(k){sp.removeItem.call(LS,k)});lista(LS).forEach(function(k){r0.call(LS,k)});return}return c0.call(this)};
+  window.__BIGSTORE={tamanho:function(){var t=0;M.forEach(function(v){t+=v.length*2});return t},chaves:function(){return Array.from(M.keys())},pendentes:function(){return pend.size+pendRm.size},db:DBN}}
+
+/* ───── arranque ───── */
+try{
+  await open();
+  M=await lerTudo();
+  /* 1. primeira vez: a base que está no localStorage sobe para o IndexedDB (e só sai do localStorage depois de confirmada) */
+  var velhas=realKeys().filter(function(k){return RE.test(k)});
+  if(velhas.length){var sobe=new Map();velhas.forEach(function(k){var v=g0.call(LS,k);if(v!=null&&!M.has(k))sobe.set(k,v)});
+    if(sobe.size){await grava(sobe);sobe.forEach(function(v,k){M.set(k,v)})}
+    velhas.forEach(function(k){try{r0.call(LS,k)}catch(e){}});
+    console.log('v169: '+velhas.length+' chave(s) da base levadas do localStorage para o IndexedDB')}
+  /* 2. reserva de um fecho anterior: reaplica */
+  var fbs=realKeys().filter(function(k){return k.indexOf(FB)===0&&k!==TS});
+  if(fbs.length){var put=new Map(),rm=[];fbs.forEach(function(k){var v=g0.call(LS,k);if(k.indexOf(FB+'rm:')===0)rm.push(k.slice((FB+'rm:').length));else if(v!=null)put.set(k.slice(FB.length),v)});
+    await grava(put,rm);put.forEach(function(v,k){M.set(k,v)});rm.forEach(function(k){M.delete(k)});fbs.concat([TS]).forEach(function(k){try{r0.call(LS,k)}catch(e){}});
+    console.log('v169: reserva de '+fbs.length+' chave(s) reaplicada')}
+  instala();
+  try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist()}catch(e){}
+}catch(e){
+  /* sem IndexedDB (modo privado antigo, bloqueio): o sistema abre como sempre, direto no localStorage */
+  console.error('v169: IndexedDB indisponível — a base fica no localStorage',e);
+}
+try{await abreApp()}catch(e){document.getElementById('ld').innerHTML='<div class="w">taag</div><div class="s">Não deu para abrir o sistema ('+String(e.message||e).replace(/</g,'&lt;')+'). Recarregue a página.</div>'}
+})();
+</script>
+</body>
+</html>

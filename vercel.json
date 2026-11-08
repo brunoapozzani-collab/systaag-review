@@ -10,7 +10,7 @@
       ]
     },
     {
-      "source": "/index.html",
+      "source": "/(index|app).html",
       "headers": [
         {
           "key": "cache-control",
