@@ -324,6 +324,9 @@ function ponteTxt(best){const sp=L.sp;const miss=best.miss||[];const nm=sp.unid|
   if(!best.n)parts.push(`nenhum dos ${N0((sp.recs||[]).length)} ${E(nm)} aparece nesta lista`);
   else if(miss.length)parts.push(`${N0(sp.recs.length)} ${E(nm)} = ${N0(best.n)} nesta lista + ${N0(miss.length)} que esta lista não mostra${sp.porque?' ('+E(sp.porque)+')':''}: ${miss.slice(0,12).map(lk).join(' · ')}${miss.length>12?` · + ${N0(miss.length-12)}`:''}`);
   if(sp.ponte&&best.n)parts.unshift(E(sp.ponte));
+  /* v166 (Bruno 07/11 — números têm de fechar na tela): o filtro da própria tela mostra mais linhas do que o número clicado → dizer quem são as outras */
+  {const tot=(best.rows||[]).length,fora=tot-(best.n||0);if(L.nat&&best.n&&fora>0){const pq=/Estoque livre/i.test(sp.lb||'')?'também têm unidade livre, mas toda ela já é pedida por propostas vendidas — estão em “Pedido por propostas”':'não fazem parte deste número';
+    parts.push(`a tela com o filtro “${E(L.nat.desc||"")}” tem ${N0(tot)}: ${N0(best.n)} deste número + ${N0(fora)} que ${pq}`)}}
   return parts.join(' · ')}
 
 /* ───────── vigias: tudo por evento, nada por relógio ───────── */
