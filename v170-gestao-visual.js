@@ -29,9 +29,11 @@ const CSS=`
 .g170-kpi{position:relative;overflow:hidden;min-width:0}
 .row>div:has(>.g170-kpi){flex:1 1 0;min-width:0;max-width:none}
 @media (max-width:1100px){.row>div:has(>.g170-kpi){flex:1 1 45%}}
-.g170-kpi .g170-kin{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.g170-kpi .g170-kin{display:block;position:relative}
 .g170-kpi .g170-kin>div:first-child{min-width:0}
-.g170-kpi .g170-ring{width:52px;height:52px;margin:-2px -4px -2px 0}
+.g170-kpi .g170-kin>div:first-child>.sub:last-child{padding-right:52px}
+.g170-kpi .g170-ring{position:absolute;right:-4px;bottom:-4px;width:48px;height:48px}
+.g170-kpi .sub,.g170-kpi .g170-lbl{overflow-wrap:normal;word-break:keep-all}
 .g170-kpi .g170-kval{font-size:21px!important;white-space:nowrap;letter-spacing:-.01em}
 .g170-kpi .sub{font-size:10.5px!important}
 .g170-hero{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
