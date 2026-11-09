@@ -8,7 +8,7 @@
 (function(){
 'use strict';
 if(window.__v141)return;window.__v141=true;
-const nz=s=>String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toUpperCase().replace(/[^A-Z0-9]+/g,' ').trim();
+const nz=(()=>{/* rapido3 09-nov: mesma função, com memória */const f=s=>String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toUpperCase().replace(/[^A-Z0-9]+/g,' ').trim(),m=new Map();return s=>{if(typeof s!=='string')return f(s);let v=m.get(s);if(v===undefined){v=f(s);m.set(s,v)}return v}})();
 const K=s=>nz(s).replace(/ /g,'');
 const head=n=>String(n||'').split('—')[0].trim();
 const M=s=>K(String(s||'').replace(/[.\s,;:-]+$/,'')); /* modelo sem ponto/traço final */

@@ -25387,7 +25387,7 @@ try { render(); } catch (e) {}
 'use strict';
 if (typeof S === 'undefined' || !S.db) return;
 if (window.__UM_REGISTRO) return;             /* installs once */
-const nz = s => String(s == null ? '' : s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, ' ').trim();
+const nz=(()=>{/* rapido3 09-nov: mesma função, com memória */const f=s => String(s == null ? '' : s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, ' ').trim(),m=new Map();return s=>{if(typeof s!=='string')return f(s);let v=m.get(s);if(v===undefined){v=f(s);m.set(s,v)}return v}})();
 const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 const unesc = s => String(s).replace(/&quot;/g, '"').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&#39;/g, "'").replace(/&amp;/g, '&');
 const P = () => (S.db.parceiros || []).filter(p => !p.inativo);
@@ -25627,7 +25627,7 @@ try { render(); } catch (e) {}
 'use strict';
 if (typeof S === 'undefined' || !S.db || typeof put !== 'function') return;
 if (window.__OBRA_PROPOSTA) return;
-const nz = s => String(s == null ? '' : s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, ' ').trim();
+const nz=(()=>{/* rapido3 09-nov: mesma função, com memória */const f=s => String(s == null ? '' : s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, ' ').trim(),m=new Map();return s=>{if(typeof s!=='string')return f(s);let v=m.get(s);if(v===undefined){v=f(s);m.set(s,v)}return v}})();
 const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 const cliOf = id => id ? S.db.clientes.find(c => c.id === id) : null;
 const obraOf = id => id ? S.db.obras.find(o => o.id === id) : null;
@@ -25838,7 +25838,7 @@ function clientesParecidos(nome, codinome) {
 }
 function clientePorNome(nome, codinome) { const h = clientesParecidos(nome, codinome); return h.length === 1 ? h[0] : null; }
 const siglaDona = sig => S.db.clientes.find(c => nz(c.sigla) === nz(sig));
-function siglaLivre(base) { base = String(base || '').toUpperCase().replace(/[^A-Z0-9]/g, '') || 'CLI'; if (!siglaDona(base)) return base; let i = 2; while (siglaDona(base + i)) i++; return base + i; }
+function siglaLivre(base) { /* rapido3 09-nov: mesma regra, uma passada só — as siglas em uso entram num Set em vez de varrer todos os clientes a cada tentativa */ base = String(base || '').toUpperCase().replace(/[^A-Z0-9]/g, '') || 'CLI'; const usadas = new Set(S.db.clientes.map(c => nz(c.sigla))); if (!usadas.has(nz(base))) return base; let i = 2; while (usadas.has(nz(base + i))) i++; return base + i; }
 if (typeof A.novaNegociacao === 'function') {
   const _nn = A.novaNegociacao;
   A.novaNegociacao = function (f) {
@@ -26200,7 +26200,7 @@ window.__EDITORFIX01=true;window.__EDITORFIX01v=2;
 if(!window.CRM_RAW||!window.CRM_SEED){console.error('CRM-02: seed ausente');return}
 const RAW=window.CRM_RAW, SEED=window.CRM_SEED;
 const E=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const nz=s=>String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toUpperCase().replace(/[^A-Z0-9]+/g,' ').trim();
+const nz=(()=>{/* rapido3 09-nov: mesma função, com memória */const f=s=>String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toUpperCase().replace(/[^A-Z0-9]+/g,' ').trim(),m=new Map();return s=>{if(typeof s!=='string')return f(s);let v=m.get(s);if(v===undefined){v=f(s);m.set(s,v)}return v}})();
 const UP=s=>String(s||'').trim().toUpperCase();
 const T=()=>today();
 const addD=(d,n)=>{const x=new Date(String(d).slice(0,10)+'T12:00:00');x.setDate(x.getDate()+n);return x.toISOString().slice(0,10)};
@@ -26398,7 +26398,7 @@ const soReais=l=>(l||[]).filter(x=>x&&parc(x.pid)).map(x=>({pid:x.pid,pct:+x.pct
 const normL=l=>JSON.stringify((l||[]).map(x=>[x.pid,+x.pct||0]).sort((a,b)=>String(a[0]).localeCompare(String(b[0]))));
 const igual=(a,b)=>normL(a)===normL(b);
 const totalL=l=>(l||[]).reduce((a,x)=>a+(+x.pct||0),0);
-const nz=s=>String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toUpperCase().replace(/[^A-Z0-9]+/g,' ').trim();
+const nz=(()=>{/* rapido3 09-nov: mesma função, com memória */const f=s=>String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toUpperCase().replace(/[^A-Z0-9]+/g,' ').trim(),m=new Map();return s=>{if(typeof s!=='string')return f(s);let v=m.get(s);if(v===undefined){v=f(s);m.set(s,v)}return v}})();
 const E=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const pc=v=>(Math.round((+v||0)*100)/100).toLocaleString('pt-BR')+'%';
 const M=window.CRM_MATCH||{};

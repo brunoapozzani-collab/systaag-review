@@ -21,7 +21,7 @@ if(typeof S==='undefined'||!S.db)return;
 const V=window.V123=window.V123||{};
 const P=window.V123PES=window.V123PES||{};
 const log_=(t,id,m)=>{try{log(t,id,m)}catch(e){}};
-const nz=s=>String(s==null?'':s).normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/&/g,' e ').replace(/[^a-z0-9]+/g,' ').trim();
+const nz=(()=>{/* rapido3 09-nov: mesma função, com memória */const f=s=>String(s==null?'':s).normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/&/g,' e ').replace(/[^a-z0-9]+/g,' ').trim(),m=new Map();return s=>{if(typeof s!=='string')return f(s);let v=m.get(s);if(v===undefined){v=f(s);m.set(s,v)}return v}})();
 const sq=s=>nz(s).replace(/([a-z])\1+/g,'$1');
 const STOP=new Set(['de','da','do','das','dos','e']);
 const toks=s=>sq(String(s==null?'':s).replace(/\([^)]*\)/g,' ')).replace(/\b(rj|sp)$/,'').trim().split(' ').filter(t=>t&&!STOP.has(t));
