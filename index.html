@@ -26273,7 +26273,7 @@ function handle(req){switch(req.action){
  case 'loadAll':{curEmail();const tables={};TABLES.forEach(k=>{if(k!=='log')tables[k]=Tb(k)});tables.parceiros=S.db.parceiros.filter(p=>!p.inativo&&!p.crm_fora_planilha)/* v140: o CRM só mostra parceiros da planilha */.map(toRow);tables.pipeline=pipelineRows();tables.historico=[];return {ok:true,tables}}
  case 'insert':{const id=writeTable(req.table,req.row||{},'insert');persistT();if(req.table==='parceiros')save();return {ok:true,id}}
  case 'update':{const id=writeTable(req.table,req.row||{},'update');persistT();if(req.table==='parceiros')save();return {ok:true,id}}
- case 'deleteRow':{if(req.table==='parceiros'){const p=PC(req.id);if(!p)return {ok:true,result:false};p.inativo=true;put('parceiros',p,'CRM: parceiro excluído');save();persistT();return {ok:true,result:true}}const arr=Tb(req.table);const n=arr.length;window.CRM_T[req.table]=arr.filter(r=>+r.id!==+req.id);persistT();return {ok:true,result:n!==S.db.crm.t[req.table].length}}
+ case 'deleteRow':{if(req.table==='parceiros'){const p=PC(req.id);if(!p)return {ok:true,result:false};p.inativo=true;put('parceiros',p,'CRM: parceiro excluído');save();persistT();return {ok:true,result:true}}const arr=Tb(req.table);const n=arr.length;window.CRM_T[req.table]=arr.filter(r=>+r.id!==+req.id);persistT();return {ok:true,result:n!==window.CRM_T[req.table].length}}
  case 'deleteWhere':{const arr=Tb(req.table);const n=arr.filter(r=>String(r[req.field])!==''&&String(r[req.field])===String(req.value)).length;window.CRM_T[req.table]=arr.filter(r=>!(String(r[req.field])!==''&&String(r[req.field])===String(req.value)));persistT();return {ok:true,result:n}}
  case 'renameValues':{let n=0;(req.items||[]).forEach(it=>{if(it.table==='parceiros'){S.db.parceiros.forEach(p=>{const r=toRow(p);if(String(r[it.field])===String(it.de)){const o={};o[it.field]=it.para;fromRow(o,p);n++}})}else{(Tb(it.table)||[]).forEach(r=>{if(String(r[it.field])===String(it.de)){r[it.field]=it.para;n++}})}});persistT();save();return {ok:true,result:n}}
  case 'batch':{const remap={};let n=0;(req.ops||[]).forEach(o=>{const row=o.row||{};const ref=(c,t)=>{const k=t+':'+row[c];if(row[c]!==''&&row[c]!==undefined&&remap[k])row[c]=remap[k]};ref('interacao_id','interacoes');ref('interacao_conclusao_id','interacoes');ref('tarefa_id','tarefas');const before=+row.id||0;const id=writeTable(o.table,row,o.op);if(before&&id!==before)remap[o.table+':'+before]=id;n++});persistT();save();return {ok:true,result:{n,remap}}}
@@ -30857,4 +30857,6 @@ try{if(/^#\/(dbfiliais|finlanc)/.test(location.hash))render()}catch(e){}
 <script src="v158-cliques.js"></script>
 <script src="v167-base.js"></script>
 <script src="v170-gestao-visual.js"></script>
+<script src="nuvem-config.js"></script>
+<script src="v171-nuvem.js"></script>
 </body></html>
