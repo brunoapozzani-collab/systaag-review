@@ -26,11 +26,14 @@ const CSS=`
 .g170-ring text{font-weight:800;fill:currentColor}
 @keyframes g170in{from{--g170v:0}}
 @media (prefers-reduced-motion:reduce){.g170-ring circle.seg{animation:none}}
-.g170-kpi{position:relative;overflow:hidden}
+.g170-kpi{position:relative;overflow:hidden;min-width:0}
+.row>div:has(>.g170-kpi){flex:1 1 0;min-width:0;max-width:none}
+@media (max-width:1100px){.row>div:has(>.g170-kpi){flex:1 1 45%}}
 .g170-kpi .g170-kin{display:flex;align-items:center;justify-content:space-between;gap:10px}
 .g170-kpi .g170-kin>div:first-child{min-width:0}
-.g170-kpi .g170-ring{width:58px;height:58px;margin:-2px -2px -2px 0}
-.g170-kpi .g170-kval{font-size:22px!important;white-space:nowrap;letter-spacing:-.01em}
+.g170-kpi .g170-ring{width:52px;height:52px;margin:-2px -4px -2px 0}
+.g170-kpi .g170-kval{font-size:21px!important;white-space:nowrap;letter-spacing:-.01em}
+.g170-kpi .sub{font-size:10.5px!important}
 .g170-hero{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
 .g170-hero .g170-ring{width:112px;height:112px}
 .g170-big{font-size:34px;font-weight:800;line-height:1;letter-spacing:-.01em}
