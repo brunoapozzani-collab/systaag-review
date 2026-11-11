@@ -19,6 +19,8 @@
    Esta camada NÃO grava nada ao abrir: nenhuma tabela é criada, nenhuma pessoa é alterada, nenhum acesso muda —
    só grava quando alguém registra uma meta, um check-in, uma avaliação ou escolhe um gestor.
    Quem vê o quê: nível 2+ na tela (Gestor, RH) vê todos e a calibração; os demais veem só a própria avaliação e a do seu time.
+   As folhas (pessoa, quem avalia quem) são <dialog> NÃO-modal com fundo próprio: o guia Aprender fazendo e os avisos ficam por cima;
+   a v172 não redesenha a tela enquanto houver um dialog[open].
    Carregada ANTES da v171/v172 (a nuvem compara a base por fora). Nenhuma linha existente do protótipo é alterada. */
 (function(){'use strict';
 if(window.__v174)return;window.__v174=true;
@@ -146,9 +148,9 @@ var FIN3=[['fcativos','Ativos internos'],['fcemprest','Empréstimos'],['fccontra
 '.avd-dots{display:flex;gap:6px}.avd-dots i{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-size:11px;font-weight:700;background:rgba(127,127,127,.14);color:rgba(127,127,127,.9)}'+
 '.avd-dots i.ok{background:rgba(25,135,84,.16);color:#198754}.avd-dots i.cur{background:rgba(255,193,7,.25);color:#9a6b00;outline:1.5px solid rgba(255,193,7,.7)}'+
 '.avd-warn{border-radius:12px;padding:9px 14px;background:rgba(255,193,7,.16);border:1px solid rgba(255,193,7,.45);font-size:13px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}'+
-'dialog.avd-sheet{border:0;padding:0;border-radius:18px;width:min(1000px,96vw);max-height:92vh;background:var(--bg,#f5f5f7);color:var(--tx,#1d1d1f);box-shadow:0 30px 80px rgba(0,0,0,.35);overflow:hidden}'+
+'dialog.avd-sheet{position:fixed;inset:0;margin:auto;height:fit-content;z-index:1061;border:0;padding:0;border-radius:18px;width:min(1000px,96vw);max-height:92vh;background:var(--bg,#f5f5f7);color:var(--tx,#1d1d1f);box-shadow:0 30px 80px rgba(0,0,0,.35);overflow:hidden}'+
 'dialog.avd-sheet[open]{display:flex;flex-direction:column}'+
-'dialog.avd-sheet::backdrop{background:rgba(0,0,0,.45)}'+
+'#avd-back{position:fixed;inset:0;z-index:1060;background:rgba(0,0,0,.45)}'+
 '.avd-sh-h{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;padding:18px 22px 12px;border-bottom:1px solid var(--bd,#dee2e6);background:var(--card,#fff)}'+
 '.avd-sh-h h2{font-size:21px;font-weight:800;margin:0;letter-spacing:-.02em}.avd-sh-h .sub{font-size:12.5px}'+
 '.avd-sh-b{padding:16px 22px;overflow:auto;flex:1}'+
@@ -205,7 +207,7 @@ function telaCiclo(c){var P=visiveis(),tot=P.length,tudo=veTudo(),H='';
   H+='<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2"><h6 class="mb-0">'+(ST.filt==null?(tudo?'Todas as pessoas do ciclo':'A sua avaliação e a do seu time')+' · '+N0(tot):'Faltando: '+RN[ST.filt][0].toLowerCase()+' · '+N0(L.length)+' de '+N0(tot))+'</h6>'+(ST.filt!=null?'<button class="btn-soft" onclick="AVD.filt(null)">Ver todas as '+N0(tot)+'</button>':'')+'</div>';
   H+='<div class="card p-0"><div class="table-responsive"><table class="table mb-0 pc-tbl"><thead><tr><th>Pessoa</th><th>Área</th><th>Gestor</th><th>Metas · Check-in · Auto · Avaliação</th><th></th></tr></thead><tbody>'+
     (L.length?L.map(function(p){var s=passos(p,c),cur=s.indexOf(false),g=gestorDe(p),sou=p.id===meuPid();
-      return '<tr><td class="l"><a href="javascript:void 0" onclick="AVD.abrir(\''+E(p.id)+'\')"><b>'+E(p.nome)+'</b></a>'+(sou?' <span class="pc-chip info">você</span>':'')+'<div class="sub">'+E(p.cargo||'')+'</div></td><td>'+E(p.dep||'—')+'</td><td>'+(g?E(pnome(g)):'<span class="pc-chip warn">sem gestor</span>')+'</td>'+
+      return '<tr data-avd="'+E(p.nome)+'"><td class="l"><a href="javascript:void 0" onclick="AVD.abrir(\''+E(p.id)+'\')"><b>'+E(p.nome)+'</b></a>'+(sou?' <span class="pc-chip info">você</span>':'')+'<div class="sub">'+E(p.cargo||'')+'</div></td><td>'+E(p.dep||'—')+'</td><td>'+(g?E(pnome(g)):'<span class="pc-chip warn">sem gestor</span>')+'</td>'+
         '<td><div class="avd-dots">'+['M','C','A','✓'].map(function(l,i){return '<i class="'+(s[i]?'ok':i===cur?'cur':'')+'" title="'+RN[i][0]+(s[i]?' ✓':'')+'">'+l+'</i>'}).join('')+'</div></td>'+
         '<td class="text-end"><button class="'+(s[3]?'btn-soft':'btn-apple')+'" onclick="AVD.abrir(\''+E(p.id)+'\')">'+(s[3]?'Ver avaliação':sou?(s[2]?'Ver':'Autoavaliação'):!s[0]?'Registrar metas':!s[1]?'Check-in':'Avaliar')+'</button></td></tr>'}).join(''):'<tr><td colspan="5" class="sub">Ninguém faltando aqui.</td></tr>')+
     '</tbody></table></div></div>';
@@ -233,8 +235,10 @@ function telaCalib(c){var P=ativas(),areas=[];P.forEach(function(p){var a=p.dep|
 /* ═════════════════════════ §4 a folha da pessoa (dialog) ═════════════════════════ */
 var SH={pid:'',ciclo:'',modo:'gestor',edit:false,dm:null,msg:''};
 function dlg(){var d=document.getElementById('avd-sheet');if(!d){d=document.createElement('dialog');d.id='avd-sheet';d.className='avd-sheet';document.body.appendChild(d);
-  d.addEventListener('close',function(){if(_ts)gravar(true);SH.pid='';redesenha()});d.addEventListener('click',function(ev){if(ev.target===d)d.close()})}return d}
-function abre(d){if(!d.open){try{d.showModal()}catch(e){d.setAttribute('open','')}}}
+  d.addEventListener('close',function(){if(_ts)gravar(true);SH.pid='';fundo(false);redesenha()})}return d}
+function fundo(on){var b=document.getElementById('avd-back');if(on){if(!b){b=document.createElement('div');b.id='avd-back';b.onclick=function(){document.querySelectorAll('dialog.avd-sheet[open]').forEach(function(x){x.close()})};document.body.appendChild(b)}}else if(b&&!document.querySelector('dialog.avd-sheet[open]'))b.remove()}
+function abre(d){if(!d.open){try{d.show()}catch(e){d.setAttribute('open','')}}fundo(true)}
+document.addEventListener('keydown',function(ev){if(ev.key!=='Escape')return;var a=document.querySelectorAll('dialog.avd-sheet[open]');if(a.length&&!document.querySelector('.modal.show'))a[a.length-1].close()});
 function seg(val,labels,fn,i,ro){return '<div class="avd-seg" role="group">'+labels.map(function(l,v){return '<button type="button" '+(ro?'disabled':'onclick="AVD.'+fn+'('+i+','+v+')"')+' class="'+(val===v?'s'+v:'')+'">'+l+'</button>'}).join('')+'</div>'}
 function inp(f,val,ph,ro,extra){return '<input type="text" class="avd-in" data-f="'+f+'" '+(extra||'')+' value="'+E(val||'')+'" placeholder="'+E(ph||'')+'" '+(ro?'disabled':'oninput="AVD.txt(this)"')+'>'}
 function txa(f,val,ro,extra){return '<textarea class="avd-in" data-f="'+f+'" '+(extra||'')+' '+(ro?'disabled':'oninput="AVD.txt(this)"')+'>'+E(val||'')+'</textarea>'}
@@ -301,12 +305,12 @@ function pick(au,campo,i,v){var x=alvo(au);if(!x)return;x[campo]=Array.isArray(x
 function optsGestor(sel,fora){var P=ativas().filter(function(p){return p.id!==fora}),li=P.filter(function(p){return p.lider}),ou=P.filter(function(p){return !p.lider});
   var o=function(p){return '<option value="'+E(p.id)+'" '+(p.id===sel?'selected':'')+'>'+E(p.nome)+(p.cargo?' — '+E(p.cargo):'')+'</option>'};
   return '<option value="">— sem gestor —</option>'+(li.length?'<optgroup label="Líderes de equipe (Base › Pessoas)">'+li.map(o).join('')+'</optgroup>':'')+'<optgroup label="Outras pessoas">'+ou.map(o).join('')+'</optgroup>'}
-function painelGestores(){var d=document.getElementById('avd-gest');if(!d){d=document.createElement('dialog');d.id='avd-gest';d.className='avd-sheet';document.body.appendChild(d);d.addEventListener('close',function(){if(_ts)gravar(true);redesenha()});d.addEventListener('click',function(ev){if(ev.target===d)d.close()})}
+function painelGestores(){var d=document.getElementById('avd-gest');if(!d){d=document.createElement('dialog');d.id='avd-gest';d.className='avd-sheet';document.body.appendChild(d);d.addEventListener('close',function(){if(_ts)gravar(true);fundo(false);redesenha()})}
   var P=ativas(),areas=[];P.forEach(function(p){var a=p.dep||'—';if(areas.indexOf(a)<0)areas.push(a)});areas.sort(function(a,b){return a.localeCompare(b,'pt-BR')});var sem=P.filter(function(p){return !gestorDe(p)}).length;
   var abertos={};d.querySelectorAll('details[open]').forEach(function(x){abertos[x.getAttribute('data-a')]=1});var y=0;try{y=d.querySelector('.avd-sh-b').scrollTop}catch(e){}
   d.innerHTML='<div class="avd-sh-h"><div><h2>Quem avalia quem</h2><div class="sub">O gestor fica gravado na ficha da pessoa, na Base. <b>'+N0(P.length-sem)+' de '+N0(P.length)+'</b> com gestor definido'+(sem?' · '+(sem===1?'falta 1':'faltam '+N0(sem)):'')+'.</div></div><button class="avd-x" title="Fechar" onclick="document.getElementById(\'avd-gest\').close()">×</button></div><div class="avd-sh-b">'+
     areas.map(function(a,ix){var L=P.filter(function(p){return (p.dep||'—')===a}),gs=[];L.forEach(function(p){var g=gestorDe(p);if(gs.indexOf(g)<0)gs.push(g)});var um=gs.length===1?gs[0]:'';var s=L.filter(function(p){return !gestorDe(p)}).length;
-      return '<div class="avd-ga"><div class="avd-gr" style="border-top:0"><span><b>'+E(a)+'</b> <span class="sub">· '+N0(L.length)+(L.length===1?' pessoa':' pessoas')+(s?' · <span class="pc-chip warn">'+N0(s)+' sem gestor</span>':' · <span class="pc-chip ok">completo</span>')+'</span></span><select class="avd-in" title="Gestor da área" onchange="AVD.gestorArea('+ix+',this.value)"><option value="__">Gestor da área inteira…</option>'+optsGestor(gs.length===1?um:'__x','')+'</select></div>'+
+      return '<div class="avd-ga" data-avd-area="'+E(a)+'"><div class="avd-gr" style="border-top:0"><span><b>'+E(a)+'</b> <span class="sub">· '+N0(L.length)+(L.length===1?' pessoa':' pessoas')+(s?' · <span class="pc-chip warn">'+N0(s)+' sem gestor</span>':' · <span class="pc-chip ok">completo</span>')+'</span></span><select class="avd-in" title="Gestor da área" onchange="AVD.gestorArea('+ix+',this.value)"><option value="__">Gestor da área inteira…</option>'+optsGestor(gs.length===1?um:'__x','')+'</select></div>'+
         '<details data-a="'+ix+'" '+(abertos[ix]?'open':'')+'><summary>Ver e ajustar pessoa por pessoa</summary>'+L.map(function(p){return '<div class="avd-gr"><span>'+E(p.nome)+' <span class="sub">'+E(p.cargo||'')+'</span></span><select class="avd-in" onchange="AVD.gestor(\''+E(p.id)+'\',this.value)">'+optsGestor(gestorDe(p),p.id)+'</select></div>'}).join('')+'</details></div>'}).join('')+
     '</div><div class="avd-sh-f"><span class="sub">Cada escolha é salva na hora. A pessoa nunca é gestora de si mesma.</span><button class="btn-apple" onclick="document.getElementById(\'avd-gest\').close()">Pronto</button></div>';
   d.__areas=areas;abre(d);try{d.querySelector('.avd-sh-b').scrollTop=y}catch(e){}}
@@ -352,7 +356,10 @@ window.AVD={
   gestor:function(pid,gid){if(!veTudo())return;var p=pessoa(pid);if(!p)return;if(setGestor(p,gid))gravar(true);painelGestores()},
   gestorArea:function(ix,gid){if(!veTudo()||gid==='__')return;var d=document.getElementById('avd-gest'),a=d&&d.__areas&&d.__areas[ix];if(a==null)return;var ch=false;ativas().filter(function(p){return (p.dep||'—')===a}).forEach(function(p){if(p.id!==gid&&setGestor(p,gid))ch=true});if(ch)gravar(true);painelGestores()},
   /* leitura para conferência */
-  _info:function(){return {ciclo:cicloAtual(),pessoas:ativas().length,avaliacoes:AV().length,auto:AU().length,calib:CA().length}}
+  _info:function(){return {ciclo:cicloAtual(),pessoas:ativas().length,avaliacoes:AV().length,auto:AU().length,calib:CA().length}},
+  _aberta:function(){var d=document.getElementById('avd-sheet');return d&&d.open?(pnome(SH.pid)||''):''},
+  _tab:function(){return ST.tab},
+  _de:function(nome){var p=ativas().find(function(x){return x.nome===nome});if(!p)return null;var c=ST.ciclo||cicloAtual(),r=rec(c,p.id)||{};return {gestor:pnome(gestorDe(p)),metas:!!r.metas_em,checkin:!!r.checkin_em,res:[0,1,2].filter(function(i){return (r.res||[])[i]!=null}).length,beh:[0,1,2,3].filter(function(i){return (r.beh||[])[i]!=null}).length,faltas:faltas(r).length,fechada:!!r.fechada_em,proximas:!!((rec(prox(c),p.id)||{}).metas||[]).length}}
 };
 
 /* Entrada e saída: a mensagem do checklist apontava para "Facilities › Empréstimos" */
