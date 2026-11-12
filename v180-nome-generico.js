@@ -4,7 +4,8 @@
    Regras do Bruno (10/11 e 12/11):
      · nada é inventado nem reescrito — o campo "Nomenclatura genérica (apelido)" recebe EXATAMENTE as palavras do Render;
      · produto do Render sem nome genérico → o apelido daqui fica como está;
-     · produto do Render que não existe aqui → NÃO é criado; vai para uma lista em Base › Produtos.
+     · produto do Render que não existe aqui → NÃO é criado: o catálogo certo é o daqui (Planilha de Preços, Bruno 12/11);
+     · Base › Produtos mostra quantos produtos do catálogo têm nome genérico e a lista dos que faltam, com campo para digitar.
    Como casa: modelo = nome do produto até o " — " (sem acento, maiúsculas, só letras e números). Mesmo modelo = mesmo produto;
    se o Render der dois nomes genéricos diferentes para o mesmo modelo, nada é gravado e o modelo vai para a lista "ambíguos".
    Carga feita UMA vez, depois que a nuvem da Base (v172) terminou a primeira leitura — vale para todos os computadores.
@@ -65,27 +66,32 @@ if(!window.NUVEM_CONFIG||!window.NUVEM_CONFIG.url){setTimeout(aplica,2500)}
 else if(window.__v172pronto)setTimeout(aplica,300);
 else window.addEventListener('v172-pronta',()=>setTimeout(aplica,300),{once:true});
 
-/* ───── Base › Produtos: a lista do que o SysTaag tem e a Base não tem ───── */
+/* ───── Base › Produtos: quantos produtos DESTE catálogo já têm nome genérico, e a lista dos que faltam ─────
+   12/11/2026 (Bruno): "a informação correta é a do Vercel — veio da Planilha de Preços, que acabou de ser atualizada; o que
+   faltava era só o nome genérico". Por isso a tela mostra o catálogo daqui (não os produtos do Render que não existem aqui):
+   os que já têm nome genérico e os que ainda não têm — esses ganham um campo para a equipe digitar. */
+const catalogo=()=>(S.db.produtos||[]).filter(p=>p&&!p.inativo&&!p.merged_into);
+const doRender=p=>String(p.apelido_fonte||'').indexOf(FONTE)===0;
+const tem=p=>String(p.apelido||'').trim()!=='';
 V180.ver=function(on){S.v180=on||0;S.v180q='';rerender()};
 V180.q=function(v){S.v180q=v;const el=document.getElementById('v180-body');if(el)el.innerHTML=linhas()};
-function linhas(){const c=casa();const q=nz(S.v180q||'');
-  if(S.v180==='amb'){const rs=c.ambiguos.filter(a=>!q||a.k.includes(q));
-    return rs.map(a=>`<tr><td><b>${E(a.rs[0][1])}</b><div class="sub" style="font-size:11px">aqui: ${a.prods.map(p=>E(p.nome)).join(' · ')}</div></td><td>${a.rs.map(r=>E(r[3]||'—')+' <span class="sub" style="font-size:11px">(Render '+r[0]+')</span>').join('<br>')}</td></tr>`).join('')||'<tr><td colspan="2" class="sub">nenhum</td></tr>'}
-  const rs=c.semPar.filter(r=>!q||nz(r[1]+' '+r[2]+' '+r[3]).includes(q)).sort((a,b)=>(a[2]+a[1]).localeCompare(b[2]+b[1]));
-  const lim=rs.slice(0,400);
-  return lim.map(r=>`<tr><td class="mono sub">${r[0]}</td><td><b>${E(r[1])}</b></td><td>${E(r[2]||'—')}</td><td>${r[3]?E(r[3]):'<span class="sub">sem nome genérico no Render</span>'}</td></tr>`).join('')+(rs.length>lim.length?`<tr><td colspan="4" class="sub">+ ${N0(rs.length-lim.length)} — use a busca para achar um produto</td></tr>`:'')||'<tr><td colspan="4" class="sub">nenhum</td></tr>'}
-function tela(){const c=casa();const P=(S.db.params||{}).v180_ng||{};
-  const comNome=D.todos.filter(r=>r[3]).length;const comNomeSem=c.semPar.filter(r=>r[3]).length;const comNomeAmb=c.ambiguos.reduce((a,x)=>a+x.rs.filter(r=>r[3]).length,0);
-  const prodsGrav=new Set(c.gravar.map(x=>x.p.id)).size;
-  const hd=T(()=>head('Produtos do SysTaag (Render) — nome genérico','O nome genérico (o nome que o cliente vê) vem do SysTaag no Render, com as mesmas palavras. Produto do Render que não existe aqui não é criado: fica nesta lista para alguém decidir.',`<button class="btn-soft" onclick="V180.ver(0)">Voltar aos produtos ✕</button>`),'<h3>Produtos do SysTaag (Render)</h3>');
-  const ponte=`<div class="card p-3 mb-2 af-bar" style="display:block;font-size:13px">
-    <div><b>${N0(D.total)} produtos no SysTaag</b> = <b>${N0(c.achados.length)}</b> encontrados aqui (mesmo modelo) + <a href="javascript:void 0" onclick="V180.ver('sem')"><b>${N0(c.semPar.length)}</b> sem par aqui ›</a></div>
-    <div class="mt-1"><b>${N0(comNome)} com nome genérico</b> = <b>${N0(comNome-comNomeSem-comNomeAmb)}</b> gravados aqui (em ${N0(prodsGrav)} produto(s)) + <a href="javascript:void 0" onclick="V180.ver('sem')">${N0(comNomeSem)} sem par aqui ›</a> + <a href="javascript:void 0" onclick="V180.ver('amb')">${N0(comNomeAmb)} em modelos com dois nomes diferentes no Render ›</a></div>
-    <div class="sub mt-1" style="font-size:11.5px">${E(D.fonte)}${P.em?' · carga feita em '+E(new Date(P.em).toLocaleString('pt-BR'))+' por '+E(P.por||'')+' ('+N0(P.gravados)+' gravados'+(P.trocados?', '+N0(P.trocados)+' tinham outro apelido — guardado':'')+')':' · carga ainda não feita neste computador'}</div></div>`;
-  const tabs=`<div class="d-flex gap-2 mb-2 flex-wrap align-items-center"><span class="chip ${S.v180==='sem'?'ok':''}" style="cursor:pointer" onclick="V180.ver('sem')">Sem par aqui (${N0(c.semPar.length)})</span><span class="chip ${S.v180==='amb'?'ok':''}" style="cursor:pointer" onclick="V180.ver('amb')">Dois nomes no Render (${N0(c.ambiguos.length)})</span><input class="form-control form-control-sm ms-auto" style="max-width:280px" placeholder="Buscar modelo, marca ou nome…" oninput="V180.q(this.value)"></div>`;
-  const th=S.v180==='amb'?'<tr><th>Modelo no Render</th><th>Nomes genéricos no Render</th></tr>':'<tr><th>Id Render</th><th>Modelo</th><th>Marca</th><th>Nome genérico (Render)</th></tr>';
-  return hd+ponte+tabs+`<div class="card"><div class="tblwrap"><table class="tbl"><thead>${th}</thead><tbody id="v180-body">${linhas()}</tbody></table></div></div>`}
-const chip=()=>{const n=casa().semPar.length;return `<span class="chip" data-v180-chip="1" style="font-size:11px;cursor:pointer" title="nome genérico vindo do SysTaag (Render) e os produtos de lá que não existem aqui" onclick="V180.ver('sem')"><i class="bi bi-tag me-1"></i>SysTaag (Render): ${N0(n)} sem par aqui</span>`};
+V180.set=function(pid,v){const p=(S.db.produtos||[]).find(x=>x.id===pid);if(!p)return;const s=String(v==null?'':v).trim();if(!s)return;
+  const antes=p.apelido||'';if(antes===s)return;p.apelido=s;p.apelido_fonte='Base › Produtos (digitado por '+login()+' em '+new Date().toLocaleDateString('pt-BR')+')';
+  try{log('produtos',pid,'Nome genérico: "'+antes+'" → "'+s+'"')}catch(e){}try{save()}catch(e){}try{toast('Nome genérico gravado: '+s)}catch(e){}
+  const el=document.getElementById('v180-body');if(el)el.innerHTML=linhas();const b=document.getElementById('v180-ponte');if(b)b.outerHTML=ponte()};
+function ambiguo(){const m=new Map();casa().ambiguos.forEach(a=>a.prods.forEach(p=>m.set(p.id,[...new Set(a.rs.map(r=>r[3]).filter(Boolean))])));return m}
+function linhas(){const q=nz(S.v180q||'');const amb=ambiguo();
+  const rs=catalogo().filter(p=>!tem(p)&&(!q||nz(p.nome+' '+p.marca+' '+p.categoria).includes(q))).sort((a,b)=>String(a.marca+a.nome).localeCompare(String(b.marca+b.nome)));
+  return rs.map(p=>{const a=amb.get(p.id);return `<tr><td><b>${E(p.nome)}</b><div class="sub" style="font-size:11px">${E(p.marca||'')}${p.categoria?' · '+E(p.categoria):''}</div>${a?`<div class="sub" style="font-size:11px;color:#b45309">o SysTaag (Render) tem dois nomes para este modelo: ${a.map(E).join(' · ')} — escolha um</div>`:''}</td><td style="min-width:260px"><input type="text" class="form-control form-control-sm" placeholder="ex.: CAIXA ACÚSTICA" onchange="V180.set('${E(p.id)}',this.value)" title="digite e saia do campo: grava o nome genérico deste produto"></td></tr>`}).join('')
+    ||'<tr><td colspan="2" class="sub">todos os produtos têm nome genérico ✓</td></tr>'}
+function ponte(){const C=catalogo();const com=C.filter(tem);const r=com.filter(doRender).length;const sem=C.length-com.length;const P=(S.db.params||{}).v180_ng||{};
+  return `<div class="card p-3 mb-2 af-bar" id="v180-ponte" style="display:block;font-size:13px">
+    <div><b>${N0(C.length)} produtos no catálogo</b> = <b>${N0(com.length)}</b> com nome genérico (${N0(r)} vindos do SysTaag + ${N0(com.length-r)} digitados aqui ou que já tinham) + <b style="color:${sem?'#b45309':'inherit'}">${N0(sem)}</b> sem nome genérico</div>
+    <div class="sub mt-1" style="font-size:11.5px">O catálogo é o daqui (Planilha de Preços). Do SysTaag veio só o nome genérico, com as mesmas palavras, nos produtos do mesmo modelo${P.em?' — carga feita em '+E(new Date(P.em).toLocaleString('pt-BR'))+' por '+E(P.por||''):''}. Os que o SysTaag não tinha ficam aqui para a equipe digitar.</div></div>`}
+function tela(){const hd=T(()=>head('Produtos sem nome genérico','O nome genérico é o nome que o cliente vê na proposta. Digite e saia do campo: grava na hora, para todos.',`<button class="btn-soft" onclick="V180.ver(0)">Voltar aos produtos ✕</button>`),'<h3>Produtos sem nome genérico</h3>');
+  const busca=`<div class="d-flex mb-2"><input class="form-control form-control-sm ms-auto" style="max-width:280px" placeholder="Buscar modelo, marca ou categoria…" oninput="V180.q(this.value)"></div>`;
+  return hd+ponte()+busca+`<div class="card"><div class="tblwrap"><table class="tbl"><thead><tr><th>Produto</th><th>Nome genérico</th></tr></thead><tbody id="v180-body">${linhas()}</tbody></table></div></div>`}
+const chip=()=>{const C=catalogo();const sem=C.filter(p=>!tem(p)).length;return `<span class="chip ${sem?'warn':'ok'}" data-v180-chip="1" style="font-size:11px;cursor:pointer" title="produtos do catálogo sem nome genérico (o nome que o cliente vê)" onclick="V180.ver('sem')"><i class="bi bi-tag me-1"></i>nome genérico: ${N0(C.length-sem)} de ${N0(C.length)}${sem?' · '+N0(sem)+' sem':''}</span>`};
 try{const _dbp=SCREENS.dbprodutos;if(typeof _dbp==='function'&&!_dbp.__v180){SCREENS.dbprodutos=function(arg){const cat=!arg||arg==='catalogo';
     if(cat&&S.v180)return tela();
     let h=_dbp.apply(this,arguments);if(typeof h!=='string'||!cat)return h;
