@@ -91,6 +91,8 @@ function ligarPessoas(){
 
 /* ───────── 3. "Quem é você?" ───────── */
 var GRUPOS=[['Gestão',['diretoria','ti']],['Comercial',['comercial','prevendas','marketing']],['Estoque e compras',['estoque']],['Financeiro e administração',['financeiro','admin']],['Operação',['chefetec','obras','gestao']],['Técnicos',['tecnico']],['Projetos',['projetos']],['Pós-venda',['posvenda']],['Outros',[]]];
+/* 12/11/2026 (Bruno): ordem fixa em Gestão — Cesar, Rodolfo, Bruno */
+var ORDEM_GESTAO=function(u){var n=norm(nomeCurto(u)+' '+u.login);return /\bcesar\b/.test(n)?0:/\brodolfo\b/.test(n)?1:/\bbruno\b/.test(n)?2:9};
 var CORES=['#0071e3','#be185d','#16a34a','#d97706','#7c3aed','#0891b2','#dc2626','#475569'];
 var cor=function(l){var h=0;for(var i=0;i<l.length;i++)h=(h*31+l.charCodeAt(i))&0xffff;return CORES[h%CORES.length]};
 var ini=function(n){return String(n||'?').split(' ').filter(Boolean).map(function(x){return x[0]}).join('').slice(0,2).toUpperCase()};
@@ -126,7 +128,7 @@ function pintar(qs){
   var L=users().filter(function(u){return u.ativo!==false&&(!qn||norm(nomeCurto(u)+' '+u.nome+' '+u.cargo+' '+u.setor).indexOf(qn)>=0)});
   var usados={};
   var html=GRUPOS.map(function(g){var its=L.filter(function(u){if(usados[u.login])return false;var ok=g[1].length?g[1].indexOf(u.perfil)>=0:true;if(ok)usados[u.login]=1;return ok})
-      .sort(function(a,b){return nomeCurto(a).localeCompare(nomeCurto(b),'pt-BR')});
+      .sort(function(a,b){if(g[0]==='Gestão'){var oa=ORDEM_GESTAO(a),ob=ORDEM_GESTAO(b);if(oa!==ob)return oa-ob}return nomeCurto(a).localeCompare(nomeCurto(b),'pt-BR')});
     if(!its.length)return '';
     return '<div class="qv-g"><div class="qv-gh">'+E(g[0])+'</div><div class="qv-grid">'+its.map(function(u){var n=nomeCurto(u);
       return '<button class="qv-t'+(u.login===cur&&localStorage.getItem(KEY)?' cur':'')+'" onclick="QUEM.entrar(\''+E(u.login)+'\')"><span class="qv-av" style="background:'+cor(u.login)+'">'+E(ini(n))+'</span><span class="qv-n">'+E(n)+'</span></button>'}).join('')+'</div></div>'}).join('');
