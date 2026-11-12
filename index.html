@@ -28915,7 +28915,10 @@ if(typeof W.aplicarZero==='function'&&!W.aplicarZero.__af114){
    This one-time pass is what cleans it — and it must happen even if the wrapper could not be installed,
    which is exactly the failure that made the first v114 build report "107 locais ativos". */
 try{if(typeof S!=='undefined'&&S&&S.db&&S.db.af113_zero){  /* bare S — window.S is undefined (const) */
-  var n114=AF114_podaLocais(S.db);AF114_zeraCRM();
+  /* 12/11/2026: no carregamento esvazia-se só a SEMENTE do CRM (CRM_SEED/CRM_RAW, refeita a cada carga). As tabelas do CRM
+     (CRM_T: contatos, interações, ações…) já foram zeradas uma vez pelo aplicarZero; zerá-las de novo a cada carga apagava
+     tudo o que a pessoa fez no CRM (no Modo treino: o contato Helena Prado sumia ao pular de capítulo ou recarregar). */
+  var n114=AF114_podaLocais(S.db);[W.CRM_SEED,W.CRM_RAW].forEach(function(O){if(O&&typeof O==='object')CRM_REC.forEach(function(k){if(Array.isArray(O[k]))O[k]=[]})});
   try{localStorage.setItem('systaag_zero','1')}catch(e){}
   try{save()}catch(e){}
   if(n114>=0&&W.console&&console.info)console.info('AF114 · modo zero: '+n114+' locais ativos');
@@ -30859,7 +30862,7 @@ try{if(/^#\/(dbfiliais|finlanc)/.test(location.hash))render()}catch(e){}
 <script src="v170-gestao-visual.js"></script>
 <script src="nuvem-config.js"></script>
 <script src="v173-escritorio.js"></script><!-- v173: antes da v171, para o vínculo arquiteto→escritório subir para a nuvem -->
-<script src="v174-pessoas.js"></script><script src="v175-guia-pessoas.js"></script><!-- v174: Pessoas — avaliação de desempenho quadrimestral; Ativos/Empréstimos/Contratos no Financeiro (antes da v171, para subir para a nuvem) -->
+<script src="v174-pessoas.js"></script><script src="v175-guia-pessoas.js"></script><script src="v178-posvenda-editor.js"></script><script src="v179-guia-posvenda-crm.js"></script><!-- v174: Pessoas — avaliação de desempenho quadrimestral; Ativos/Empréstimos/Contratos no Financeiro (antes da v171, para subir para a nuvem) -->
 <script src="v171-nuvem.js"></script>
 <script src="v172-nuvem-base.js"></script>
 </body></html>

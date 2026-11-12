@@ -15,6 +15,8 @@
    Mesma tabela da v171 (crm_registros), com as tabelas da base prefixadas "base:". */
 (function(){'use strict';
 if(window.__v172)return;window.__v172=true;
+/* 12/11/2026: no Modo treino (Aprender fazendo) a nuvem fica DESLIGADA — o treino nunca lê a base real da nuvem nem envia nada para ela */
+if(window.__TREINO){console.info('v172: modo treino — nuvem desligada');return}
 var CFG=window.NUVEM_CONFIG||{url:'',key:''};
 if(!CFG.url||!CFG.key){console.warn('v172: nuvem não configurada');return}
 if(typeof S==='undefined'||!S||!S.db){console.error('v172: S.db ausente');return}

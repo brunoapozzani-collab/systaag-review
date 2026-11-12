@@ -14,6 +14,8 @@
    A única coisa a configurar é NUVEM.url + NUVEM.key (chave anon pública do projeto). Sem elas, nada muda. */
 (function(){'use strict';
 if(window.__v171)return;window.__v171=true;
+/* 12/11/2026: no Modo treino (Aprender fazendo) a nuvem fica DESLIGADA — o treino nunca lê a base real da nuvem nem envia nada para ela */
+if(window.__TREINO){console.info('v171: modo treino — nuvem desligada');return}
 var CFG=window.NUVEM_CONFIG||{url:'',key:''};
 if(!CFG.url||!CFG.key){console.warn('v171: nuvem não configurada (NUVEM_CONFIG) — CRM continua só local');return}
 if(typeof CRM_SERVER==='undefined'||!CRM_SERVER||typeof CRM_SERVER.api!=='function'){console.error('v171: CRM_SERVER ausente');return}
