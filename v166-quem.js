@@ -129,7 +129,7 @@ function pintar(qs){
       .sort(function(a,b){return nomeCurto(a).localeCompare(nomeCurto(b),'pt-BR')});
     if(!its.length)return '';
     return '<div class="qv-g"><div class="qv-gh">'+E(g[0])+'</div><div class="qv-grid">'+its.map(function(u){var n=nomeCurto(u);
-      return '<button class="qv-t'+(u.login===cur&&localStorage.getItem(KEY)?' cur':'')+'" onclick="QUEM.entrar(\''+E(u.login)+'\')"><span class="qv-av" style="background:'+cor(u.login)+'">'+E(ini(n))+'</span><span class="qv-n">'+E(n)+'</span><span class="qv-c">'+E(u.cargo||'')+'</span></button>'}).join('')+'</div></div>'}).join('');
+      return '<button class="qv-t'+(u.login===cur&&localStorage.getItem(KEY)?' cur':'')+'" onclick="QUEM.entrar(\''+E(u.login)+'\')"><span class="qv-av" style="background:'+cor(u.login)+'">'+E(ini(n))+'</span><span class="qv-n">'+E(n)+'</span></button>'}).join('')+'</div></div>'}).join('');
   document.getElementById('qv-list').innerHTML=html||'<div class="qv-none">Nenhum nome encontrado.</div>';
 }
 function entrar(login){
@@ -225,7 +225,15 @@ var _rd=window.render;window.render=function(){var r=_rd.apply(this,arguments);t
 var _rn=window.renderNav;window.renderNav=function(){var r=_rn.apply(this,arguments);try{pilula()}catch(e){}return r};
 
 /* ───────── início ───────── */
-try{migrar();ligarPessoas()}catch(e){console.error('v166',e)}
+/* 12/11/2026 (pedido do Rodolfo): Davi Germanetti sai da lista "Quem é você?" — o acesso dele fica desativado
+   (não apagado; volta em Base › Usuários e permissões se precisar). Roda uma vez por base. */
+function tirarDavi(){
+  if(S.db.__quemSemDavi)return;var ch=false;
+  users().forEach(function(u){var p=pessoaDe(u);var n=norm(u.nome+' '+u.login+' '+(p?(p.nome+' '+(p.nomeCompleto||'')):''));
+    if(/\bdavi\b/.test(n)&&/germanett?i/.test(n)&&u.ativo!==false){u.ativo=false;u.desativado_em='2026-11-12';u.desativado_por='pedido do Rodolfo (12/11/2026)';ch=true}});
+  if(ch){S.db.__quemSemDavi=1;save_()}
+}
+try{migrar();ligarPessoas();tirarDavi()}catch(e){console.error('v166',e)}
 var lembrado=null;try{lembrado=localStorage.getItem(KEY)}catch(e){}
 if(lembrado&&usr(lembrado)&&usr(lembrado).ativo!==false){if(S.user!==lembrado){S.user=lembrado;save_()}}
 try{pilula();observar();renderNav();pintarPilula();render()}catch(e){}
