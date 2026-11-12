@@ -108,5 +108,5 @@ window.addEventListener('online',function(){enviar();sincroniza(false)});
 
 /* ───── arranque ───── */
 window.NUVEM={sincronizar:function(){return sincroniza(false)},fila:fila,estado:function(){return {online:online,ultimo:ultimo,fila:fila().length,since:since,cli:CLI,erro:ultimoErro}}};
-sincroniza(true).then(function(){tempoReal();setInterval(function(){sincroniza(false)},30000)});
+sincroniza(true).then(function(){window.__v171pronto=true;try{window.dispatchEvent(new Event('v171-pronta'))}catch(e){}/* 12/11/2026 (v181): aviso de que a primeira leitura da nuvem do CRM acabou */tempoReal();setInterval(function(){sincroniza(false)},30000)});
 })();

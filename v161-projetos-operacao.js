@@ -269,6 +269,8 @@ function cardObra(o,ops){const s=P.estado(o);const k=P.K[s.k];const linha=temLin
    <div class="mt-3"><div class="sub mb-1" style="font-size:11px;font-weight:600">EXECUÇÃO (ETAPAS DO PAINEL)</div>${et||'<span class="sub">—</span>'}</div>
    <div class="row g-2 mt-2" style="font-size:13px"><div class="col-12 col-md-6"><div class="sub" style="font-size:11px">ENTREGA PREVISTA</div>${pv?'<b>'+dBR(pv)+'</b> <span class="sub">'+E((o.entrega||{}).previstaFonte||'')+'</span>':'<span class="bad">sem data</span> <span class="sub">— sem término da Programação AV no Painel e sem fim da execução na E.T.</span>'}</div><div class="col-12 col-md-6"><div class="sub" style="font-size:11px">DIÁRIAS</div>${diar}</div></div></div>`}
 function injeta(h,card,depoisDoPrimeiroCard){if(typeof h!=='string')return h;
+  /* 12/11/2026: o cartão entra UMA vez — outra camada re-embrulha SCREENS.obras sem a marca __v161, e a cada desenho o cartão se repetia (a ficha da obra chegava a 11.000 px) */
+  if(h.indexOf('id="v161-obra"')>=0)return h;
   if(depoisDoPrimeiroCard){const i=h.indexOf('<div class="card p-3 mb-3">');const b=i>=0?bloco(h,i):null;if(b)return h.slice(0,i+b.length)+card+h.slice(i+b.length)}
   const i=h.indexOf('<div class="tabs');return i>=0?h.slice(0,i)+card+h.slice(i):h+card}
 
