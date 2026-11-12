@@ -5,7 +5,7 @@
        anterior nunca era fechada; o painel mostrava as antigas como ATRASADAS mesmo depois de alguém já ter falado
        com o parceiro;
      · a mesma ação aparecia duas vezes (mesmo parceiro, mesmo texto, abertas).
-   Regra (agora e daqui para a frente):
+   Regra (agora e daqui para a frente) — e-mail de campanha (enviado em massa) não conta como interação:
      1. uma interação registrada com o parceiro FECHA as próximas ações dele que já estavam abertas antes dela
         (status "concluída", concluída na data da interação, ligada a ela) — a próxima ação nova, criada junto com a
         interação, é a única que fica aberta;
@@ -37,6 +37,9 @@ function origem(t,porId){const i=porId.get(+t.interacao_id);return d10(i&&i.data
 
 /* calcula as mudanças para um conjunto de parceiros (ou todos) */
 /* passos da Régua pós-evento são atividades marcadas (D+7, D+30…), não "próxima ação": nenhuma interação as fecha */
+/* 12/11/2026 (conferência no Chrome): e-mail de CAMPANHA (o mesmo e-mail enviado para vários parceiros) não é conversa com
+   o parceiro — não fecha a próxima ação dele. Duas ações (Roberto Migotto, Passarelli) tinham sido fechadas assim e foram reabertas. */
+const campanha=i=>/CAMPANHA/.test(nz(i.resumo))||/CAMPANHA|MARKETING/.test(nz((i.acao||'')+' '+(i.acao_outra||'')));
 const regua=t=>t.origem==='regua'||/^REGUA POS EVENTO/.test(nz(t.descricao));
 function planeja(tb,soParceiros,modo){
   const tar=(tb.tarefas||[]),its=(tb.interacoes||[]);const porId=new Map(its.map(i=>[+i.id,i]));
@@ -48,7 +51,7 @@ function planeja(tb,soParceiros,modo){
   grupos.forEach(g=>{if(g.length<2)return;g.sort((a,b)=>(+a.id)-(+b.id));g.slice(1).forEach(t=>{const r=Object.assign({},t);guarda(r);r.status='cancelada';r.edicoes=nota(r,'SYSTAAG '+dBR(hoje())+': cancelada — cópia da ação nº '+g[0].id+' (mesmo parceiro, texto e data)');ops.push({table:'tarefas',op:'update',row:r});canceladas.push(r);mexidas.add(+t.id)})});
   /* 1 · houve interação depois de a ação ser criada → a ação foi cumprida por ela */
   abertas.forEach(t=>{if(mexidas.has(+t.id)||regua(t))return;if(!(modo==='nova'||d10(t.data_prevista)<hoje()))return;const o=origem(t,porId);if(!o)return;
-    const depois=(itsPorP.get(+t.parceiro_id)||[]).filter(i=>+i.id!==+t.interacao_id&&d10(i.data)&&d10(i.data)>=o&&d10(i.data)<=hoje()&&(+i.id>+t.interacao_id||d10(i.data)>o)).sort((a,b)=>d10(a.data).localeCompare(d10(b.data))||(+a.id)-(+b.id));
+    const depois=(itsPorP.get(+t.parceiro_id)||[]).filter(i=>+i.id!==+t.interacao_id&&!campanha(i)&&d10(i.data)&&d10(i.data)>=o&&d10(i.data)<=hoje()&&(+i.id>+t.interacao_id||d10(i.data)>o)).sort((a,b)=>d10(a.data).localeCompare(d10(b.data))||(+a.id)-(+b.id));
     if(!depois.length)return;const i=depois[0];
     const r=Object.assign({},t);guarda(r);r.status='concluida';r.concluida_em=d10(i.data);r.interacao_conclusao_id=+i.id;
     r.edicoes=nota(r,'SYSTAAG '+dBR(hoje())+': concluída pela interação de '+dBR(i.data)+(i.responsavel?' ('+i.responsavel+')':'')+' — estava aberta como atrasada');
