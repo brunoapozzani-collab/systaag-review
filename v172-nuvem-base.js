@@ -118,6 +118,6 @@ setInterval(pinta,5000);window.addEventListener('online',function(){enviar();sin
 
 /* ───── arranque: depois de a página abrir (todas as camadas já correram) ───── */
 window.NUVEM_BASE={sincronizar:function(){return sincroniza(false)},fila:fila,estado:function(){return {online:online,ultimo:ultimo,fila:fila().length,desde:meta().desde,cli:CLI,erro:ultimoErro,aguardando:aguardando,rt:window.__v172rt}},foto:function(){var n=0;Object.keys(ANT).forEach(function(k){n+=ANT[k].map.size});return n}};
-function arranca(){fotoInicial();sincroniza(true).then(function(){pronto=true;/* só depois da primeira leitura da nuvem é que as gravações locais passam a subir */tempoReal();setInterval(function(){sincroniza(false)},30000)})}
+function arranca(){fotoInicial();sincroniza(true).then(function(){pronto=true;window.__v172pronto=true;try{window.dispatchEvent(new Event('v172-pronta'))}catch(e){}/* 12/11/2026 (v180): aviso de que a primeira leitura da nuvem acabou — cargas únicas esperam por ele */ /* só depois da primeira leitura da nuvem é que as gravações locais passam a subir */tempoReal();setInterval(function(){sincroniza(false)},30000)})}
 if(document.readyState==='complete')setTimeout(arranca,1500);else window.addEventListener('load',function(){setTimeout(arranca,1500)});
 })();
