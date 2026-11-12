@@ -15,7 +15,7 @@ if(window.__v178pv)return;window.__v178pv=true;
 if(typeof S==='undefined'||!S||!S.db){console.error('v178: S.db ausente');return}
 var APROV=function(e){return e==='perdida'?'RECUSADO':['aprovada_cliente','vendida','em_obra','concluida'].indexOf(e)>=0?'APROVADO':'EM ANALISE'};
 function totalEditor(p){try{if(typeof M==='undefined'||!M.total)return 0;var t=+M.total(p)||0;return t>0?Math.round(t*100):0}catch(e){return 0}}
-function sync(){var mud=0;try{(S.db.propostas||[]).forEach(function(p){if(!p||p.linha!=='posvenda'||!p.at||p.origem)return;
+function sync(){var mud=0;try{(S.db.propostas||[]).forEach(function(p){if(!p||p.linha!=='posvenda'||!p.at||p.origem||p.fonte||p.at.origem||p.at.fonteAT)return;/* importadas (CONTROLE DE AT, planos): a planilha é a verdade, nada muda */
   var ap=APROV(p.estado);if(p.at.approval_status!==ap){p.at.approval_status=ap;mud++}
   var v=totalEditor(p);if(v>0&&p.at.proposal_type!=='SERVICE_PLAN'&&p.at.proposal_value_cents!==v){p.at.proposal_value_cents=v;mud++}})}catch(e){console.error('v178 sync',e)}
   if(mud){try{if(window.S&&S.changed&&S.changed.add)S.changed.add('propostas')}catch(e){}}return mud}
