@@ -5326,7 +5326,7 @@ window.__lessIsMore=function(k){const m=document.getElementById('main');if(!m)re
   }};
 
 /* 1y. the Estoque matrix's numbers open the micro level: sit/<situação>/<lugar> becomes that lugar's page already filtered to the situação */
-(function(){const f=SCREENS.sit;SCREENS.sit=function(a){const p=location.hash.replace(/^#\/?sit\/?/,'').split('/');const k=p[0],lid=p[1];if(['livre','alocado','terceiro','empresa'].includes(k)&&lid){let path=null;try{path=L.path(lid)}catch(e){}if(path&&path.length){S.lugarSit={node:lid,k};setTimeout(()=>location.replace(__lugarHref(path)),0);return placeholder('Estoque','Abrindo…')}}return f.apply(this,arguments)}})();
+(function(){const f=SCREENS.sit;SCREENS.sit=function(a){const p=location.hash.replace(/^#\/?sit\/?/,'').split('/');const k=p[0],lid=p[1];if(['livre','alocado','terceiro','empresa'].includes(k)&&lid){let path=null;try{path=L.path(lid)}catch(e){}if(path&&path.length){S.lugarSit={node:lid,k};setTimeout(()=>location.replace(__lugarHref(path)),0);/* 18-Nov: not placeholder() — its "em construção" text made v123 send the click to Início */return '<div class="sub p-3">Abrindo…</div>'}}return f.apply(this,arguments)}})();
 
 /* 1z. Bruno 30-Sep: "Alocado" → "Separado" everywhere in the stock screens (a unit only gets an owner when it is physically separated;
        nothing is reserved before). Text-level rename after every render of Estoque/Operação screens, Início and the Base de dados lenses. */
@@ -30873,6 +30873,7 @@ try{if(/^#\/(dbfiliais|finlanc)/.test(location.hash))render()}catch(e){}
 <script src="v186-troca-preco-mantido.js"></script>
 <script src="v187-rt-parceiro.js"></script>
 <script src="v189-contato-certo.js"></script>
+<script src="v190-estoque-clique.js"></script>
 <script src="v171-nuvem.js"></script>
 <script src="v172-nuvem-base.js"></script>
 </body></html>
