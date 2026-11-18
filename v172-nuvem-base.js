@@ -110,6 +110,8 @@ function tempoReal(){function liga(){try{var c=window.supabase.createClient(CFG.
 var CHIP=null;
 function pinta(){try{if(!CHIP){CHIP=document.createElement('div');CHIP.id='nuvemBaseChip';CHIP.style.cssText='position:fixed;left:50%;transform:translateX(-50%);bottom:10px;z-index:60;font:600 11.5px/1.2 system-ui,-apple-system,sans-serif;padding:6px 11px;border-radius:999px;box-shadow:0 2px 10px rgba(0,0,0,.10);cursor:default;user-select:none;opacity:.92';document.body.appendChild(CHIP)}
   var f=fila().length,h=ultimo?ultimo.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}):'—';
+  /* 18/11/2026 (Bruno): a pastilha verde "Base compartilhada · todos veem o mesmo" era desnecessária — quando está tudo certo, nada aparece; só aparece quando há algo a dizer (sem ligação, aguardando, enviando) */
+  CHIP.style.display=(aguardando||!online||f)?'':'none';
   if(aguardando){CHIP.style.background='#fff4e5';CHIP.style.color='#8a4b00';CHIP.textContent='☁ Base: aguardando a primeira carga (computador do Bruno)';CHIP.title=''}
   else if(!online){CHIP.style.background='#fff4e5';CHIP.style.color='#8a4b00';CHIP.textContent='☁ Base sem ligação à nuvem — gravando aqui'+(f?' · '+f+' pendente'+(f>1?'s':''):'');CHIP.title=ultimoErro}
   else if(f){CHIP.style.background='#e8f1ff';CHIP.style.color='#0b4fa3';CHIP.textContent='☁ Base: enviando '+f.toLocaleString('pt-BR')+' registro'+(f>1?'s':'')+'…';CHIP.title=''}

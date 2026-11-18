@@ -44,7 +44,9 @@ if(podeWorker&&window.LZString&&typeof LZString.compressToUTF16==='function'){
     /* 05/11 correção: só o JSON da própria base vai para o worker (que grava em KEY). Antes, qualquer texto grande
        comprimido durante um save (ex.: as tabelas do CRM) ia para o worker e era gravado na chave da base, e quem chamou
        recebia a base antiga — o CRM perdia as tabelas. Agora: o texto tem de começar exatamente como JSON.stringify(S.db). */
-    let pref='';try{const k0=window.S&&S.db&&Object.keys(S.db)[0];pref=k0?JSON.stringify({[k0]:0}).slice(0,-2):''}catch(e){}
+    /* 18/11/2026: S é uma constante da página (não vive em window.S) — o teste antigo `window.S&&…` dava sempre vazio e a base era
+       comprimida na thread da tela a cada gravação (≈1 s de tela travada num Mac M1, mais em máquinas lentas; duas vezes só para abrir). */
+    let pref='';try{const k0=(typeof S!=='undefined')&&S&&S.db&&Object.keys(S.db)[0];pref=k0?JSON.stringify({[k0]:0}).slice(0,-2):''}catch(e){}
     if(!pref||s.slice(0,pref.length)!==pref)return real(s);
     const st=new Error().stack||'';if(!/\bsave\b|grava|flush/.test(st))return real(s);
     /* a base: quem chama é o save do COP (via v128 flush) */

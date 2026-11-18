@@ -99,7 +99,7 @@ function tempoReal(){try{var s=document.createElement('script');s.src='https://c
 var CHIP=null;
 function pinta(){try{var host=document.getElementById('crmHost');if(!host){if(CHIP)CHIP.style.display='none';return}
   if(!CHIP){CHIP=document.createElement('div');CHIP.id='nuvemChip';CHIP.style.cssText='position:fixed;right:190px;bottom:18px;z-index:60;font:600 12px/1.2 system-ui,-apple-system,sans-serif;padding:8px 12px;border-radius:999px;box-shadow:0 2px 10px rgba(0,0,0,.12);cursor:default;user-select:none';document.body.appendChild(CHIP)}
-  CHIP.style.display='';var f=fila().length,h=ultimo?ultimo.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}):'—';
+  var f=fila().length,h=null;/* 18/11/2026 (Bruno): verde "todos veem o mesmo" não aparece mais — só quando há algo a dizer */CHIP.style.display=(!online||f)?'':'none';h=ultimo?ultimo.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}):'—';
   if(!online){CHIP.style.background='#fff4e5';CHIP.style.color='#8a4b00';CHIP.textContent='☁ Sem ligação à nuvem — gravando aqui, envia ao voltar'+(f?' ('+f+' pendente'+(f>1?'s':'')+')':'');CHIP.title=ultimoErro}
   else if(f){CHIP.style.background='#e8f1ff';CHIP.style.color='#0b4fa3';CHIP.textContent='☁ Enviando '+f+' registro'+(f>1?'s':'')+'…';CHIP.title=''}
   else{CHIP.style.background='#e6f6ec';CHIP.style.color='#116633';CHIP.textContent='☁ Nuvem · todos veem o mesmo · '+h;CHIP.title='Supabase · '+CFG.url.replace(/^https?:\/\//,'')+(window.__v171rt?' · tempo real: '+window.__v171rt:'')}}catch(e){}}

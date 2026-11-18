@@ -29,6 +29,11 @@ const pre=[];                    /* o que a porta de entrada manda baixar já: [
 function publica(nome,conteudo){writeFileSync(join(OUT,nome),conteudo);selo[nome]=dig(conteudo);return nome+'?v='+selo[nome]}
 mkdirSync(join(OUT,'app'),{recursive:true});
 let extraidos=0;
+/* 18/11/2026 (rápido 3b): enquanto o navegador monta o sistema (centenas de blocos de código, um atrás do outro), a página
+   ficava BRANCA por 5–10 s. Agora a mesma tela "taag · Abrindo o sistema…" da porta de entrada continua na frente até o
+   sistema se dar por pronto (a marca pronto127 da v127) — só aparência: nada do sistema muda, e ela sai sozinha (ou em 30 s, no máximo). */
+let telaPosta=false;
+const TELA='<div id="abrindo-sistema" style="visibility:visible!important;position:fixed;inset:0;z-index:2147483647;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:#f4f5f7;color:#1f2430;font:600 15px/1.4 &quot;Plus Jakarta Sans&quot;,system-ui,-apple-system,sans-serif;transition:opacity .25s ease"><div style="font:300 44px/1 &quot;Plus Jakarta Sans&quot;,system-ui,sans-serif;letter-spacing:.06em">taag</div><div style="opacity:.6;font-weight:500">Abrindo o sistema…</div><div style="width:160px;height:4px;border-radius:999px;background:rgba(0,0,0,.08);overflow:hidden"><i style="display:block;height:100%;width:40%;background:#1f2430;border-radius:999px;animation:abrindo-sistema 1.1s ease-in-out infinite"></i></div><style>@keyframes abrindo-sistema{0%{transform:translateX(-100%)}100%{transform:translateX(400%)}}#boot127{display:none!important}</style></div><script>(function(){var el=document.getElementById("abrindo-sistema"),H=document.documentElement;function some(){if(!el)return;var e=el;el=null;e.style.opacity="0";e.style.pointerEvents="none";setTimeout(function(){try{e.remove()}catch(x){}},280)}window.__abrindoSome=some;/* sai quando o sistema se dá por pronto (a mesma marca da tela de abertura antiga, v127) */try{new MutationObserver(function(){if(H.classList.contains("pronto127"))some()}).observe(H,{attributes:true,attributeFilter:["class"]})}catch(x){window.addEventListener("load",function(){setTimeout(some,400)})}setTimeout(some,30000)})();</script><!--ABRINDO-->';
 async function html(src){
   const parts=src.split(/(<script\b[^>]*>[\s\S]*?<\/script>|<style\b[^>]*>[\s\S]*?<\/style>)/);
   let out='',i=0;
@@ -52,7 +57,8 @@ async function html(src){
         const href=publica('app/'+dig(est)+'.css',est);pre.push([href,'style']);extraidos++;
         out+='<link rel="stylesheet" href="'+href+'">';
       }else out+=m[1]+est+m[4];
-    }else out+=p;
+    }else if(!telaPosta&&/<body\b[^>]*>/i.test(p)){telaPosta=true;out+=p.replace(/<body\b[^>]*>/i,(b)=>b+TELA)}
+    else out+=p;
   }
   return out;
 }

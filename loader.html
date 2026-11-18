@@ -31,7 +31,16 @@ function realKeys(){var o=[],n=l0.call(LS);for(var i=0;i<n;i++)o.push(k0.call(LS
 var APP='app.html'+(location.search?location.search:'');
 function abreApp(){return fetch(APP,/* rápido 3: publicado com ?v=impressão digital → pode vir do que o navegador já guardou */APP.indexOf('?v=')>0?{}:{cache:'no-store'}).then(function(r){if(!r.ok)throw new Error('app.html '+r.status);return r.text()}).then(function(h){
   /* document.open() apaga os ouvintes da janela — os nossos entram depois dele */
-  document.open();if(window.__BIGSTORE)escuta();document.write(h);document.close()})}
+  document.open();if(window.__BIGSTORE)escuta();
+  /* rápido 3b (18/11/2026): com o código já guardado no navegador, o sistema monta-se de uma vez só (5–10 s) e o navegador não
+     chegava a desenhar nada — a página ficava BRANCA. Agora a página é escrita em dois tempos: primeiro até a tela
+     "Abrindo o sistema…" (marcada no app.html pela publicação), espera o navegador desenhá-la, e só então escreve o resto. */
+  var corte=h.indexOf('<!--ABRINDO-->');
+  if(corte<0){document.write(h);document.close();return}
+  document.write(h.slice(0,corte));
+  return new Promise(function(ok){var feito=false,fim=function(){if(feito)return;feito=true;ok()};
+    try{requestAnimationFrame(function(){requestAnimationFrame(function(){window.__abrindoPintada=Date.now();fim()})})}catch(e){fim()}
+    setTimeout(fim,700)}).then(function(){document.write(h.slice(corte));document.close()})})}
 
 /* ───── IndexedDB ───── */
 var db=null;
