@@ -32,8 +32,21 @@ V160.toggle=()=>{st.aberto=!st.aberto;const p=document.getElementById('v160-pop'
 /* ---------- Indicador (05/11 Bruno): INDICADOR, GERENCIADORA e ARQUITETURA contam como indicador; "Sem indicador" = as três em branco ---------- */
 const nz=s=>String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/\s+/g,' ').trim();
 const VAZ=/^(|-|—|n\/a|na|nao|não|sem|nenhum|nenhuma)$/i;
-function indsDe(n){const c=n.planilha&&n.planilha.c;const xs=c?[c[5],c[6],c[7]]:[n.fontes&&n.fontes.indicador,n.fontes&&n.fontes.gerenciadora,n.fontes&&n.fontes.arquitetura];
-  return [...new Set(xs.map(x=>String(x||'').trim()).filter(x=>!VAZ.test(x)))]}
+/* 18/11/2026 — UM NOME POR PARCEIRO (Bruno: "every partner has the dedicated name and there's no duplicates").
+   A lista do filtro "Indicador" lia o texto digitado na planilha ("Fort Real", "Fort Real Estates", "Fort Real (Armentano)"… 298 grafias).
+   Agora lê o VÍNCULO da negociação com o cadastro (Base › Parceiros, o mesmo do CRM) e mostra o nome do cadastro — cada parceiro uma vez.
+   Um cadastro unido a outro aparece com o nome do que ficou. Texto sem vínculo só entra se o De/Para não o marcou como "ignorado". */
+let _pm=null,_pt=0;
+function parcMap(){const a=(S.db&&S.db.parceiros)||[];const t=Date.now();if(_pm&&_pm.a===a&&_pm.n===a.length&&t-_pt<1500)return _pm.m;const m=new Map();a.forEach(p=>m.set(p.id,p));_pm={a:a,n:a.length,m:m};_pt=t;return m}
+function parcNome(id){const m=parcMap();let p=m.get(id),i=0;while(p&&p.merged_into&&i++<10)p=m.get(p.merged_into);return p?String(p.nome||'').trim():''}
+let _ig=null,_it=0;
+function ignorados(){const t=Date.now();if(_ig&&t-_it<1500)return _ig;const s=new Set();try{((window.CRM_T||{}).depara||[]).forEach(d=>{if(d.parceiro_id===''||d.parceiro_id==null)s.add(nz(d.nome_pipeline)+'|'+String(d.papel||'').toLowerCase())})}catch(e){}_ig=s;_it=t;return s}
+function indsDe(n){const c=n.planilha&&n.planilha.c;const f=n.fontes||{};const l=n.parceiros||{};
+  const tx=c?{indicador:c[5],gerenciadora:c[6],arquitetura:c[7]}:f;const ig=ignorados();const out=[];const seen=new Set();
+  ['indicador','gerenciadora','arquitetura'].forEach(r=>{let x=l[r]?parcNome(l[r]):'';
+    if(!x){x=String(tx[r]||'').trim();if(VAZ.test(x))return;const k0=nz(x);if(ig.has(k0+'|'+r)||ig.has(k0+'|'))return}
+    const k=nz(x);if(!k||seen.has(k))return;seen.add(k);out.push(x)});
+  return out}
 V160.indsDe=indsDe;
 function passaInd(n,k){if(!k)return true;const xs=indsDe(n);return k==='_sem'?!xs.length:xs.some(x=>nz(x)===k)}
 function listaInd(base){const m={};let sem=0;base.forEach(n=>{const xs=indsDe(n);if(!xs.length){sem++;return}xs.forEach(x=>{const k=nz(x);(m[k]=m[k]||{k,n:0,sp:{}});m[k].n++;m[k].sp[x]=(m[k].sp[x]||0)+1})});
