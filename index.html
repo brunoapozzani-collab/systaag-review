@@ -25983,7 +25983,7 @@ function sync() {
   (S.db.negociacoes || []).forEach(n => {
     const m = montadores(n); if (!m.nomes.length || (window.negCons?negCons(n):[n.consultor]).some(c=>m.nomes.includes(c))) return;
     const pv = m.ps.find(vendida) || m.ps[m.ps.length - 1]; const novo = (pv.consultores || [])[0]; if (!novo) return;
-    const antes = n.consultor; n.consultor = novo; (n.timeline = n.timeline || []).push({ data: today(), o: `Consultor: ${novo} (montou a proposta ${pv.numero}; antes ${antes})` });
+    const antes = n.consultor; if (antes === novo) return; /* 18/11/2026: sem troca de verdade ("antes André" → "André") não há o que registrar — esta linha era escrita de novo a cada abertura e a cada gravação: 17.444 linhas repetidas em 22 negócios desde 08/11 */ n.consultor = novo; (n.timeline = n.timeline || []).push({ data: today(), o: `Consultor: ${novo} (montou a proposta ${pv.numero}; antes ${antes})` });
     msgs.push(`negócio ${n.codinome}: consultor ${antes} → ${novo} (quem montou a proposta ${pv.numero})`);
   });
   /* 11. every deal has its client in Base */
