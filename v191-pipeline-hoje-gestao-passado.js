@@ -12,7 +12,7 @@
      · (Tarefas de hoje usa o mesmo filtro de consultor.)
    GESTÃO
      · nova seção "O QUE JÁ ACONTECEU": as negociações decididas da aba Pipeline da To Do Comercial — fechadas e perdidas —
-       por ano (gráfico) e por consultor (tabela), conversão = fechadas ÷ perdidas (regra do Bruno, 07/11), valor das
+       por ano (gráfico) e por consultor (tabela), conversão = fechadas ÷ (fechadas + perdidas) (regra do Bruno, 18/11), valor das
        fechadas = venda METAS emprestada (regra R1 de 06/11). Todo número abre a lista exata (Comercial › Negociações).
        Data de cada uma: decisão do cliente → upgrade → envio da proposta (colunas da planilha); sem nenhuma = "sem data".
    ===================================================================================================== */
@@ -119,7 +119,7 @@ function historia(){
   const xs=st.ano==='*'?all:all.filter(n=>anoDe(n)===st.ano);
   const fe=xs.filter(n=>n.resultado==='fechada'),pe=xs.filter(n=>n.resultado==='perdida');
   const comV=fe.filter(n=>valor(n)>0);const vt=comV.reduce((a,n)=>a+valor(n),0);
-  const conv=pe.length?Math.round(fe.length/pe.length*100):null;
+  const conv=xs.length?Math.round(fe.length/xs.length*100):null;
   const ids=a=>a.map(n=>n.id);const per=st.ano==='*'?'todos os anos':st.ano;
   const chips=`<div class="v191-chips">${['*'].concat(anos).map(a=>`<button class="v191-chip${st.ano===a?' on':''}" onclick="V191.ano='${J(a)}';renderMain()">${a==='*'?'Todos os anos':E(a)}</button>`).join('')}</div>`;
   /* gráfico por ano: fechadas × perdidas (cada barra abre a lista) */
@@ -135,7 +135,7 @@ function historia(){
   const linhas=Object.entries(g).sort((a,b)=>b[1].f.length-a[1].f.length||b[1].p.length-a[1].p.length);
   const ult=a=>a.map(dataDe).filter(Boolean).sort().pop()||'';
   const tab=`<div class="table-responsive"><table class="table mb-0"><thead><tr><th>Consultor</th><th class="text-end">Fechadas</th><th class="text-end">Perdidas</th><th class="text-end">Conversão</th><th class="text-end">Valor das fechadas (METAS)</th><th class="text-end">Última decisão</th></tr></thead><tbody>${linhas.map(([c,x])=>{const v=x.f.reduce((a,n)=>a+valor(n),0);
-      return `<tr><td><b>${E(c)}</b>${c.split(' + ').some(exDe)?' <span class="chip" style="font-size:10px">ex-consultor</span>':''}</td><td class="text-end">${x.f.length?porta(ids(x.f),'Fechadas · '+c+' · '+per,N0(x.f.length),'color:#198754;font-weight:700'):'—'}</td><td class="text-end">${x.p.length?porta(ids(x.p),'Perdidas · '+c+' · '+per,N0(x.p.length),'color:#dc3545'):'—'}</td><td class="text-end">${x.p.length?Math.round(x.f.length/x.p.length*100)+'%':(x.f.length?'só fechadas':'—')}</td><td class="text-end">${v?porta(ids(x.f.filter(n=>valor(n)>0)),'Fechadas com venda METAS · '+c,R0(v)):'<span class="sub">—</span>'}</td><td class="text-end sub">${dBR(ult(x.f.concat(x.p)))}</td></tr>`}).join('')}
+      return `<tr><td><b>${E(c)}</b>${c.split(' + ').some(exDe)?' <span class="chip" style="font-size:10px">ex-consultor</span>':''}</td><td class="text-end">${x.f.length?porta(ids(x.f),'Fechadas · '+c+' · '+per,N0(x.f.length),'color:#198754;font-weight:700'):'—'}</td><td class="text-end">${x.p.length?porta(ids(x.p),'Perdidas · '+c+' · '+per,N0(x.p.length),'color:#dc3545'):'—'}</td><td class="text-end">${Math.round(x.f.length/(x.f.length+x.p.length)*100)+'%'}</td><td class="text-end">${v?porta(ids(x.f.filter(n=>valor(n)>0)),'Fechadas com venda METAS · '+c,R0(v)):'<span class="sub">—</span>'}</td><td class="text-end sub">${dBR(ult(x.f.concat(x.p)))}</td></tr>`}).join('')}
     <tr style="background:rgba(127,127,127,.06)"><td class="sub">Total</td><td class="text-end"><b>${N0(fe.length)}</b></td><td class="text-end"><b>${N0(pe.length)}</b></td><td class="text-end"><b>${conv==null?'—':conv+'%'}</b></td><td class="text-end"><b>${R0(vt)}</b></td><td></td></tr></tbody></table></div>`;
   const tile=(bg,lb,big,sub)=>`<div class="col-12 col-md-4"><div class="v191-tile" style="background:${bg}"><div class="sub" style="font-size:12px">${lb}</div><div class="v191-big">${big}</div><div class="sub" style="font-size:12px;margin-top:4px">${sub}</div></div></div>`;
   return `<div class="card p-3 mb-3" id="v191-hist" data-v191="1">
@@ -143,7 +143,7 @@ function historia(){
    <div class="row g-2 mb-3">
     ${tile('rgba(25,135,84,.12)','Fechadas · '+E(per),porta(ids(fe),'Fechadas · '+per,N0(fe.length),'color:#146c43'),`${porta(ids(comV),'Fechadas com venda METAS · '+per,R0(vt),'font-weight:700;color:#146c43')} em ${N0(comV.length)} com venda METAS · ${N0(fe.length-comV.length)} sem valor cadastrado`)}
     ${tile('rgba(220,53,69,.1)','Perdidas · '+E(per),porta(ids(pe),'Perdidas · '+per,N0(pe.length),'color:#b02a37'),'propostas que o cliente não fechou')}
-    ${tile('rgba(42,120,214,.1)','Conversão (fechadas ÷ perdidas)',conv==null?'—':conv+'%',`${porta(ids(xs),'Decididas · '+per,N0(xs.length))} decididas = ${N0(fe.length)} fechadas + ${N0(pe.length)} perdidas ✓`)}
+    ${tile('rgba(42,120,214,.1)','Conversão (fechadas ÷ decididas)',conv==null?'—':conv+'%',`${porta(ids(xs),'Decididas · '+per,N0(xs.length))} decididas = ${N0(fe.length)} fechadas + ${N0(pe.length)} perdidas ✓`)}
    </div>
    <div class="row g-3"><div class="col-12 col-lg-4"><div class="sub mb-1" style="font-size:11px;letter-spacing:.06em">POR ANO · <span style="color:#198754">■</span> fechadas <span style="color:#dc3545">■</span> perdidas</div>${svg}</div>
     <div class="col-12 col-lg-8"><div class="sub mb-1" style="font-size:11px;letter-spacing:.06em">POR CONSULTOR · ${E(per)}</div>${tab}</div></div>

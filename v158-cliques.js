@@ -188,8 +188,8 @@ function geralHTML(h){
   h=h.replace(/(CONVERSÃO<\/div><div [^>]*>)([\d.,]+)%(<\/div><div class="sub" style="font-size:11px">)(\d[\d.]*) de (\d[\d.]*) decididas(<\/div>)/,(m,a,pc,b,g,d,z)=>{
     const G1=+g.replace(/\./g,''),D1=+d.replace(/\./g,''),P1=D1-G1;const shown=+pc.replace(/\./g,'').replace(',','.');
     if(!(D1>0&&P1>0)||Math.abs(G1/D1*100-shown)>0.06)return m;
-    const nv=(G1/P1*100).toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1});
-    return `${a}${nv}%${b}${door("V156.negF({res:'fechada'})",N0(G1)+' ganhas','abrir as '+N0(G1)+' negociações ganhas (fechadas)')} ÷ ${door("V156.negF({res:'perdida'})",N0(P1)+' perdidas','abrir as '+N0(P1)+' negociações perdidas')}${z}`});
+    const nv=(G1/D1*100).toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1});
+    return `${a}${nv}%${b}${door("V156.negF({res:'fechada'})",N0(G1)+' fechadas','abrir as '+N0(G1)+' negociações fechadas')} de ${door("V156.negF({res:'decidida'})",N0(D1)+' decididas','abrir as '+N0(D1)+' negociações decididas ('+N0(G1)+' fechadas + '+N0(P1)+' perdidas)')}${z}`});
   const oT=G('g:tot','negociações (todas)',()=>negsG()),oJ=G('g:jogo','negociações em aberto',()=>negsG().filter(n=>!n.resultado));
   h=h.replace(/(<div style="font-size:12px;color:#9aa">)(\d[\d.]*) negociações · (\d[\d.]*) em aberto ·/,(m,pre,a,b)=>`${pre}${door(oT,a+' negociações')} · ${door(oJ,b+' em aberto')} ·`);
   h=h.replace(/(POR CHANCE DE FECHAMENTO · )(\d[\d.]*)( em aberto)/,(m,a,b,c)=>a+door(oJ,b+c,'abrir as '+b+' negociações em aberto'));
