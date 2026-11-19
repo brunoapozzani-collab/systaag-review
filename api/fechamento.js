@@ -51,6 +51,10 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') { res.setHeader('Access-Control-Allow-Methods', 'GET,POST'); res.setHeader('Access-Control-Allow-Headers', 'content-type'); return res.status(204).end(); }
   try {
     if (modo === 'resumo') { const { T, a, w, R } = await montar(); return res.status(200).json({ ok: true, agora: a, semana: w, agenda: agenda(T), destinatarios: destinatarios(T), remetente_ok: !!(process.env.SMTP_USER && process.env.SMTP_PASS), R }); }
+    if (modo === 'diag') { const T = await lerTabelas(TABELAS); const ult = (arr, k) => arr.map(x => String(x[k] || '')).filter(Boolean).sort().slice(-8);
+      const negs = (T['base:negociacoes'] || []).filter(n => !n.demo); const fec = negs.filter(n => /FECHAD/.test(n.status_pipeline || '') || n.resultado === 'fechada');
+      return res.status(200).json({ ok: true, interacoes_data: ult(T.interacoes, 'data'), interacoes_criado: ult(T.interacoes, 'criado_em'), tarefas_concluida_em: ult(T.tarefas, 'concluida_em'), tarefas_status: [...new Set(T.tarefas.map(t => t.status))],
+        exemplo_interacao: T.interacoes.slice(-2), fechadas_nov: fec.filter(n => String(n.data_decisao || '').slice(0, 7) === '2026-11').slice(0, 5).map(n => ({ c: n.cliente_nome, st: n.status_pipeline, r: n.resultado, dd: n.data_decisao, cons: n.consultor })), neg_criado: ult(negs, 'criado') }); }
     if (modo === 'pdf') { const { R } = await montar(); const pdf = await gerarPdf(R, geradoEm()); res.setHeader('Content-Type', 'application/pdf'); res.setHeader('Content-Disposition', 'inline; filename="' + nomePdf(R) + '"'); return res.status(200).send(pdf); }
     if (modo === 'auto') {
       const { T, a, w, R } = await montar(); const g = agenda(T);
