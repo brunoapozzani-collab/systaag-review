@@ -173,6 +173,7 @@ function ligaTela(){if(typeof SCREENS!=='object'||typeof SCREENS.pipeline!=='fun
   return true}
 if(!ligaTela()){let n=0;const iv=setInterval(()=>{if(ligaTela()||++n>40)clearInterval(iv)},250)}
 
-if(mud){T(()=>save_())}
+/* 19/11: save_ não existe mais no escopo global — sem gravar, a leitura nova ficava só na memória e sumia */
+if(mud){T(()=>{if(typeof save_==='function')save_();else save()})}
 T(()=>{if(typeof route==='function'&&route().k==='pipeline')renderMain()});
 })();
