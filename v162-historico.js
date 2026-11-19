@@ -62,6 +62,7 @@ function importa(){const N=S.db.negociacoes||[];const h=H();
   if(novos){S.db._v162h={importadas:(S.db._v162h&&S.db._v162h.importadas||0)+novos,quando:agora()};gravar()}
   return novos}
 UI.importadas=T(importa,0);
+UI.reimporta=()=>{const k=T(importa,0);UI.importadas=(UI.importadas||0)+k;return k}; /* 19/11: chamada pela v159 depois que a nuvem abriu */
 /* se a Base for trocada depois (carga gravada, importação, Começar do zero), a leitura roda de novo na Base nova */
 let dbVisto=S.db;T(()=>{const r0=window.render;if(typeof r0==='function'&&!r0.__v162h){const W=function(){if(S.db!==dbVisto){dbVisto=S.db;T(importa,0)}return r0.apply(this,arguments)};W.__v162h=true;window.render=W}},null);
 

@@ -175,5 +175,11 @@ if(!ligaTela()){let n=0;const iv=setInterval(()=>{if(ligaTela()||++n>40)clearInt
 
 /* 19/11: save_ não existe mais no escopo global — sem gravar, a leitura nova ficava só na memória e sumia */
 if(mud){T(()=>{if(typeof save_==='function')save_();else save()})}
+/* 19/11: a nuvem (v172) aplica a cópia dela POR CIMA da local ao abrir — o que a leitura fez antes disso some.
+   Por isso a leitura roda de novo depois da primeira leitura da nuvem, grava (sobe para a nuvem) e então o Histórico (v162) importa os textos novos. */
+function quandoPronto(fn){if(window.__TREINO||!window.NUVEM_CONFIG||!window.NUVEM_CONFIG.url){setTimeout(fn,1500);return}
+  if(window.__v172pronto){setTimeout(fn,300);return}window.addEventListener('v172-pronta',()=>setTimeout(fn,300),{once:true})}
+quandoPronto(()=>{const m=T(liga,0);if(m)T(()=>save());T(()=>{if(window.V162&&typeof V162.reimporta==='function')V162.reimporta()});
+  T(()=>{if(typeof route==='function'&&route().k==='pipeline')renderMain()})});
 T(()=>{if(typeof route==='function'&&route().k==='pipeline')renderMain()});
 })();
