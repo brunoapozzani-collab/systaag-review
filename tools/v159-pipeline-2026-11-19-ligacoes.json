@@ -1,0 +1,3783 @@
+{
+"pairs": [
+{
+"linha": 2,
+"id": "pl1"
+},
+{
+"linha": 3,
+"id": "pl2"
+},
+{
+"linha": 4,
+"id": "pl3"
+},
+{
+"linha": 5,
+"id": "pl4"
+},
+{
+"linha": 6,
+"id": "pl5"
+},
+{
+"linha": 7,
+"id": "pl6"
+},
+{
+"linha": 8,
+"id": "pl7"
+},
+{
+"linha": 10,
+"id": "pl8"
+},
+{
+"linha": 11,
+"id": "pl9"
+},
+{
+"linha": 12,
+"id": "pl10"
+},
+{
+"linha": 13,
+"id": "pl11"
+},
+{
+"linha": 14,
+"id": "pl12"
+},
+{
+"linha": 15,
+"id": "pl13"
+},
+{
+"linha": 16,
+"id": "pl14"
+},
+{
+"linha": 17,
+"id": "pl15"
+},
+{
+"linha": 18,
+"id": "pl16"
+},
+{
+"linha": 19,
+"id": "pl17"
+},
+{
+"linha": 20,
+"id": "pl18"
+},
+{
+"linha": 21,
+"id": "pl19"
+},
+{
+"linha": 22,
+"id": "pl20"
+},
+{
+"linha": 23,
+"id": "pl21"
+},
+{
+"linha": 24,
+"id": "pl22"
+},
+{
+"linha": 25,
+"id": "pl23"
+},
+{
+"linha": 26,
+"id": "pl24"
+},
+{
+"linha": 27,
+"id": "pl25"
+},
+{
+"linha": 28,
+"id": "pl26"
+},
+{
+"linha": 29,
+"id": "pl27"
+},
+{
+"linha": 30,
+"id": "pl28"
+},
+{
+"linha": 31,
+"id": "pl29"
+},
+{
+"linha": 32,
+"id": "pl30"
+},
+{
+"linha": 33,
+"id": "pl31"
+},
+{
+"linha": 34,
+"id": "pl32"
+},
+{
+"linha": 35,
+"id": "pl33"
+},
+{
+"linha": 36,
+"id": "pl34"
+},
+{
+"linha": 37,
+"id": "pl35"
+},
+{
+"linha": 38,
+"id": "pl36"
+},
+{
+"linha": 39,
+"id": "pl37"
+},
+{
+"linha": 40,
+"id": "pl38"
+},
+{
+"linha": 41,
+"id": "pl39"
+},
+{
+"linha": 42,
+"id": "pl40"
+},
+{
+"linha": 43,
+"id": "pl41"
+},
+{
+"linha": 44,
+"id": "pl42"
+},
+{
+"linha": 45,
+"id": "pl43"
+},
+{
+"linha": 46,
+"id": "pl44"
+},
+{
+"linha": 47,
+"id": "pl45"
+},
+{
+"linha": 48,
+"id": "pl46"
+},
+{
+"linha": 49,
+"id": "pl47"
+},
+{
+"linha": 50,
+"id": "pl48"
+},
+{
+"linha": 51,
+"id": "pl49"
+},
+{
+"linha": 52,
+"id": "pl50"
+},
+{
+"linha": 53,
+"id": "pl51"
+},
+{
+"linha": 54,
+"id": "pl52"
+},
+{
+"linha": 55,
+"id": "pl53"
+},
+{
+"linha": 56,
+"id": "pl54"
+},
+{
+"linha": 57,
+"id": "pl55"
+},
+{
+"linha": 58,
+"id": "pl56"
+},
+{
+"linha": 59,
+"id": "pl57"
+},
+{
+"linha": 60,
+"id": "pl58"
+},
+{
+"linha": 61,
+"id": "pl59"
+},
+{
+"linha": 62,
+"id": "pl60"
+},
+{
+"linha": 63,
+"id": "pl61"
+},
+{
+"linha": 64,
+"id": "pl62"
+},
+{
+"linha": 65,
+"id": "pl63"
+},
+{
+"linha": 66,
+"id": "pl64"
+},
+{
+"linha": 67,
+"id": "pl65"
+},
+{
+"linha": 68,
+"id": "pl66"
+},
+{
+"linha": 69,
+"id": "pl67"
+},
+{
+"linha": 70,
+"id": "pl68"
+},
+{
+"linha": 71,
+"id": "pl69"
+},
+{
+"linha": 72,
+"id": "pl70"
+},
+{
+"linha": 73,
+"id": "pl71"
+},
+{
+"linha": 74,
+"id": "pl72"
+},
+{
+"linha": 75,
+"id": "pl73"
+},
+{
+"linha": 76,
+"id": "pl74"
+},
+{
+"linha": 77,
+"id": "pl75"
+},
+{
+"linha": 78,
+"id": "pl76"
+},
+{
+"linha": 79,
+"id": "pl77"
+},
+{
+"linha": 80,
+"id": "pl78"
+},
+{
+"linha": 81,
+"id": "pl79"
+},
+{
+"linha": 82,
+"id": "pl80"
+},
+{
+"linha": 83,
+"id": "pl81"
+},
+{
+"linha": 84,
+"id": "pl82"
+},
+{
+"linha": 85,
+"id": "pl83"
+},
+{
+"linha": 86,
+"id": "pl84"
+},
+{
+"linha": 87,
+"id": "pl85"
+},
+{
+"linha": 88,
+"id": "pl86"
+},
+{
+"linha": 89,
+"id": "pl87"
+},
+{
+"linha": 90,
+"id": "pl88"
+},
+{
+"linha": 91,
+"id": "pl89"
+},
+{
+"linha": 92,
+"id": "pl90"
+},
+{
+"linha": 93,
+"id": "pl91"
+},
+{
+"linha": 94,
+"id": "pl92"
+},
+{
+"linha": 95,
+"id": "pl93"
+},
+{
+"linha": 96,
+"id": "pl94"
+},
+{
+"linha": 97,
+"id": "pl95"
+},
+{
+"linha": 98,
+"id": "pl96"
+},
+{
+"linha": 99,
+"id": "pl97"
+},
+{
+"linha": 100,
+"id": "pl98"
+},
+{
+"linha": 101,
+"id": "pl99"
+},
+{
+"linha": 102,
+"id": "pl100"
+},
+{
+"linha": 103,
+"id": "pl101"
+},
+{
+"linha": 104,
+"id": "pl102"
+},
+{
+"linha": 105,
+"id": "pl103"
+},
+{
+"linha": 106,
+"id": "pl104"
+},
+{
+"linha": 107,
+"id": "pl105"
+},
+{
+"linha": 108,
+"id": "pl106"
+},
+{
+"linha": 109,
+"id": "pl107"
+},
+{
+"linha": 110,
+"id": "pl108"
+},
+{
+"linha": 111,
+"id": "pl109"
+},
+{
+"linha": 112,
+"id": "pl110"
+},
+{
+"linha": 113,
+"id": "pl111"
+},
+{
+"linha": 114,
+"id": "pl112"
+},
+{
+"linha": 115,
+"id": "pl113"
+},
+{
+"linha": 116,
+"id": "pl114"
+},
+{
+"linha": 117,
+"id": "pl115"
+},
+{
+"linha": 118,
+"id": "pl116"
+},
+{
+"linha": 119,
+"id": "pl117"
+},
+{
+"linha": 120,
+"id": "pl118"
+},
+{
+"linha": 121,
+"id": "pl119"
+},
+{
+"linha": 122,
+"id": "pl120"
+},
+{
+"linha": 123,
+"id": "pl121"
+},
+{
+"linha": 124,
+"id": "pl122"
+},
+{
+"linha": 125,
+"id": "pl123"
+},
+{
+"linha": 126,
+"id": "pl124"
+},
+{
+"linha": 127,
+"id": "pl125"
+},
+{
+"linha": 128,
+"id": "pl126"
+},
+{
+"linha": 129,
+"id": "pl127"
+},
+{
+"linha": 130,
+"id": "pl128"
+},
+{
+"linha": 131,
+"id": "pl129"
+},
+{
+"linha": 132,
+"id": "pl130"
+},
+{
+"linha": 133,
+"id": "pl131"
+},
+{
+"linha": 134,
+"id": "pl132"
+},
+{
+"linha": 135,
+"id": "pl133"
+},
+{
+"linha": 136,
+"id": "pl134"
+},
+{
+"linha": 137,
+"id": "pl135"
+},
+{
+"linha": 140,
+"id": "pl138"
+},
+{
+"linha": 141,
+"id": "pl136"
+},
+{
+"linha": 142,
+"id": "pl137"
+},
+{
+"linha": 144,
+"id": "pl139"
+},
+{
+"linha": 145,
+"id": "pl140"
+},
+{
+"linha": 147,
+"id": "pl141"
+},
+{
+"linha": 149,
+"id": "pl142"
+},
+{
+"linha": 150,
+"id": "pl143"
+},
+{
+"linha": 151,
+"id": "pl149"
+},
+{
+"linha": 152,
+"id": "pl150"
+},
+{
+"linha": 154,
+"id": "pl144"
+},
+{
+"linha": 155,
+"id": "pl145"
+},
+{
+"linha": 156,
+"id": "pl146"
+},
+{
+"linha": 157,
+"id": "pl155"
+},
+{
+"linha": 158,
+"id": "pl156"
+},
+{
+"linha": 159,
+"id": "pl157"
+},
+{
+"linha": 160,
+"id": "pl158"
+},
+{
+"linha": 161,
+"id": "pl159"
+},
+{
+"linha": 162,
+"id": "pl160"
+},
+{
+"linha": 163,
+"id": "pl161"
+},
+{
+"linha": 164,
+"id": "pl162"
+},
+{
+"linha": 165,
+"id": "pl163"
+},
+{
+"linha": 166,
+"id": "pl164"
+},
+{
+"linha": 167,
+"id": "pl165"
+},
+{
+"linha": 168,
+"id": "pl166"
+},
+{
+"linha": 169,
+"id": "pl167"
+},
+{
+"linha": 170,
+"id": "pl168"
+},
+{
+"linha": 171,
+"id": "pl169"
+},
+{
+"linha": 172,
+"id": "pl170"
+},
+{
+"linha": 173,
+"id": "pl171"
+},
+{
+"linha": 174,
+"id": "pl172"
+},
+{
+"linha": 175,
+"id": "pl173"
+},
+{
+"linha": 176,
+"id": "pl174"
+},
+{
+"linha": 177,
+"id": "pl175"
+},
+{
+"linha": 178,
+"id": "pl176"
+},
+{
+"linha": 179,
+"id": "pl179"
+},
+{
+"linha": 180,
+"id": "pl180"
+},
+{
+"linha": 181,
+"id": "pl181"
+},
+{
+"linha": 182,
+"id": "pl182"
+},
+{
+"linha": 183,
+"id": "pl183"
+},
+{
+"linha": 184,
+"id": "pl184"
+},
+{
+"linha": 185,
+"id": "pl185"
+},
+{
+"linha": 186,
+"id": "pl186"
+},
+{
+"linha": 187,
+"id": "pl187"
+},
+{
+"linha": 188,
+"id": "pl188"
+},
+{
+"linha": 189,
+"id": "pl189"
+},
+{
+"linha": 190,
+"id": "pl190"
+},
+{
+"linha": 191,
+"id": "pl191"
+},
+{
+"linha": 192,
+"id": "pl192"
+},
+{
+"linha": 193,
+"id": "pl193"
+},
+{
+"linha": 194,
+"id": "pl194"
+},
+{
+"linha": 195,
+"id": "pl195"
+},
+{
+"linha": 196,
+"id": "pl196"
+},
+{
+"linha": 197,
+"id": "pl197"
+},
+{
+"linha": 198,
+"id": "pl198"
+},
+{
+"linha": 199,
+"id": "pl199"
+},
+{
+"linha": 200,
+"id": "pl200"
+},
+{
+"linha": 201,
+"id": "pl201"
+},
+{
+"linha": 202,
+"id": "pl202"
+},
+{
+"linha": 203,
+"id": "pl203"
+},
+{
+"linha": 204,
+"id": "pl204"
+},
+{
+"linha": 205,
+"id": "pl205"
+},
+{
+"linha": 206,
+"id": "pl206"
+},
+{
+"linha": 207,
+"id": "pl207"
+},
+{
+"linha": 208,
+"id": "pl208"
+},
+{
+"linha": 209,
+"id": "pl209"
+},
+{
+"linha": 210,
+"id": "pl210"
+},
+{
+"linha": 211,
+"id": "pl211"
+},
+{
+"linha": 212,
+"id": "pl212"
+},
+{
+"linha": 213,
+"id": "pl213"
+},
+{
+"linha": 214,
+"id": "pl214"
+},
+{
+"linha": 215,
+"id": "pl215"
+},
+{
+"linha": 216,
+"id": "pl216"
+},
+{
+"linha": 217,
+"id": "pl217"
+},
+{
+"linha": 218,
+"id": "pl218"
+},
+{
+"linha": 219,
+"id": "pl219"
+},
+{
+"linha": 220,
+"id": "pl220"
+},
+{
+"linha": 221,
+"id": "pl221"
+},
+{
+"linha": 222,
+"id": "pl222"
+},
+{
+"linha": 223,
+"id": "pl223"
+},
+{
+"linha": 224,
+"id": "pl224"
+},
+{
+"linha": 225,
+"id": "pl225"
+},
+{
+"linha": 226,
+"id": "pl226"
+},
+{
+"linha": 227,
+"id": "pl227"
+},
+{
+"linha": 228,
+"id": "pl228"
+},
+{
+"linha": 229,
+"id": "pl229"
+},
+{
+"linha": 230,
+"id": "pl230"
+},
+{
+"linha": 231,
+"id": "pl231"
+},
+{
+"linha": 232,
+"id": "pl232"
+},
+{
+"linha": 233,
+"id": "pl233"
+},
+{
+"linha": 234,
+"id": "pl235"
+},
+{
+"linha": 235,
+"id": "pl236"
+},
+{
+"linha": 236,
+"id": "pl237"
+},
+{
+"linha": 237,
+"id": "pl238"
+},
+{
+"linha": 238,
+"id": "pl239"
+},
+{
+"linha": 239,
+"id": "pl240"
+},
+{
+"linha": 240,
+"id": "pl241"
+},
+{
+"linha": 241,
+"id": "pl242"
+},
+{
+"linha": 242,
+"id": "pl243"
+},
+{
+"linha": 243,
+"id": "pl244"
+},
+{
+"linha": 244,
+"id": "pl245"
+},
+{
+"linha": 245,
+"id": "pl246"
+},
+{
+"linha": 246,
+"id": "pl247"
+},
+{
+"linha": 247,
+"id": "pl248"
+},
+{
+"linha": 248,
+"id": "pl249"
+},
+{
+"linha": 249,
+"id": "pl250"
+},
+{
+"linha": 250,
+"id": "pl251"
+},
+{
+"linha": 251,
+"id": "pl252"
+},
+{
+"linha": 252,
+"id": "pl253"
+},
+{
+"linha": 253,
+"id": "pl254"
+},
+{
+"linha": 254,
+"id": "pl255"
+},
+{
+"linha": 255,
+"id": "pl256"
+},
+{
+"linha": 256,
+"id": "pl257"
+},
+{
+"linha": 257,
+"id": "pl258"
+},
+{
+"linha": 258,
+"id": "pl259"
+},
+{
+"linha": 259,
+"id": "pl260"
+},
+{
+"linha": 260,
+"id": "pl261"
+},
+{
+"linha": 261,
+"id": "pl262"
+},
+{
+"linha": 262,
+"id": "pl263"
+},
+{
+"linha": 263,
+"id": "pl264"
+},
+{
+"linha": 264,
+"id": "pl265"
+},
+{
+"linha": 265,
+"id": "pl266"
+},
+{
+"linha": 266,
+"id": "pl267"
+},
+{
+"linha": 267,
+"id": "pl269"
+},
+{
+"linha": 268,
+"id": "pl270"
+},
+{
+"linha": 269,
+"id": "pl271"
+},
+{
+"linha": 270,
+"id": "pl272"
+},
+{
+"linha": 271,
+"id": "pl273"
+},
+{
+"linha": 272,
+"id": "pl274"
+},
+{
+"linha": 273,
+"id": "pl275"
+},
+{
+"linha": 274,
+"id": "pl276"
+},
+{
+"linha": 275,
+"id": "pl277"
+},
+{
+"linha": 276,
+"id": "pl278"
+},
+{
+"linha": 277,
+"id": "pl279"
+},
+{
+"linha": 278,
+"id": "pl280"
+},
+{
+"linha": 279,
+"id": "pl281"
+},
+{
+"linha": 280,
+"id": "pl282"
+},
+{
+"linha": 281,
+"id": "pl283"
+},
+{
+"linha": 282,
+"id": "pl284"
+},
+{
+"linha": 283,
+"id": "pl285"
+},
+{
+"linha": 284,
+"id": "pl286"
+},
+{
+"linha": 285,
+"id": "pl287"
+},
+{
+"linha": 286,
+"id": "pl288"
+},
+{
+"linha": 287,
+"id": "pl289"
+},
+{
+"linha": 288,
+"id": "pl290"
+},
+{
+"linha": 289,
+"id": "pl291"
+},
+{
+"linha": 290,
+"id": "pl292"
+},
+{
+"linha": 291,
+"id": "pl293"
+},
+{
+"linha": 292,
+"id": "pl294"
+},
+{
+"linha": 293,
+"id": "pl295"
+},
+{
+"linha": 294,
+"id": "pl296"
+},
+{
+"linha": 295,
+"id": "pl297"
+},
+{
+"linha": 296,
+"id": "pl298"
+},
+{
+"linha": 297,
+"id": "pl299"
+},
+{
+"linha": 298,
+"id": "pl300"
+},
+{
+"linha": 299,
+"id": "pl301"
+},
+{
+"linha": 300,
+"id": "pl302"
+},
+{
+"linha": 301,
+"id": "pl303"
+},
+{
+"linha": 302,
+"id": "pl304"
+},
+{
+"linha": 303,
+"id": "pl305"
+},
+{
+"linha": 304,
+"id": "pl306"
+},
+{
+"linha": 305,
+"id": "pl307"
+},
+{
+"linha": 306,
+"id": "pl308"
+},
+{
+"linha": 307,
+"id": "pl309"
+},
+{
+"linha": 308,
+"id": "pl310"
+},
+{
+"linha": 309,
+"id": "pl311"
+},
+{
+"linha": 310,
+"id": "pl312"
+},
+{
+"linha": 311,
+"id": "pl313"
+},
+{
+"linha": 312,
+"id": "pl314"
+},
+{
+"linha": 313,
+"id": "pl315"
+},
+{
+"linha": 314,
+"id": "pl316"
+},
+{
+"linha": 315,
+"id": "pl317"
+},
+{
+"linha": 316,
+"id": "pl318"
+},
+{
+"linha": 317,
+"id": "pl319"
+},
+{
+"linha": 318,
+"id": "pl320"
+},
+{
+"linha": 319,
+"id": "pl321"
+},
+{
+"linha": 320,
+"id": "pl322"
+},
+{
+"linha": 321,
+"id": "pl323"
+},
+{
+"linha": 322,
+"id": "pl324"
+},
+{
+"linha": 323,
+"id": "pl325"
+},
+{
+"linha": 324,
+"id": "pl326"
+},
+{
+"linha": 325,
+"id": "pl327"
+},
+{
+"linha": 326,
+"id": "pl328"
+},
+{
+"linha": 327,
+"id": "pl329"
+},
+{
+"linha": 328,
+"id": "pl330"
+},
+{
+"linha": 329,
+"id": "pl331"
+},
+{
+"linha": 330,
+"id": "pl332"
+},
+{
+"linha": 331,
+"id": "pl333"
+},
+{
+"linha": 332,
+"id": "pl334"
+},
+{
+"linha": 333,
+"id": "pl335"
+},
+{
+"linha": 334,
+"id": "pl336"
+},
+{
+"linha": 335,
+"id": "pl337"
+},
+{
+"linha": 336,
+"id": "pl340"
+},
+{
+"linha": 337,
+"id": "pl341"
+},
+{
+"linha": 338,
+"id": "pl342"
+},
+{
+"linha": 339,
+"id": "pl343"
+},
+{
+"linha": 340,
+"id": "pl344"
+},
+{
+"linha": 341,
+"id": "pl345"
+},
+{
+"linha": 342,
+"id": "pl346"
+},
+{
+"linha": 343,
+"id": "pl347"
+},
+{
+"linha": 344,
+"id": "pl348"
+},
+{
+"linha": 345,
+"id": "pl349"
+},
+{
+"linha": 346,
+"id": "pl350"
+},
+{
+"linha": 347,
+"id": "pl351"
+},
+{
+"linha": 348,
+"id": "pl352"
+},
+{
+"linha": 349,
+"id": "pl353"
+},
+{
+"linha": 350,
+"id": "pl354"
+},
+{
+"linha": 351,
+"id": "pl355"
+},
+{
+"linha": 352,
+"id": "pl356"
+},
+{
+"linha": 353,
+"id": "pl357"
+},
+{
+"linha": 354,
+"id": "pl358"
+},
+{
+"linha": 355,
+"id": "pl359"
+},
+{
+"linha": 356,
+"id": "pl360"
+},
+{
+"linha": 357,
+"id": "pl361"
+},
+{
+"linha": 358,
+"id": "pl362"
+},
+{
+"linha": 359,
+"id": "pl363"
+},
+{
+"linha": 360,
+"id": "pl364"
+},
+{
+"linha": 361,
+"id": "pl365"
+},
+{
+"linha": 362,
+"id": "pl366"
+},
+{
+"linha": 363,
+"id": "pl367"
+},
+{
+"linha": 364,
+"id": "pl368"
+},
+{
+"linha": 365,
+"id": "pl369"
+},
+{
+"linha": 366,
+"id": "pl370"
+},
+{
+"linha": 367,
+"id": "pl371"
+},
+{
+"linha": 368,
+"id": "pl372"
+},
+{
+"linha": 369,
+"id": "pl373"
+},
+{
+"linha": 370,
+"id": "pl374"
+},
+{
+"linha": 371,
+"id": "pl375"
+},
+{
+"linha": 372,
+"id": "pl376"
+},
+{
+"linha": 373,
+"id": "pl377"
+},
+{
+"linha": 374,
+"id": "pl378"
+},
+{
+"linha": 375,
+"id": "pl379"
+},
+{
+"linha": 376,
+"id": "pl380"
+},
+{
+"linha": 377,
+"id": "pl381"
+},
+{
+"linha": 378,
+"id": "pl382"
+},
+{
+"linha": 379,
+"id": "pl383"
+},
+{
+"linha": 380,
+"id": "pl384"
+},
+{
+"linha": 381,
+"id": "pl385"
+},
+{
+"linha": 382,
+"id": "pl386"
+},
+{
+"linha": 383,
+"id": "pl387"
+},
+{
+"linha": 384,
+"id": "pl388"
+},
+{
+"linha": 385,
+"id": "pl389"
+},
+{
+"linha": 386,
+"id": "pl390"
+},
+{
+"linha": 387,
+"id": "pl391"
+},
+{
+"linha": 388,
+"id": "pl392"
+},
+{
+"linha": 389,
+"id": "pl393"
+},
+{
+"linha": 390,
+"id": "pl394"
+},
+{
+"linha": 391,
+"id": "pl395"
+},
+{
+"linha": 392,
+"id": "pl396"
+},
+{
+"linha": 393,
+"id": "pl398"
+},
+{
+"linha": 394,
+"id": "pl397"
+},
+{
+"linha": 395,
+"id": "pl399"
+},
+{
+"linha": 396,
+"id": "pl400"
+},
+{
+"linha": 397,
+"id": "pl401"
+},
+{
+"linha": 398,
+"id": "pl402"
+},
+{
+"linha": 399,
+"id": "pl403"
+},
+{
+"linha": 400,
+"id": "pl404"
+},
+{
+"linha": 401,
+"id": "pl405"
+},
+{
+"linha": 402,
+"id": "pl406"
+},
+{
+"linha": 403,
+"id": "pl407"
+},
+{
+"linha": 404,
+"id": "pl408"
+},
+{
+"linha": 405,
+"id": "pl409"
+},
+{
+"linha": 406,
+"id": "pl410"
+},
+{
+"linha": 407,
+"id": "pl411"
+},
+{
+"linha": 408,
+"id": "pl412"
+},
+{
+"linha": 409,
+"id": "pl413"
+},
+{
+"linha": 410,
+"id": "pl414"
+},
+{
+"linha": 411,
+"id": "pl415"
+},
+{
+"linha": 412,
+"id": "pl416"
+},
+{
+"linha": 413,
+"id": "pl417"
+},
+{
+"linha": 414,
+"id": "pl418"
+},
+{
+"linha": 415,
+"id": "pl419"
+},
+{
+"linha": 416,
+"id": "pl420"
+},
+{
+"linha": 417,
+"id": "pl421"
+},
+{
+"linha": 418,
+"id": "pl422"
+},
+{
+"linha": 419,
+"id": "pl423"
+},
+{
+"linha": 420,
+"id": "pl424"
+},
+{
+"linha": 421,
+"id": "pl425"
+},
+{
+"linha": 422,
+"id": "pl426"
+},
+{
+"linha": 423,
+"id": "pl427"
+},
+{
+"linha": 424,
+"id": "pl428"
+},
+{
+"linha": 425,
+"id": "pl429"
+},
+{
+"linha": 426,
+"id": "pl430"
+},
+{
+"linha": 427,
+"id": "pl431"
+},
+{
+"linha": 428,
+"id": "pl432"
+},
+{
+"linha": 429,
+"id": "pl433"
+},
+{
+"linha": 430,
+"id": "pl434"
+},
+{
+"linha": 431,
+"id": "pl435"
+},
+{
+"linha": 432,
+"id": "pl436"
+},
+{
+"linha": 433,
+"id": "pl437"
+},
+{
+"linha": 434,
+"id": "pl438"
+},
+{
+"linha": 435,
+"id": "pl439"
+},
+{
+"linha": 436,
+"id": "pl440"
+},
+{
+"linha": 437,
+"id": "pl441"
+},
+{
+"linha": 438,
+"id": "pl442"
+},
+{
+"linha": 439,
+"id": "pl443"
+},
+{
+"linha": 440,
+"id": "pl444"
+},
+{
+"linha": 441,
+"id": "pl445"
+},
+{
+"linha": 442,
+"id": "pl446"
+},
+{
+"linha": 443,
+"id": "pl447"
+},
+{
+"linha": 444,
+"id": "pl448"
+},
+{
+"linha": 445,
+"id": "pl449"
+},
+{
+"linha": 446,
+"id": "pl450"
+},
+{
+"linha": 447,
+"id": "pl451"
+},
+{
+"linha": 448,
+"id": "pl452"
+},
+{
+"linha": 449,
+"id": "pl453"
+},
+{
+"linha": 450,
+"id": "pl454"
+},
+{
+"linha": 451,
+"id": "pl455"
+},
+{
+"linha": 452,
+"id": "pl456"
+},
+{
+"linha": 453,
+"id": "pl457"
+},
+{
+"linha": 454,
+"id": "pl458"
+},
+{
+"linha": 455,
+"id": "pl459"
+},
+{
+"linha": 456,
+"id": "pl460"
+},
+{
+"linha": 457,
+"id": "pl461"
+},
+{
+"linha": 458,
+"id": "pl462"
+},
+{
+"linha": 459,
+"id": "pl463"
+},
+{
+"linha": 460,
+"id": "pl464"
+},
+{
+"linha": 461,
+"id": "pl465"
+},
+{
+"linha": 462,
+"id": "pl466"
+},
+{
+"linha": 463,
+"id": "pl467"
+},
+{
+"linha": 464,
+"id": "pl468"
+},
+{
+"linha": 465,
+"id": "pl469"
+},
+{
+"linha": 466,
+"id": "pl470"
+},
+{
+"linha": 467,
+"id": "pl471"
+},
+{
+"linha": 468,
+"id": "pl472"
+},
+{
+"linha": 469,
+"id": "pl473"
+},
+{
+"linha": 470,
+"id": "pl474"
+},
+{
+"linha": 471,
+"id": "pl475"
+},
+{
+"linha": 472,
+"id": "pl476"
+},
+{
+"linha": 473,
+"id": "pl477"
+},
+{
+"linha": 474,
+"id": "pl478"
+},
+{
+"linha": 475,
+"id": "pl479"
+},
+{
+"linha": 476,
+"id": "pl480"
+},
+{
+"linha": 477,
+"id": "pl481"
+},
+{
+"linha": 478,
+"id": "pl482"
+},
+{
+"linha": 479,
+"id": "pl483"
+},
+{
+"linha": 480,
+"id": "pl484"
+},
+{
+"linha": 481,
+"id": "pl485"
+},
+{
+"linha": 482,
+"id": "pl486"
+},
+{
+"linha": 483,
+"id": "pl487"
+},
+{
+"linha": 484,
+"id": "pl488"
+},
+{
+"linha": 485,
+"id": "pl489"
+},
+{
+"linha": 486,
+"id": "pl490"
+},
+{
+"linha": 487,
+"id": "pl491"
+},
+{
+"linha": 488,
+"id": "pl492"
+},
+{
+"linha": 489,
+"id": "pl493"
+},
+{
+"linha": 490,
+"id": "pl494"
+},
+{
+"linha": 491,
+"id": "pl495"
+},
+{
+"linha": 492,
+"id": "pl496"
+},
+{
+"linha": 493,
+"id": "pl497"
+},
+{
+"linha": 494,
+"id": "pl498"
+},
+{
+"linha": 495,
+"id": "pl499"
+},
+{
+"linha": 496,
+"id": "pl500"
+},
+{
+"linha": 497,
+"id": "pl501"
+},
+{
+"linha": 498,
+"id": "pl502"
+},
+{
+"linha": 499,
+"id": "pl503"
+},
+{
+"linha": 500,
+"id": "pl504"
+},
+{
+"linha": 501,
+"id": "pl505"
+},
+{
+"linha": 502,
+"id": "pl506"
+},
+{
+"linha": 503,
+"id": "pl507"
+},
+{
+"linha": 504,
+"id": "pl508"
+},
+{
+"linha": 505,
+"id": "pl509"
+},
+{
+"linha": 506,
+"id": "pl510"
+},
+{
+"linha": 507,
+"id": "pl511"
+},
+{
+"linha": 508,
+"id": "pl512"
+},
+{
+"linha": 509,
+"id": "pl513"
+},
+{
+"linha": 510,
+"id": "pl514"
+},
+{
+"linha": 511,
+"id": "pl515"
+},
+{
+"linha": 512,
+"id": "pl516"
+},
+{
+"linha": 513,
+"id": "pl517"
+},
+{
+"linha": 514,
+"id": "pl518"
+},
+{
+"linha": 515,
+"id": "pl519"
+},
+{
+"linha": 516,
+"id": "pl520"
+},
+{
+"linha": 517,
+"id": "pl521"
+},
+{
+"linha": 518,
+"id": "pl522"
+},
+{
+"linha": 519,
+"id": "pl523"
+},
+{
+"linha": 520,
+"id": "pl524"
+},
+{
+"linha": 521,
+"id": "pl525"
+},
+{
+"linha": 522,
+"id": "pl526"
+},
+{
+"linha": 523,
+"id": "pl527"
+},
+{
+"linha": 524,
+"id": "pl528"
+},
+{
+"linha": 525,
+"id": "pl529"
+},
+{
+"linha": 526,
+"id": "pl530"
+},
+{
+"linha": 527,
+"id": "pl531"
+},
+{
+"linha": 528,
+"id": "pl532"
+},
+{
+"linha": 529,
+"id": "pl533"
+},
+{
+"linha": 530,
+"id": "pl534"
+},
+{
+"linha": 531,
+"id": "pl535"
+},
+{
+"linha": 532,
+"id": "pl536"
+},
+{
+"linha": 533,
+"id": "pl537"
+},
+{
+"linha": 534,
+"id": "pl538"
+},
+{
+"linha": 535,
+"id": "pl539"
+},
+{
+"linha": 536,
+"id": "pl540"
+},
+{
+"linha": 537,
+"id": "pl541"
+},
+{
+"linha": 538,
+"id": "pl542"
+},
+{
+"linha": 539,
+"id": "pl543"
+},
+{
+"linha": 540,
+"id": "pl544"
+},
+{
+"linha": 541,
+"id": "pl545"
+},
+{
+"linha": 542,
+"id": "pl546"
+},
+{
+"linha": 543,
+"id": "pl547"
+},
+{
+"linha": 544,
+"id": "pl548"
+},
+{
+"linha": 545,
+"id": "pl549"
+},
+{
+"linha": 546,
+"id": "pl550"
+},
+{
+"linha": 547,
+"id": "pl551"
+},
+{
+"linha": 548,
+"id": "pl552"
+},
+{
+"linha": 549,
+"id": "pl553"
+},
+{
+"linha": 550,
+"id": "pl554"
+},
+{
+"linha": 551,
+"id": "pl555"
+},
+{
+"linha": 552,
+"id": "pl556"
+},
+{
+"linha": 553,
+"id": "pl557"
+},
+{
+"linha": 554,
+"id": "pl558"
+},
+{
+"linha": 555,
+"id": "pl559"
+},
+{
+"linha": 556,
+"id": "pl560"
+},
+{
+"linha": 557,
+"id": "pl561"
+},
+{
+"linha": 558,
+"id": "pl562"
+},
+{
+"linha": 559,
+"id": "pl563"
+},
+{
+"linha": 560,
+"id": "pl564"
+},
+{
+"linha": 561,
+"id": "pl565"
+},
+{
+"linha": 562,
+"id": "pl566"
+},
+{
+"linha": 563,
+"id": "pl567"
+},
+{
+"linha": 564,
+"id": "pl568"
+},
+{
+"linha": 565,
+"id": "pl569"
+},
+{
+"linha": 566,
+"id": "pl570"
+},
+{
+"linha": 567,
+"id": "pl571"
+},
+{
+"linha": 568,
+"id": "pl572"
+},
+{
+"linha": 569,
+"id": "pl573"
+},
+{
+"linha": 570,
+"id": "pl574"
+},
+{
+"linha": 571,
+"id": "pl575"
+},
+{
+"linha": 572,
+"id": "pl576"
+},
+{
+"linha": 573,
+"id": "pl577"
+},
+{
+"linha": 574,
+"id": "pl578"
+},
+{
+"linha": 575,
+"id": "pl579"
+},
+{
+"linha": 576,
+"id": "pl580"
+},
+{
+"linha": 577,
+"id": "pl581"
+},
+{
+"linha": 578,
+"id": "pl582"
+},
+{
+"linha": 579,
+"id": "pl583"
+},
+{
+"linha": 580,
+"id": "pl584"
+},
+{
+"linha": 581,
+"id": "pl585"
+},
+{
+"linha": 582,
+"id": "pl586"
+},
+{
+"linha": 583,
+"id": "pl587"
+},
+{
+"linha": 584,
+"id": "pl588"
+},
+{
+"linha": 585,
+"id": "pl589"
+},
+{
+"linha": 586,
+"id": "pl590"
+},
+{
+"linha": 587,
+"id": "pl591"
+},
+{
+"linha": 588,
+"id": "pl592"
+},
+{
+"linha": 589,
+"id": "pl593"
+},
+{
+"linha": 590,
+"id": "pl594"
+},
+{
+"linha": 591,
+"id": "pl595"
+},
+{
+"linha": 592,
+"id": "pl596"
+},
+{
+"linha": 593,
+"id": "pl597"
+},
+{
+"linha": 594,
+"id": "pl598"
+},
+{
+"linha": 595,
+"id": "pl599"
+},
+{
+"linha": 596,
+"id": "pl600"
+},
+{
+"linha": 597,
+"id": "pl601"
+},
+{
+"linha": 598,
+"id": "pl602"
+},
+{
+"linha": 599,
+"id": "pl603"
+},
+{
+"linha": 600,
+"id": "pl604"
+},
+{
+"linha": 601,
+"id": "pl605"
+},
+{
+"linha": 602,
+"id": "pl606"
+},
+{
+"linha": 603,
+"id": "pl607"
+},
+{
+"linha": 604,
+"id": "pl608"
+},
+{
+"linha": 605,
+"id": "pl609"
+},
+{
+"linha": 606,
+"id": "pl610"
+},
+{
+"linha": 607,
+"id": "pl611"
+},
+{
+"linha": 608,
+"id": "pl612"
+},
+{
+"linha": 609,
+"id": "pl613"
+},
+{
+"linha": 610,
+"id": "pl614"
+},
+{
+"linha": 611,
+"id": "pl615"
+},
+{
+"linha": 612,
+"id": "pl616"
+},
+{
+"linha": 613,
+"id": "pl617"
+},
+{
+"linha": 614,
+"id": "pl618"
+},
+{
+"linha": 615,
+"id": "pl619"
+},
+{
+"linha": 616,
+"id": "pl620"
+},
+{
+"linha": 617,
+"id": "pl621"
+},
+{
+"linha": 618,
+"id": "pl622"
+},
+{
+"linha": 619,
+"id": "pl623"
+},
+{
+"linha": 620,
+"id": "pl624"
+},
+{
+"linha": 621,
+"id": "pl625"
+},
+{
+"linha": 622,
+"id": "pl626"
+},
+{
+"linha": 623,
+"id": "pl627"
+},
+{
+"linha": 624,
+"id": "pl628"
+},
+{
+"linha": 625,
+"id": "pl629"
+},
+{
+"linha": 626,
+"id": "pl630"
+},
+{
+"linha": 627,
+"id": "pl631"
+},
+{
+"linha": 628,
+"id": "pl632"
+},
+{
+"linha": 629,
+"id": "pl633"
+},
+{
+"linha": 630,
+"id": "pl634"
+},
+{
+"linha": 631,
+"id": "pl635"
+},
+{
+"linha": 632,
+"id": "pl636"
+},
+{
+"linha": 633,
+"id": "pl637"
+},
+{
+"linha": 634,
+"id": "pl638"
+},
+{
+"linha": 635,
+"id": "pl639"
+},
+{
+"linha": 636,
+"id": "pl640"
+},
+{
+"linha": 637,
+"id": "pl641"
+},
+{
+"linha": 638,
+"id": "pl642"
+},
+{
+"linha": 639,
+"id": "pl643"
+},
+{
+"linha": 640,
+"id": "pl644"
+},
+{
+"linha": 641,
+"id": "pl645"
+},
+{
+"linha": 642,
+"id": "pl646"
+},
+{
+"linha": 643,
+"id": "pl647"
+},
+{
+"linha": 644,
+"id": "pl648"
+},
+{
+"linha": 645,
+"id": "pl649"
+},
+{
+"linha": 646,
+"id": "pl650"
+},
+{
+"linha": 647,
+"id": "pl651"
+},
+{
+"linha": 648,
+"id": "pl652"
+},
+{
+"linha": 649,
+"id": "pl653"
+},
+{
+"linha": 650,
+"id": "pl654"
+},
+{
+"linha": 651,
+"id": "pl655"
+},
+{
+"linha": 652,
+"id": "pl656"
+},
+{
+"linha": 653,
+"id": "pl657"
+},
+{
+"linha": 654,
+"id": "pl658"
+},
+{
+"linha": 655,
+"id": "pl659"
+},
+{
+"linha": 656,
+"id": "pl660"
+},
+{
+"linha": 657,
+"id": "pl661"
+},
+{
+"linha": 658,
+"id": "pl662"
+},
+{
+"linha": 659,
+"id": "pl663"
+},
+{
+"linha": 660,
+"id": "pl664"
+},
+{
+"linha": 661,
+"id": "pl665"
+},
+{
+"linha": 662,
+"id": "pl666"
+},
+{
+"linha": 663,
+"id": "pl667"
+},
+{
+"linha": 664,
+"id": "pl668"
+},
+{
+"linha": 665,
+"id": "pl669"
+},
+{
+"linha": 666,
+"id": "pl670"
+},
+{
+"linha": 667,
+"id": "pl671"
+},
+{
+"linha": 668,
+"id": "pl672"
+},
+{
+"linha": 669,
+"id": "pl673"
+},
+{
+"linha": 670,
+"id": "pl674"
+},
+{
+"linha": 671,
+"id": "pl675"
+},
+{
+"linha": 672,
+"id": "pl676"
+},
+{
+"linha": 673,
+"id": "pl677"
+},
+{
+"linha": 674,
+"id": "pl678"
+},
+{
+"linha": 675,
+"id": "pl679"
+},
+{
+"linha": 676,
+"id": "pl680"
+},
+{
+"linha": 677,
+"id": "pl681"
+},
+{
+"linha": 678,
+"id": "pl682"
+},
+{
+"linha": 679,
+"id": "pl683"
+},
+{
+"linha": 680,
+"id": "pl684"
+},
+{
+"linha": 681,
+"id": "pl685"
+},
+{
+"linha": 682,
+"id": "pl686"
+},
+{
+"linha": 683,
+"id": "pl687"
+},
+{
+"linha": 684,
+"id": "pl688"
+},
+{
+"linha": 685,
+"id": "pl689"
+},
+{
+"linha": 686,
+"id": "pl690"
+},
+{
+"linha": 687,
+"id": "pl691"
+},
+{
+"linha": 688,
+"id": "pl692"
+},
+{
+"linha": 689,
+"id": "pl693"
+},
+{
+"linha": 690,
+"id": "pl694"
+},
+{
+"linha": 691,
+"id": "pl695"
+},
+{
+"linha": 692,
+"id": "pl696"
+},
+{
+"linha": 693,
+"id": "pl697"
+},
+{
+"linha": 694,
+"id": "pl698"
+},
+{
+"linha": 695,
+"id": "pl699"
+},
+{
+"linha": 696,
+"id": "pl700"
+},
+{
+"linha": 697,
+"id": "pl701"
+},
+{
+"linha": 698,
+"id": "pl702"
+},
+{
+"linha": 699,
+"id": "pl703"
+},
+{
+"linha": 700,
+"id": "pl704"
+},
+{
+"linha": 701,
+"id": "pl705"
+},
+{
+"linha": 702,
+"id": "pl706"
+},
+{
+"linha": 703,
+"id": "pl707"
+},
+{
+"linha": 704,
+"id": "pl708"
+},
+{
+"linha": 705,
+"id": "pl709"
+},
+{
+"linha": 706,
+"id": "pl710"
+},
+{
+"linha": 707,
+"id": "pl711"
+},
+{
+"linha": 708,
+"id": "pl712"
+},
+{
+"linha": 709,
+"id": "pl713"
+},
+{
+"linha": 710,
+"id": "pl714"
+},
+{
+"linha": 711,
+"id": "pl715"
+},
+{
+"linha": 712,
+"id": "pl716"
+},
+{
+"linha": 713,
+"id": "pl717"
+},
+{
+"linha": 714,
+"id": "pl718"
+},
+{
+"linha": 715,
+"id": "pl719"
+},
+{
+"linha": 716,
+"id": "pl720"
+},
+{
+"linha": 717,
+"id": "pl721"
+},
+{
+"linha": 718,
+"id": "pl722"
+},
+{
+"linha": 719,
+"id": "pl723"
+},
+{
+"linha": 720,
+"id": "pl724"
+},
+{
+"linha": 721,
+"id": "pl725"
+},
+{
+"linha": 722,
+"id": "pl726"
+},
+{
+"linha": 723,
+"id": "pl727"
+},
+{
+"linha": 724,
+"id": "pl728"
+},
+{
+"linha": 725,
+"id": "pl729"
+},
+{
+"linha": 726,
+"id": "pl730"
+},
+{
+"linha": 727,
+"id": "pl731"
+},
+{
+"linha": 728,
+"id": "pl732"
+},
+{
+"linha": 729,
+"id": "pl733"
+},
+{
+"linha": 730,
+"id": "pl734"
+},
+{
+"linha": 731,
+"id": "pl735"
+},
+{
+"linha": 732,
+"id": "pl736"
+},
+{
+"linha": 733,
+"id": "pl737"
+},
+{
+"linha": 734,
+"id": "pl738"
+},
+{
+"linha": 735,
+"id": "pl739"
+},
+{
+"linha": 736,
+"id": "pl740"
+},
+{
+"linha": 737,
+"id": "pl741"
+},
+{
+"linha": 738,
+"id": "pl742"
+},
+{
+"linha": 739,
+"id": "pl743"
+},
+{
+"linha": 740,
+"id": "pl744"
+},
+{
+"linha": 741,
+"id": "pl745"
+},
+{
+"linha": 742,
+"id": "pl746"
+},
+{
+"linha": 743,
+"id": "pl747"
+},
+{
+"linha": 744,
+"id": "pl748"
+},
+{
+"linha": 745,
+"id": "pl749"
+},
+{
+"linha": 746,
+"id": "pl750"
+},
+{
+"linha": 747,
+"id": "pl751"
+},
+{
+"linha": 748,
+"id": "pl752"
+},
+{
+"linha": 749,
+"id": "pl753"
+},
+{
+"linha": 750,
+"id": "pl754"
+},
+{
+"linha": 751,
+"id": "pl755"
+},
+{
+"linha": 752,
+"id": "pl756"
+},
+{
+"linha": 753,
+"id": "pl757"
+},
+{
+"linha": 754,
+"id": "pl758"
+},
+{
+"linha": 755,
+"id": "pl759"
+},
+{
+"linha": 756,
+"id": "pl760"
+},
+{
+"linha": 757,
+"id": "pl761"
+},
+{
+"linha": 758,
+"id": "pl762"
+},
+{
+"linha": 759,
+"id": "pl763"
+},
+{
+"linha": 760,
+"id": "pl764"
+},
+{
+"linha": 761,
+"id": "pl765"
+},
+{
+"linha": 762,
+"id": "pl766"
+},
+{
+"linha": 763,
+"id": "pl767"
+},
+{
+"linha": 764,
+"id": "pl768"
+},
+{
+"linha": 765,
+"id": "pl769"
+},
+{
+"linha": 766,
+"id": "pl770"
+},
+{
+"linha": 767,
+"id": "pl771"
+},
+{
+"linha": 768,
+"id": "pl772"
+},
+{
+"linha": 769,
+"id": "pl773"
+},
+{
+"linha": 770,
+"id": "pl774"
+},
+{
+"linha": 771,
+"id": "pl775"
+},
+{
+"linha": 772,
+"id": "pl776"
+},
+{
+"linha": 773,
+"id": "pl777"
+},
+{
+"linha": 774,
+"id": "pl778"
+},
+{
+"linha": 775,
+"id": "pl779"
+},
+{
+"linha": 776,
+"id": "pl780"
+},
+{
+"linha": 777,
+"id": "pl781"
+},
+{
+"linha": 778,
+"id": "pl782"
+},
+{
+"linha": 779,
+"id": "pl783"
+},
+{
+"linha": 780,
+"id": "pl784"
+},
+{
+"linha": 781,
+"id": "pl785"
+},
+{
+"linha": 782,
+"id": "pl786"
+},
+{
+"linha": 783,
+"id": "pl787"
+},
+{
+"linha": 784,
+"id": "pl788"
+},
+{
+"linha": 785,
+"id": "pl789"
+},
+{
+"linha": 786,
+"id": "pl790"
+},
+{
+"linha": 787,
+"id": "pl791"
+},
+{
+"linha": 788,
+"id": "pl792"
+},
+{
+"linha": 789,
+"id": "pl793"
+},
+{
+"linha": 790,
+"id": "pl794"
+},
+{
+"linha": 791,
+"id": "pl795"
+},
+{
+"linha": 792,
+"id": "pl796"
+},
+{
+"linha": 793,
+"id": "pl797"
+},
+{
+"linha": 794,
+"id": "pl798"
+},
+{
+"linha": 795,
+"id": "pl799"
+},
+{
+"linha": 796,
+"id": "pl800"
+},
+{
+"linha": 797,
+"id": "pl801"
+},
+{
+"linha": 798,
+"id": "pl802"
+},
+{
+"linha": 799,
+"id": "pl803"
+},
+{
+"linha": 800,
+"id": "pl804"
+},
+{
+"linha": 801,
+"id": "pl805"
+},
+{
+"linha": 802,
+"id": "pl806"
+},
+{
+"linha": 803,
+"id": "pl807"
+},
+{
+"linha": 804,
+"id": "pl808"
+},
+{
+"linha": 805,
+"id": "pl809"
+},
+{
+"linha": 806,
+"id": "pl810"
+},
+{
+"linha": 807,
+"id": "pl811"
+},
+{
+"linha": 808,
+"id": "pl812"
+},
+{
+"linha": 809,
+"id": "pl813"
+},
+{
+"linha": 810,
+"id": "pl814"
+},
+{
+"linha": 811,
+"id": "pl815"
+},
+{
+"linha": 812,
+"id": "pl816"
+},
+{
+"linha": 813,
+"id": "pl817"
+},
+{
+"linha": 814,
+"id": "pl818"
+},
+{
+"linha": 815,
+"id": "pl819"
+},
+{
+"linha": 816,
+"id": "pl820"
+},
+{
+"linha": 817,
+"id": "pl821"
+},
+{
+"linha": 818,
+"id": "pl822"
+},
+{
+"linha": 819,
+"id": "pl823"
+},
+{
+"linha": 820,
+"id": "pl824"
+},
+{
+"linha": 821,
+"id": "pl825"
+},
+{
+"linha": 822,
+"id": "pl826"
+},
+{
+"linha": 823,
+"id": "pl827"
+},
+{
+"linha": 824,
+"id": "pl828"
+},
+{
+"linha": 825,
+"id": "pl829"
+},
+{
+"linha": 826,
+"id": "pl830"
+},
+{
+"linha": 827,
+"id": "pl831"
+},
+{
+"linha": 828,
+"id": "pl832"
+},
+{
+"linha": 829,
+"id": "pl833"
+},
+{
+"linha": 830,
+"id": "pl834"
+},
+{
+"linha": 831,
+"id": "pl835"
+},
+{
+"linha": 832,
+"id": "pl836"
+},
+{
+"linha": 833,
+"id": "pl837"
+},
+{
+"linha": 834,
+"id": "pl838"
+},
+{
+"linha": 835,
+"id": "pl839"
+},
+{
+"linha": 836,
+"id": "pl840"
+},
+{
+"linha": 837,
+"id": "pl841"
+},
+{
+"linha": 838,
+"id": "pl842"
+},
+{
+"linha": 839,
+"id": "pl843"
+},
+{
+"linha": 840,
+"id": "pl844"
+},
+{
+"linha": 841,
+"id": "pl845"
+},
+{
+"linha": 842,
+"id": "pl846"
+},
+{
+"linha": 843,
+"id": "pl847"
+},
+{
+"linha": 844,
+"id": "pl848"
+},
+{
+"linha": 845,
+"id": "pl849"
+},
+{
+"linha": 846,
+"id": "pl850"
+},
+{
+"linha": 847,
+"id": "pl851"
+},
+{
+"linha": 848,
+"id": "pl852"
+},
+{
+"linha": 849,
+"id": "pl853"
+},
+{
+"linha": 850,
+"id": "pl854"
+},
+{
+"linha": 851,
+"id": "pl855"
+},
+{
+"linha": 852,
+"id": "pl856"
+},
+{
+"linha": 853,
+"id": "pl857"
+},
+{
+"linha": 854,
+"id": "pl858"
+},
+{
+"linha": 855,
+"id": "pl859"
+},
+{
+"linha": 856,
+"id": "pl860"
+},
+{
+"linha": 857,
+"id": "pl861"
+},
+{
+"linha": 858,
+"id": "pl862"
+},
+{
+"linha": 859,
+"id": "pl863"
+},
+{
+"linha": 860,
+"id": "pl864"
+},
+{
+"linha": 861,
+"id": "pl865"
+},
+{
+"linha": 862,
+"id": "pl866"
+},
+{
+"linha": 863,
+"id": "pl867"
+},
+{
+"linha": 864,
+"id": "pl868"
+},
+{
+"linha": 865,
+"id": "pl869"
+},
+{
+"linha": 866,
+"id": "pl870"
+},
+{
+"linha": 867,
+"id": "pl871"
+},
+{
+"linha": 868,
+"id": "pl872"
+},
+{
+"linha": 869,
+"id": "pl873"
+},
+{
+"linha": 870,
+"id": "pl874"
+},
+{
+"linha": 871,
+"id": "pl875"
+},
+{
+"linha": 872,
+"id": "pl876"
+},
+{
+"linha": 873,
+"id": "pl877"
+},
+{
+"linha": 874,
+"id": "pl878"
+},
+{
+"linha": 875,
+"id": "pl879"
+},
+{
+"linha": 876,
+"id": "pl880"
+},
+{
+"linha": 877,
+"id": "pl881"
+},
+{
+"linha": 878,
+"id": "pl882"
+},
+{
+"linha": 879,
+"id": "pl883"
+},
+{
+"linha": 880,
+"id": "pl884"
+},
+{
+"linha": 881,
+"id": "pl885"
+},
+{
+"linha": 882,
+"id": "pl886"
+},
+{
+"linha": 883,
+"id": "pl887"
+},
+{
+"linha": 884,
+"id": "pl888"
+},
+{
+"linha": 885,
+"id": "pl889"
+},
+{
+"linha": 886,
+"id": "pl890"
+},
+{
+"linha": 887,
+"id": "pl891"
+},
+{
+"linha": 888,
+"id": "pl892"
+},
+{
+"linha": 889,
+"id": "pl893"
+},
+{
+"linha": 890,
+"id": "pl894"
+},
+{
+"linha": 891,
+"id": "pl895"
+},
+{
+"linha": 892,
+"id": "pl896"
+},
+{
+"linha": 893,
+"id": "pl897"
+},
+{
+"linha": 894,
+"id": "pl898"
+},
+{
+"linha": 895,
+"id": "pl899"
+},
+{
+"linha": 896,
+"id": "pl900"
+},
+{
+"linha": 897,
+"id": "pl901"
+},
+{
+"linha": 898,
+"id": "pl902"
+},
+{
+"linha": 899,
+"id": "pl903"
+},
+{
+"linha": 900,
+"id": "pl904"
+},
+{
+"linha": 901,
+"id": "pl905"
+},
+{
+"linha": 902,
+"id": "pl906"
+},
+{
+"linha": 903,
+"id": "pl907"
+},
+{
+"linha": 904,
+"id": "pl908"
+},
+{
+"linha": 905,
+"id": "pl909"
+},
+{
+"linha": 906,
+"id": "pl910"
+},
+{
+"linha": 907,
+"id": "pl911"
+},
+{
+"linha": 908,
+"id": "pl912"
+},
+{
+"linha": 909,
+"id": "pl913"
+},
+{
+"linha": 910,
+"id": "pl914"
+},
+{
+"linha": 912,
+"id": "pl915"
+},
+{
+"linha": 913,
+"id": "pl916"
+},
+{
+"linha": 914,
+"id": "pl917"
+},
+{
+"linha": 916,
+"id": "pl147"
+},
+{
+"linha": 917,
+"id": "pl153"
+},
+{
+"linha": 918,
+"id": "pl148"
+},
+{
+"linha": 919,
+"id": "pl151"
+},
+{
+"linha": 920,
+"id": "pl152"
+}
+],
+"novas": {
+"9": {
+"cliente_id": "CLI-M0187",
+"codinome": "JCS",
+"consultor": "André",
+"tipo": "SISTEMA",
+"indicador": {
+"id": "p698",
+"nome": "ROBERTO MIGOTTO"
+},
+"arquitetura": {
+"id": "p698",
+"nome": "ROBERTO MIGOTTO"
+},
+"gerenciadora": null,
+"id": "pl19n9"
+},
+"138": {
+"cliente_id": "c_qcy8py",
+"codinome": "AMEX",
+"consultor": "Edson",
+"tipo": "PROJETO",
+"indicador": {
+"id": "p720",
+"nome": "PERKINS & WILL"
+},
+"arquitetura": null,
+"gerenciadora": null,
+"id": "pl19n138"
+},
+"139": {
+"cliente_id": "c_n3wgdw",
+"codinome": "ACP",
+"consultor": "Edson",
+"tipo": "SISTEMA",
+"indicador": {
+"id": "p703",
+"nome": "STUDIO ARTHUR CASAS"
+},
+"arquitetura": {
+"id": "p703",
+"nome": "STUDIO ARTHUR CASAS"
+},
+"gerenciadora": null,
+"id": "pl19n139"
+},
+"143": {
+"cliente_id": null,
+"codinome": "CJC",
+"consultor": "Edson",
+"tipo": "SISTEMA",
+"indicador": {
+"id": "p700",
+"nome": "CONSTRUTORA OSBORNE RJ"
+},
+"arquitetura": {
+"id": "p1009",
+"nome": "OURIÇO ARQUITETURA RJ"
+},
+"gerenciadora": null,
+"id": "pl19n143"
+},
+"146": {
+"cliente_id": null,
+"codinome": "FJ12",
+"consultor": "Edson",
+"tipo": "PROJETO",
+"indicador": {
+"id": "p677",
+"nome": "LUCIANO DALLA MARTA ARQUITETURA"
+},
+"arquitetura": {
+"id": "p677",
+"nome": "LUCIANO DALLA MARTA ARQUITETURA"
+},
+"gerenciadora": null,
+"id": "pl19n146"
+},
+"148": {
+"cliente_id": null,
+"codinome": "IBB",
+"consultor": "Edson",
+"tipo": "SISTEMA",
+"indicador": {
+"id": "p703",
+"nome": "STUDIO ARTHUR CASAS"
+},
+"arquitetura": {
+"id": "p703",
+"nome": "STUDIO ARTHUR CASAS"
+},
+"gerenciadora": null,
+"id": "pl19n148"
+},
+"153": {
+"cliente_id": null,
+"codinome": "LAF",
+"consultor": "Edson",
+"tipo": "SISTEMA",
+"indicador": {
+"id": "p703",
+"nome": "STUDIO ARTHUR CASAS"
+},
+"arquitetura": {
+"id": "p703",
+"nome": "STUDIO ARTHUR CASAS"
+},
+"gerenciadora": null,
+"id": "pl19n153"
+},
+"921": {
+"cliente_id": "c_h275z4",
+"codinome": "ATK",
+"consultor": "Edson",
+"tipo": "SISTEMA",
+"indicador": {
+"id": "p703",
+"nome": "STUDIO ARTHUR CASAS"
+},
+"arquitetura": {
+"id": "p703",
+"nome": "STUDIO ARTHUR CASAS"
+},
+"gerenciadora": {
+"id": "p1476",
+"nome": "FERRI"
+},
+"nota_regra": "linha nova sem consultor/tipo na planilha — Edson · SISTEMA (próxima fase do Tamboré II; o PROJETO fechou na linha 917), decidido por Bruno em 19/11/2026",
+"id": "pl19n921"
+}
+},
+"saiu": [
+{
+"id": "pl154",
+"acao": "perdido",
+"cliente_nome": "Vanessa e David Isaac",
+"regra": "apagada da planilha entre 05/11 e 19/11/2026 — marcada como Perdido, decidido por Bruno em 19/11/2026"
+}
+]
+}

@@ -25,30 +25,91 @@ const SEM='Sem status na planilha';
 
 /* ---------- §1 a linha da planilha entra na Base ---------- */
 function liga(){const db=S.db;const N=db.negociacoes||[];let mud=0;
+  const iso=d=>{const m=String(d||'').match(/(\d{2})\/(\d{2})\/(\d{4})/);return m?m[3]+'-'+m[2]+'-'+m[1]:''};
+  /* 19/11: as negociações novas da planilha nascem aqui (id fixo, o mesmo em todos os computadores) — antes da ligação */
+  T(()=>criaNovas(db,iso),null);
   const L=N.filter(n=>/^Pipeline \(/.test(n.origem||'')).sort((a,b)=>(+String(a.id).replace(/\D/g,'')||0)-(+String(b.id).replace(/\D/g,'')||0));
-  const usados=new Set();const falta=[];const iso=d=>{const m=String(d||'').match(/(\d{2})\/(\d{2})\/(\d{4})/);return m?m[3]+'-'+m[2]+'-'+m[1]:''};
+  const byId={};(db.negociacoes||[]).forEach(n=>{byId[n.id]=n});
+  const usados=new Set();const falta=[];
   const pts=(n,r)=>(nz(n.status_pipeline)===nz(r.c[ST])?2:0)+(String(n.data_upgrade||'').slice(0,10)===iso(r.c[12])?1:0)+(nz(n.consultor)===nz(r.c[CONS])?1:0)+(nz(n.cliente_nome)===nz(r.c[CLI])?3:0)+(nz(n.tipo_pipeline)===nz(r.c[TIPO])?1:0);
-  let ptr=0;
-  D.rows.forEach(r=>{let best=null,bp=-1;for(let k=Math.max(0,ptr-8);k<Math.min(L.length,ptr+9);k++){const n=L[k];if(usados.has(n.id))continue;const p=pts(n,r)-Math.abs(k-ptr)*0.01;if(p>bp){bp=p;best=k}}
-    if(best==null||bp<4){const k=L.findIndex(n=>!usados.has(n.id)&&nz(n.cliente_nome)===nz(r.c[CLI]));if(k>=0){best=k;bp=9}}
-    if(best==null||bp<4){falta.push(r.linha);return}
-    const n=L[best];usados.add(n.id);ptr=best+1;
+  let ptr=0;const mudSt=[];
+  D.rows.forEach(r=>{let n=null;
+    /* 19/11: a leitura diz a qual negociação cada linha pertence (r.id) — as linhas mudam de lugar na planilha */
+    if(r.id){n=byId[r.id]||null;if(!n||usados.has(n.id)){falta.push(r.linha);return}}
+    else{let best=null,bp=-1;for(let k=Math.max(0,ptr-8);k<Math.min(L.length,ptr+9);k++){const x=L[k];if(usados.has(x.id))continue;const p=pts(x,r)-Math.abs(k-ptr)*0.01;if(p>bp){bp=p;best=k}}
+      if(best==null||bp<4){const k=L.findIndex(x=>!usados.has(x.id)&&nz(x.cliente_nome)===nz(r.c[CLI]));if(k>=0){best=k;bp=9}}
+      if(best==null||bp<4){falta.push(r.linha);return}
+      n=L[best];ptr=best+1}
+    usados.add(n.id);
     const pl={linha:r.linha,c:r.c};const novo=JSON.stringify(n.planilha)!==JSON.stringify(pl);if(novo){n.planilha=pl;mud++}
-    if(!novo&&n.v159_aplicado)return; n.v159_aplicado=D.quando;
+    if(!novo&&n.v159_aplicado===D.quando)return; n.v159_aplicado=D.quando;
     /* o STATUS da planilha manda: resultado e etapa seguem o que está escrito nela hoje */
+    const stAntes=n.status_pipeline||(n.resultado==='sem_status'?'(em branco)':'');
     const st=nz(r.c[ST]);const RES={fechado:'fechada',perdido:'perdida',futuro:'futuro'};const ETP={'proposta enviada':'enviada','desenvolver proposta':'desenvolver','revisao de proposta':'revisao','proposta desenvolvida':'desenvolvida','aguardando apresentacao':'aguardando'};
     let res,etp;if(!st){res='sem_status';etp=SEM}else if(RES[st]){res=RES[st];etp=n.etapa===SEM?'desenvolver':n.etapa}else if(ETP[st]){res=null;etp=ETP[st]}else{res=n.resultado;etp=n.etapa}
     if((n.resultado||null)!==(res||null)){n.resultado=res;mud++}if(n.etapa!==etp){n.etapa=etp;mud++}
     if(r.c[ST]&&n.status_pipeline!==r.c[ST]){n.status_pipeline=r.c[ST];mud++}
+    if(r.c[ST]&&stAntes&&nz(stAntes)!==st&&n.v159_criada!==D.quando)mudSt.push({n,de:stAntes,para:r.c[ST],linha:r.linha});
     if(r.c[CONS]&&n.consultor!==r.c[CONS]){n.consultor=r.c[CONS];mud++}
-    const ch=r.c[0]===''?null:+r.c[0];if(r.c[0]!==''&&!isNaN(ch)&&n.chance!==ch){n.chance=ch;mud++}});
+    if(r.c[TIPO]&&n.tipo_pipeline!==r.c[TIPO]){n.tipo_pipeline=r.c[TIPO];mud++}
+    if(r.c[8]&&n.gestao!==r.c[8]){n.gestao=r.c[8];mud++}
+    [[11,'data_envio'],[12,'data_upgrade'],[13,'data_decisao'],[15,'previsao_obra']].forEach(([i,k])=>{const v=iso(r.c[i]);if(v&&n[k]!==v){n[k]=v;mud++}});
+    if(r.c[14]&&n.motivo_perda!==r.c[14]){n.motivo_perda=r.c[14];mud++}
+    const ch=r.c[0]===''?null:+String(r.c[0]).replace(',','.');if(r.c[0]!==''&&!isNaN(ch)&&n.chance!==ch){n.chance=ch;mud++}});
+  /* 19/11 (Bruno): mudança de STATUS na planilha também vira uma linha no Histórico do cliente */
+  mud+=T(()=>historicoStatus(db,mudSt),0);
+  /* 19/11 (Bruno): negociação que saiu da planilha e ele disse o que fazer (D.saiu) */
+  mud+=T(()=>saiuDaPlanilha(db,usados),0);
   N.forEach(n=>{if(n.planilha&&!usados.has(n.id)){delete n.planilha;mud++}});
-  let fora=L.filter(n=>!usados.has(n.id)).map(n=>n.id);
+  let fora=L.filter(n=>!usados.has(n.id)&&!n.v159_saiu).map(n=>n.id);
   /* linhas que a nossa importação de 02/11 quebrou (o STATUS caiu na coluna CLIENTE): não são negociações — saem da Base */
   const lixo=L.filter(n=>!usados.has(n.id)&&/^(fechado|perdido|futuro)$/.test(nz(n.cliente_nome)));
   if(lixo.length){const ids=new Set(lixo.map(n=>n.id));db.negociacoes=db.negociacoes.filter(n=>!ids.has(n.id));db._v159_removidas=(db._v159_removidas||[]).concat(lixo.map(n=>({id:n.id,cliente_nome:n.cliente_nome,quando:D.quando,motivo:'linha quebrada da importação de 02/11 (STATUS na coluna CLIENTE)'})));mud+=lixo.length;fora=fora.filter(id=>!ids.has(id))}
   db._v159={quando:D.quando,linhas:D.rows.length,ligadas:usados.size,sem_negociacao:falta,fora_da_planilha:fora};
   return mud}
+
+/* ---------- §1b (19/11) negociações novas, status no histórico, as que saíram ---------- */
+const p2=x=>String(x).padStart(2,'0');
+const agora=()=>{const d=new Date;return d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate())+'T'+p2(d.getHours())+':'+p2(d.getMinutes())};
+const hs=s=>{let x=2166136261;for(const ch of String(s)){x^=ch.codePointAt(0);x=Math.imul(x,16777619)>>>0}return x.toString(36)};
+const brD=s=>{const m=String(s||'').match(/^(\d{4})-(\d{2})-(\d{2})/);return m?m[3]+'/'+m[2]+'/'+m[1]:''};
+function H(db){if(!Array.isArray(db.historico_cliente))db.historico_cliente=[];return db.historico_cliente}
+function criaNovas(db,iso){const NV=D.novas||{};let n0=0;db.negociacoes=db.negociacoes||[];db.clientes=db.clientes||[];
+  Object.keys(NV).forEach(l=>{const s=NV[l];const r=D.rows.find(x=>String(x.linha)===String(l));if(!r||!s.id)return;
+    if(db.negociacoes.some(n=>n.id===s.id))return;
+    if((db._v159_apagadas||[]).includes(s.id))return; /* apagada na Base de propósito: não volta */
+    let cid=s.cliente_id&&db.clientes.some(c=>c.id===s.cliente_id)?s.cliente_id:null;
+    if(!cid){cid='c_'+s.id;if(!db.clientes.some(c=>c.id===cid))db.clientes.push({id:cid,nome:r.c[CLI],sigla:s.codinome||'',aliases:[],arquiteto:s.arquitetura?s.arquitetura.nome:'',origem:'Pipeline (planilha To Do Comercial, '+brD(D.quando)+')'})}
+    const cli=db.clientes.find(c=>c.id===cid);const f=x=>x?x.nome:'';const pid=x=>x?x.id:'';
+    db.negociacoes.push({id:s.id,codinome:s.codinome||'',cliente_nome:r.c[CLI],cliente_id:cid,frente:s.frente||'taag',consultor:r.c[CONS]||s.consultor||'',
+      tipo_pipeline:r.c[TIPO]||s.tipo||'',status_pipeline:'',etapa:'desenvolver',resultado:null,chance:null,valor:0,
+      criado:iso(r.c[1])||D.quando,movido:D.quando,data_upgrade:iso(r.c[12]),data_envio:iso(r.c[11]),data_decisao:'',motivo_perda:'',previsao_obra:'',gestao:'',
+      fontes:{indicador:f(s.indicador),arquitetura:f(s.arquitetura),gerenciadora:f(s.gerenciadora)},
+      parceiros:{indicador:pid(s.indicador),arquitetura:pid(s.arquitetura),gerenciadora:pid(s.gerenciadora)},
+      cadeia:{arquiteto:f(s.arquitetura),escritorio:f(s.arquitetura),gerenciadora:f(s.gerenciadora)},
+      proposta_ids:[],proxima:{acao:'Acompanhar com o consultor',data:'',resultado_anterior:''},
+      timeline:[{data:D.quando,o:'Negociação nova na planilha To Do Comercial (linha '+l+'), lida em '+brD(D.quando)+(cli&&cli.id===s.cliente_id?' · cliente que já estava na Base: '+cli.nome:' · cliente novo na Base')+(s.nota_regra?' · '+s.nota_regra:'')}],
+      origem:'Pipeline (planilha To Do Comercial, '+brD(D.quando)+')',v159_criada:D.quando});n0++});
+  return n0}
+function etq(n){return[n.tipo_pipeline,n.status_pipeline||n.resultado||'em aberto'].filter(Boolean).join(' · ')}
+function cliK(n){return n.cliente_id?String(n.cliente_id):'nm:'+nz(n.cliente_nome)}
+function historicoStatus(db,xs){if(!xs.length)return 0;const h=H(db);const ja=new Set(h.map(e=>e.id));let k=0;
+  xs.forEach(({n,de,para,linha})=>{const id='HC-st-'+n.id+'-'+hs(D.quando+'|'+nz(de)+'>'+nz(para));if(ja.has(id))return;
+    const txt='Status na planilha: '+de+' → '+para;
+    h.push({id,nome:(n.cliente_nome||'')+' · '+txt.slice(0,50),cli:cliK(n),cliente_nome:n.cliente_nome||'',neg_id:n.id,neg_etq:etq(n),texto:txt,quando:D.quando,
+      quem:(n.consultor||'')+'',origem:'planilha',tipo:'status',nota_origem:'To Do Comercial › Pipeline, linha '+linha+' · status mudou na leitura de '+brD(D.quando),criado:agora()});
+    (n.timeline=n.timeline||[]).push({data:D.quando,o:txt+' (leitura de '+brD(D.quando)+')'});ja.add(id);k++});
+  return k}
+function saiuDaPlanilha(db,usados){let k=0;const h=H(db);
+  (D.saiu||[]).forEach(s=>{const n=(db.negociacoes||[]).find(x=>x.id===s.id);if(!n||usados.has(n.id)||n.v159_saiu===D.quando)return;
+    const de=n.status_pipeline||'';n.v159_saiu=D.quando;
+    if(s.acao==='perdido'){n.resultado='perdida';n.status_pipeline='PERDIDO';if(!n.motivo_perda)n.motivo_perda='Saiu da planilha To Do Comercial ('+brD(D.quando)+')';if(!n.data_decisao)n.data_decisao=D.quando}
+    const txt='Saiu da planilha To Do Comercial em '+brD(D.quando)+(s.acao==='perdido'?' — marcada como Perdido'+(de?' (era '+de+')':''):'');
+    const id='HC-saiu-'+n.id+'-'+hs(D.quando);
+    if(!h.some(e=>e.id===id))h.push({id,nome:(n.cliente_nome||'')+' · '+txt.slice(0,50),cli:cliK(n),cliente_nome:n.cliente_nome||'',neg_id:n.id,neg_etq:etq(n),texto:txt,quando:D.quando,
+      quem:(n.consultor||'')+'',origem:'planilha',tipo:'status',nota_origem:s.regra||'',criado:agora()});
+    (n.timeline=n.timeline||[]).push({data:D.quando,o:txt});k++});
+  return k}
 const mud=T(liga,0);
 
 /* ---------- §2 KPI conta os sem status ---------- */

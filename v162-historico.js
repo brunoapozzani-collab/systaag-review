@@ -44,15 +44,17 @@ const UI=window.V162=window.V162||{};
 UI.f=UI.f||{};
 
 /* ═════════════ §1 a coluna da planilha entra como primeira anotação (e cada texto novo vira anotação nova) ═════════════ */
-const COL=8; /* "Reunião- Gerenciamento de Vendas" */
+const COL=8;
+/* 19/11: id fixo para o texto importado (negociação + texto) — dois computadores abrindo ao mesmo tempo gravam o MESMO registro, nunca duas linhas iguais */
+const hcId=(n,txt)=>{let x=2166136261;for(const ch of nz(txt)){x^=ch.codePointAt(0);x=Math.imul(x,16777619)>>>0}return 'HC-pl-'+n.id+'-'+x.toString(36)}; /* "Reunião- Gerenciamento de Vendas" */
 function importa(){const N=S.db.negociacoes||[];const h=H();
   const ja=new Set(h.filter(e=>e.origem==='planilha').map(e=>e.neg_id+'|'+nz(e.texto)));const jaNome=new Set(h.filter(e=>e.origem==='planilha').map(e=>nz(e.cliente_nome)+'|'+nz(e.texto)));const quando=T(()=>window.V159_PIPE.quando,'')||'';let novos=0;
   N.forEach(n=>{const c=n.planilha&&n.planilha.c;if(!c)return;const txt=String(c[COL]||'').trim();if(!txt||/^[-—.]+$/.test(txt))return;
     const k=nz(n.cliente_nome)+'|'+nz(txt);if(ja.has(n.id+'|'+nz(txt))||(n.v162_planilha===txt))return;
     const primeira=!h.some(e=>e.origem==='planilha'&&e.neg_id===n.id)&&n.v162_planilha==null;
     if(jaNome.has(k)&&primeira){n.v162_planilha=txt;return}
-    const dt=primeira?(isoBR(c[12])||isoBR(c[11])||''):quando;
-    h.push({id:uid(),nome:(n.cliente_nome||'')+' · '+txt.slice(0,50),cli:cliKey(n),cliente_nome:n.cliente_nome||'',neg_id:n.id,neg_etq:etqNeg(n),texto:txt,quando:dt,
+    const dt=primeira?(isoBR(c[12])||isoBR(c[11])||n.v159_criada||''):quando;
+    h.push({id:hcId(n,txt),nome:(n.cliente_nome||'')+' · '+txt.slice(0,50),cli:cliKey(n),cliente_nome:n.cliente_nome||'',neg_id:n.id,neg_etq:etqNeg(n),texto:txt,quando:dt,
       quem:(n.consultor||c[4]||'')+'',origem:'planilha',
       nota_origem:'To Do Comercial › Pipeline, linha '+n.planilha.linha+(primeira?(dt?' · data de upgrade da planilha':' · a planilha não tem data'):' · texto novo na leitura de '+brD(quando)),
       criado:agora()});
