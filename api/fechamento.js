@@ -24,7 +24,7 @@ async function montar() {
   return { T, a, w, R };
 }
 
-async function enviar(T, R, por) {
+async function enviar(T, R, por, semSnapshot) {
   const lista = destinatarios(T);
   if (!lista.length) return { enviado: false, motivo: 'Nenhum destinatário (Base › Envio semanal do CRM)' };
   if (!process.env.SMTP_USER || !process.env.SMTP_PASS) return { enviado: false, motivo: 'Remetente não configurado na Vercel (SMTP_USER / SMTP_PASS)' };
@@ -38,7 +38,7 @@ async function enviar(T, R, por) {
   await cfgSet(T, 'envio_ultimo', new Date().toISOString() + ' · ' + por + ' · ' + lista.length + ' destinatário(s)', por);
   const resumoTxt = 'Interações ' + R.ints + ' · Eventos ' + R.eventos + ' · Ações concluídas ' + R.concluidas + ' · Atrasadas ' + R.atrasadas + ' · Indicações ' + R.recebidas + ' · Propostas enviadas ' + R.enviadas + ' · Fechadas ' + R.fechadas + ' · Perdidas ' + R.perdidas;
   const id = Date.now() * 1000 + Math.floor(Math.random() * 1000);
-  await gravar([{ tabela: 'snapshots', id, dados: { id, semana_ini: R.ini, semana_fim: R.fim, gerado_em: new Date().toISOString(), gerado_por: por, resumo: resumoTxt, html } }], por);
+  if (!semSnapshot) await gravar([{ tabela: 'snapshots', id, dados: { id, semana_ini: R.ini, semana_fim: R.fim, gerado_em: new Date().toISOString(), gerado_por: por, resumo: resumoTxt, html } }], por);
   return { enviado: true, para: lista, de: process.env.SMTP_USER, anexo: !!pdf, semana: fmtBR(R.ini) + ' a ' + fmtBR(R.fim), id_mensagem: info && info.messageId, aviso };
 }
 
@@ -70,7 +70,7 @@ export default async function handler(req, res) {
       const ult = cfg(T, 'envio_ultimo', ''); const t0 = Date.parse(ult.split(' · ')[0]);
       if (t0 && Date.now() - t0 < 10 * 60 * 1000) return res.status(429).json({ ok: false, erro: 'Um fechamento acabou de ser enviado (' + ult + '). Aguarde 10 minutos.' });
       const corpo = await lerCorpo(req);
-      return res.status(200).json(Object.assign({ ok: true }, await enviar(T, R, String(corpo.por || 'ENVIO MANUAL').slice(0, 60))));
+      return res.status(200).json(Object.assign({ ok: true }, await enviar(T, R, String(corpo.por || 'ENVIO MANUAL').slice(0, 60), !!corpo.sem_snapshot)));
     }
     if (modo === 'config') {
       if (req.method !== 'POST') return res.status(400).json({ ok: false, erro: 'Use POST' });
