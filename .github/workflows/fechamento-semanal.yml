@@ -1,0 +1,18 @@
+# Fechamento semanal do CRM — agendador (19/11/2026)
+# A cada 10 minutos pergunta ao /api/fechamento se é hora de enviar. Quem decide é a Base do protótipo
+# (envio ligado/desligado, dia da semana, hora). Se não for a hora, nada acontece.
+name: Fechamento semanal do CRM
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch: {}
+jobs:
+  verificar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Perguntar se é hora de enviar
+        run: |
+          curl -sS --max-time 90 "https://systaag-review-tau.vercel.app/api/fechamento?modo=auto" | tee resposta.json
+          echo
+          grep -q '"ok":true' resposta.json
