@@ -72,8 +72,10 @@ export default async function handler(req, res) {
       return res.status(200).json(Object.assign({ ok: true }, await enviar(T, R, String(corpo.por || 'ENVIO MANUAL').slice(0, 60), !!corpo.sem_snapshot)));
     }
     if (modo === 'config') {
-      if (req.method !== 'POST') return res.status(400).json({ ok: false, erro: 'Use POST' });
-      const corpo = await lerCorpo(req); const T = await lerTabelas(['config']); const por = String(corpo.por || 'BASE').slice(0, 60); const feito = {};
+      const viaGet = req.method === 'GET' && String(req.query.confirmo || '') === agoraSP().iso; /* GET só com a data de hoje (uso interno) */
+      if (req.method !== 'POST' && !viaGet) return res.status(400).json({ ok: false, erro: 'Use POST' });
+      const corpo = viaGet ? Object.assign({}, req.query, { envio_auto: req.query.envio_auto === undefined ? undefined : req.query.envio_auto === '1' }) : await lerCorpo(req);
+      ['modo', 'confirmo'].forEach(k => delete corpo[k]); const T = await lerTabelas(['config']); const por = String(corpo.por || 'BASE').slice(0, 60); const feito = {};
       if (corpo.envio_auto !== undefined) { await cfgSet(T, 'envio_auto', corpo.envio_auto ? '1' : '0', por); feito.envio_auto = corpo.envio_auto ? '1' : '0'; }
       if (corpo.envio_dia !== undefined) { const d = +corpo.envio_dia; if (!(d >= 1 && d <= 7)) return res.status(400).json({ ok: false, erro: 'Dia inválido (1=segunda … 7=domingo)' }); await cfgSet(T, 'envio_dia', String(d), por); feito.envio_dia = d; }
       if (corpo.envio_hora !== undefined) { const h = String(corpo.envio_hora); if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(h)) return res.status(400).json({ ok: false, erro: 'Hora inválida (HH:MM)' }); await cfgSet(T, 'envio_hora', h, por); feito.envio_hora = h; }
