@@ -88,7 +88,7 @@ async function fotoDaNuvem(){
   }catch(e){console.warn('foto: falhou — publicação sem foto (',String(e&&e.message||e).slice(0,200),')');return null}
 }
 /* primeiro os arquivos soltos (para o index.html poder carimbar cada um com a impressão digital dele) */
-const SKIP=['dist','node_modules','.git','build.mjs','package.json','package-lock.json','vercel.json','README.md','.gitignore','loader.html','index.html'];
+const SKIP=['dist','node_modules','.git','.github','api','build.mjs','package.json','package-lock.json','vercel.json','README.md','.gitignore','loader.html','index.html'];
 for(const f of readdirSync('.')){
   if(SKIP.includes(f))continue;
   const st=statSync(f);
