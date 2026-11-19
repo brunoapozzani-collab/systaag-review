@@ -61,8 +61,11 @@ export default async function handler(req, res) {
       return res.status(200).json(Object.assign({ ok: true }, await enviar(T, R, 'ENVIO AUTOMÁTICO')));
     }
     if (modo === 'enviar') {
-      if (req.method !== 'POST' || String(req.query.confirmo) !== 'sim') return res.status(400).json({ ok: false, erro: 'Use POST com confirmo=sim' });
       const { T, R } = await montar();
+      /* POST com confirmo=sim (botões da Base/CRM) — ou GET com confirmo=<início da semana>, que só vale uma vez por semana */
+      const getSemana = req.method === 'GET' && String(req.query.confirmo) === R.ini;
+      if (!getSemana && (req.method !== 'POST' || String(req.query.confirmo) !== 'sim')) return res.status(400).json({ ok: false, erro: 'Use POST com confirmo=sim' });
+      if (getSemana && cfg(T, 'semana_enviada', '') === R.ini) return res.status(409).json({ ok: false, erro: 'Semana ' + fmtBR(R.ini) + ' já enviada' });
       const ult = cfg(T, 'envio_ultimo', ''); const t0 = Date.parse(ult.split(' · ')[0]);
       if (t0 && Date.now() - t0 < 10 * 60 * 1000) return res.status(429).json({ ok: false, erro: 'Um fechamento acabou de ser enviado (' + ult + '). Aguarde 10 minutos.' });
       const corpo = await lerCorpo(req);
