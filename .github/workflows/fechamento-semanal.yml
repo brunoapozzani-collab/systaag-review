@@ -1,18 +1,37 @@
 # Fechamento semanal do CRM — agendador (19/11/2026)
 # A cada 10 minutos pergunta ao /api/fechamento se é hora de enviar. Quem decide é a Base do protótipo
-# (envio ligado/desligado, dia da semana, hora). Se não for a hora, nada acontece.
+# (Base › Envio semanal do CRM: ligado/desligado, dia da semana, hora). Se não for a hora, nada acontece.
+# Também pode ser rodado à mão (Actions › Run workflow): "auto" (padrão), "enviar" (envia agora) ou "config" (corpo JSON).
 name: Fechamento semanal do CRM
 on:
   schedule:
     - cron: '*/10 * * * *'
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      modo:
+        description: 'auto | enviar | config'
+        default: 'auto'
+        required: true
+      corpo:
+        description: 'JSON (para config / enviar)'
+        default: '{}'
+        required: false
 jobs:
   verificar:
     runs-on: ubuntu-latest
     timeout-minutes: 3
     steps:
-      - name: Perguntar se é hora de enviar
+      - name: Chamar o servidor
+        env:
+          MODO: ${{ github.event.inputs.modo || 'auto' }}
+          CORPO: ${{ github.event.inputs.corpo || '{}' }}
         run: |
-          curl -sS --max-time 90 "https://systaag-review-tau.vercel.app/api/fechamento?modo=auto" | tee resposta.json
+          URL="https://systaag-review-tau.vercel.app/api/fechamento"
+          case "$MODO" in
+            auto)   curl -sS --max-time 90 "$URL?modo=auto" | tee resposta.json ;;
+            enviar) curl -sS --max-time 90 -X POST -H 'content-type: application/json' --data "$CORPO" "$URL?modo=enviar&confirmo=sim" | tee resposta.json ;;
+            config) curl -sS --max-time 90 -X POST -H 'content-type: application/json' --data "$CORPO" "$URL?modo=config" | tee resposta.json ;;
+            *) echo "modo inválido"; exit 1 ;;
+          esac
           echo
           grep -q '"ok":true' resposta.json
