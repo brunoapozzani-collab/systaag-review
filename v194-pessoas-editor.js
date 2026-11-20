@@ -72,13 +72,13 @@ function darAcesso(p){if(usuarioDe(p.id))return usuarioDe(p.id);
 
 /* ───────── 1 · correção de dados (uma vez por base, com desfazer guardado) ───────── */
 function corrigir(){
-  if(window.__TREINO||db().__v194a)return;
+  if(window.__TREINO||db().__v194b)return;
   const undo=[];
   pessoas().forEach(p=>{const m=/^(.*?)\s*\((consultor\(a\)|consultora?)\)\s*$/i.exec(p.nome||'');
     if(m&&m[1]){undo.push({id:p.id,nome:p.nome});renomear(p,m[1].trim())}});
   (db().perfis||[]).forEach(r=>{if(r.pessoa_id)return;const p=pessoas().find(x=>[x.nome,x.nomeCompleto].some(n=>norm(n)===norm(r.nome)));
     if(p){undo.push({perfil:r.id,pessoa_id:null});r.pessoa_id=p.id;r.nome=p.nome}});
-  db().__v194_undo=undo;db().__v194a=new Date().toISOString();save_();
+  db().__v194_undo=undo;db().__v194b=new Date().toISOString();save_();try{redraw()}catch(e){}
 }
 
 /* ───────── 2 · a tela: Base › Usuários e permissões ───────── */
@@ -153,6 +153,12 @@ function ligarTela(){
     const hd=(typeof head==='function'?head('Pessoas','Toque numa pessoa para mudar o nome, a cor, o departamento, o acesso — ou para desligar e excluir.'):'<h1 class="h1">Pessoas</h1>');
     return hd+seg()+grade()};
   Object.keys(_q).forEach(k=>{try{g[k]=_q[k]}catch(e){}});g.__v194=true;SCREENS.equipe=g}
+/* a camada de permissões desenha a Equipe direto (telaEquipe) no renderMain, sem passar por SCREENS.equipe — por isso também aqui */
+function ligarRender(){const _rm=window.renderMain;if(typeof _rm!=='function'||_rm.__v194)return;
+  const g=function(){const r=_rm.apply(this,arguments);try{if(/^#\/equipe(\/|$)/.test(location.hash||'')){const m=document.getElementById('main');if(!m)return r;
+      if(ST.vista==='pessoas'){m.innerHTML=SCREENS.equipe();document.title='SYSTAAG · Pessoas'}
+      else if(!m.querySelector('.v194-seg'))m.insertAdjacentHTML('afterbegin',seg())}}catch(e){console.error('v194 render',e)}return r};
+  for(const k in _rm)try{g[k]=_rm[k]}catch(e){}g.__v194=1;window.renderMain=g;try{renderMain=g}catch(e){}}
 
 /* ───────── 3 · o editor (painel lateral) ───────── */
 let ED=null;
@@ -240,7 +246,9 @@ window.V194={abrir,fechar,salvar,ativo,acesso,excluir,deQuem,corDe,corDoLogin,fa
   busca(v){ST.q=v;clearTimeout(ST.t);ST.t=setTimeout(()=>{redraw();const q=document.getElementById('v194-q');if(q){q.focus();q.setSelectionRange(q.value.length,q.value.length)}},250)}};
 
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&document.getElementById('v194-ov'))fechar()});
-try{corrigir()}catch(e){console.error('v194 corrigir',e)}
-try{ligarTela()}catch(e){console.error('v194 tela',e)}
+/* a correção espera a primeira leitura da nuvem (antes disso a nuvem sobrescreve o que rodou) */
+const corrigirDepois=()=>{try{corrigir()}catch(e){console.error('v194 corrigir',e)}};
+if(window.__v172pronto)corrigirDepois();else window.addEventListener('v172-pronta',corrigirDepois,{once:true});
+try{ligarTela();ligarRender()}catch(e){console.error('v194 tela',e)}
 try{if(/^#\/equipe(\/|$)/.test(location.hash||''))redraw()}catch(e){}
 })();
