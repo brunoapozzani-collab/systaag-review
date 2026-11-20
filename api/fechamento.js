@@ -26,7 +26,7 @@ async function montar() {
 
 async function enviar(T, R, por, semSnapshot) {
   const lista = destinatarios(T);
-  if (!lista.length) return { enviado: false, motivo: 'Nenhum destinatário (Base › Envio semanal do CRM)' };
+  if (!lista.length) return { enviado: false, motivo: 'Nenhum destinatário (Base › Relacionamento (CRM) › Envio semanal)' };
   if (!process.env.SMTP_USER || !process.env.SMTP_PASS) return { enviado: false, motivo: 'Remetente não configurado na Vercel (SMTP_USER / SMTP_PASS)' };
   let pdf = null, aviso = '';
   try { pdf = await gerarPdf(R, geradoEm()); } catch (e) { aviso = ' (sem anexo: ' + (e && e.message || e) + ')'; }

@@ -4,7 +4,7 @@
    O Tito desligou a automação dele (que lia a planilha antiga e mandou tudo zerado). Agora:
      · quem envia é o servidor do protótipo (/api/fechamento, Vercel), com o remetente programacao04@taagbrasil.com.br;
      · o PDF é o MESMO desenho do PDF do Tito (2 páginas A4), com os números da base compartilhada (a nuvem);
-     · Base › "Envio semanal do CRM": ligar/desligar, dia da semana, hora e destinatários — um lugar só, na Base;
+     · Base › Relacionamento (CRM) › aba "Envio semanal" (depois de Log): ligar/desligar, dia da semana, hora e destinatários — um lugar só, na Base;
        um agendador pergunta a cada 10 minutos se chegou a hora; quem decide é esta tela;
      · os botões do CRM ("Fechar a semana", "Enviar agora", ligar/desligar em Configurações) passam a usar o mesmo servidor.
    Decisões do Bruno (19/11): enviar hoje (quinta) porque sexta 20/11 é feriado; depois toda sexta 17:50; poder desligar
@@ -35,7 +35,7 @@ let EST=null,ERR='',carregando=false;
 function carregar(){if(carregando)return;carregando=true;
   fetch(API+'?modo=resumo',{cache:'no-store'}).then(r=>r.json()).then(j=>{if(!j.ok)throw new Error(j.erro||'erro');EST=j;ERR=''}).catch(e=>{ERR=String(e.message||e)})
   .finally(()=>{carregando=false;redesenha()})}
-function redesenha(){try{if(cur()==='dbenvio'&&typeof render==='function')render()}catch(e){}}
+function redesenha(){try{if(/^#\/?dbcrm\/envio/.test(location.hash||'')&&typeof render==='function')render()}catch(e){}}
 const cur=()=>(location.hash||'').replace(/^#\/?/,'').split(/[/?]/)[0];
 
 function proxima(){if(!EST)return '';const ag=EST.agenda,ag0=EST.agora;if(!ag.ligado)return 'Desligado — nada será enviado.';
@@ -64,8 +64,8 @@ function css(){if(document.getElementById('v193-css'))return;const s=document.cr
 [data-theme=dark] .v193-c select,[data-theme=dark] .v193-c input,[data-theme=dark] .v193-c textarea{border-color:rgba(255,255,255,.2)}
 [data-theme=dark] .v193-k div{border-color:rgba(255,255,255,.15)}`;document.head.appendChild(s)}
 
-function tela(){css();
-  const hd=T(()=>head('Envio semanal do CRM','O fechamento da semana do CRM (PDF de 2 páginas + resumo no corpo) sai por e-mail sozinho, no dia e na hora escolhidos aqui. Remetente: <b>'+E((EST&&EST.remetente)||'—')+'</b>.'),'<h1 class="h1">Envio semanal do CRM</h1>');
+function tela(semCabecalho){css();
+  const hd=semCabecalho?'<div class="sub mb-3" style="font-size:13px">O fechamento da semana do CRM (PDF de 2 páginas + resumo no corpo) sai por e-mail sozinho, no dia e na hora escolhidos aqui. Remetente: <b>'+E((EST&&EST.remetente)||'—')+'</b>.</div>':T(()=>head('Envio semanal do CRM','O fechamento da semana do CRM (PDF de 2 páginas + resumo no corpo) sai por e-mail sozinho, no dia e na hora escolhidos aqui. Remetente: <b>'+E((EST&&EST.remetente)||'—')+'</b>.'),'<h1 class="h1">Envio semanal do CRM</h1>');
   if(!EST&&!ERR){carregar();return hd+'<div class="card p-4" style="border-radius:18px"><div class="sub">Lendo o servidor…</div></div>'}
   if(!EST)return hd+`<div class="card p-4" style="border-radius:18px"><div class="sub" style="color:#b23">Não consegui falar com o servidor: ${E(ERR)}</div><button class="btn-apple mt-2" onclick="V193.recarregar()">Tentar de novo</button></div>`;
   const ag=EST.agenda,R=EST.R,ed=pode(),dis=ed?'':' disabled';
@@ -101,8 +101,16 @@ window.V193={recarregar(){EST=null;ERR='';carregar()},
   pedeEnvio(){const c=document.getElementById('v193-conf');if(c)c.style.display='flex'},cancela(){const c=document.getElementById('v193-conf');if(c)c.style.display='none'},
   envia(){V193.cancela();toast_('Enviando o fechamento…');post('enviar',{},'&confirmo=sim').then(j=>{if(!j.ok||!j.enviado)throw new Error(j.erro||j.motivo||'não enviado');toast_('Fechamento enviado para '+j.para.length+' pessoa(s)');EST=null;carregar()}).catch(e=>toast_('Não enviou: '+(e.message||e)))}};
 
-try{SCREENS.dbenvio=function(){return tela()};LABEL.dbenvio='Envio semanal do CRM';SEC_OF.dbenvio='bd';if(window.OWNER)OWNER.dbenvio='bd'}catch(e){console.error('v193 tela',e)}
-function menu(){try{const bd=NAV.find(s=>s.id==='bd');if(!bd)return;if(!bd.items.some(i=>i[0]==='dbenvio'))bd.items.push(['dbenvio','Envio semanal do CRM'])}catch(e){}}
+/* 20/11 (Bruno): o envio semanal mora DENTRO da Base › Relacionamento (CRM), numa aba depois de "Log" — não num item solto da Base */
+function ligaAba(){try{const orig=SCREENS.dbcrm;if(typeof orig!=='function'||orig.__v193)return false;
+  const g=function(arg){if(arg!=='envio')return String(orig.apply(this,arguments)).replace(/(href="#\/dbcrm\/log">[\s\S]*?<\/a>)/,'$1'+abaLink(false));
+    let h=String(orig.call(this,'__envio'));h=h.replace(/(href="#\/dbcrm\/log">[\s\S]*?<\/a>)/,'$1'+abaLink(true));return h+tela(true)};
+  g.__v193=true;SCREENS.dbcrm=g;return true}catch(e){console.error('v193 aba',e);return false}}
+function abaLink(on){return `<a class="btn-soft" style="font-size:12px;${on?'background:var(--apple-subtle,#e0f2fe);font-weight:700':''}" href="#/dbcrm/envio">Envio semanal</a>`}
+if(!ligaAba()){let n=0;const t=setInterval(()=>{if(ligaAba()||++n>60)clearInterval(t)},500)}
+/* o endereço antigo (#/dbenvio) leva para a aba nova; o item solto sai do menu da Base */
+try{SCREENS.dbenvio=function(){setTimeout(()=>{location.hash='#/dbcrm/envio'},0);return ''};LABEL.dbenvio='Envio semanal do CRM';SEC_OF.dbenvio='bd';if(window.OWNER)OWNER.dbenvio='bd'}catch(e){}
+function menu(){try{const bd=NAV.find(s=>s.id==='bd');if(!bd)return;const i=bd.items.findIndex(x=>x[0]==='dbenvio');if(i>=0)bd.items.splice(i,1)}catch(e){}}
 menu();
 try{const _rn=window.renderNav;if(typeof _rn==='function'&&!_rn.__v193){const g=function(){menu();return _rn.apply(this,arguments)};g.__v193=true;Object.keys(_rn).forEach(k=>{try{g[k]=_rn[k]}catch(e){}});window.renderNav=g;try{renderNav=g}catch(e){}}}catch(e){}
 
@@ -113,7 +121,7 @@ function ligaCRM(){try{if(!window.CRM_SERVER||CRM_SERVER.__v193)return false;con
       return JSON.stringify({ok:true,result:{enviado:true,para:T(()=>EST.destinatarios,[]),de:T(()=>EST.remetente,''),anexo:true}})}
     if(req&&req.action==='enviarAutomatico'){post('enviar',{por:quemSou()||'ENVIAR AGORA (CRM)'},'&confirmo=sim').then(j=>toast_(j.ok&&j.enviado?'Teste enviado para '+j.para.length+' pessoa(s)':'Não enviou: '+(j.erro||j.motivo))).catch(e=>toast_('Não enviou: '+e.message));
       return JSON.stringify({ok:true,result:{enviado:true,para:[],simulado:false}})}
-    if(req&&req.action==='gatilhoSemanal'){post('config',{envio_auto:!!req.ligar}).catch(()=>{});return JSON.stringify({ok:true,result:req.ligar?{proximo:'conforme Base › Envio semanal do CRM'}:{removido:true}})}
+    if(req&&req.action==='gatilhoSemanal'){post('config',{envio_auto:!!req.ligar}).catch(()=>{});return JSON.stringify({ok:true,result:req.ligar?{proximo:'conforme Base › Relacionamento (CRM) › Envio semanal'}:{removido:true}})}
     return api0.apply(this,arguments)};CRM_SERVER.__v193=true;return true}catch(e){console.error('v193 crm',e);return false}}
 if(!ligaCRM()){let n=0;const t=setInterval(()=>{if(ligaCRM()||++n>60)clearInterval(t)},1000)}
 })();

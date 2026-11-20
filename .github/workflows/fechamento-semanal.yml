@@ -1,6 +1,6 @@
 # Fechamento semanal do CRM — agendador (19/11/2026)
 # A cada 10 minutos pergunta ao /api/fechamento se é hora de enviar. Quem decide é a Base do protótipo
-# (Base › Envio semanal do CRM: ligado/desligado, dia da semana, hora). Se não for a hora, nada acontece.
+# (Base › Relacionamento (CRM) › Envio semanal: ligado/desligado, dia da semana, hora). Se não for a hora, nada acontece.
 # Também pode ser rodado à mão (Actions › Run workflow): "auto" (padrão), "enviar" (envia agora) ou "config" (corpo JSON).
 name: Fechamento semanal do CRM
 on:
