@@ -94,7 +94,7 @@ var GRUPOS=[['Gestão',['diretoria','ti']],['Comercial',['comercial','prevendas'
 /* 12/11/2026 (Bruno): ordem fixa em Gestão — Cesar, Rodolfo, Bruno */
 var ORDEM_GESTAO=function(u){var n=norm(nomeCurto(u)+' '+u.login);return /\bcesar\b/.test(n)?0:/\brodolfo\b/.test(n)?1:/\bbruno\b/.test(n)?2:9};
 var CORES=['#0071e3','#be185d','#16a34a','#d97706','#7c3aed','#0891b2','#dc2626','#475569'];
-var cor=function(l){var h=0;for(var i=0;i<l.length;i++)h=(h*31+l.charCodeAt(i))&0xffff;return CORES[h%CORES.length]};
+var cor=function(l){try{var c=window.V194&&V194.corDoLogin(l);if(c)return c}catch(e){}var h=0;for(var i=0;i<l.length;i++)h=(h*31+l.charCodeAt(i))&0xffff;return CORES[h%CORES.length]};
 var ini=function(n){return String(n||'?').split(' ').filter(Boolean).map(function(x){return x[0]}).join('').slice(0,2).toUpperCase()};
 var nomeCurto=function(u){return u.nome||((pessoaDe(u)||{}).nome)||u.login};
 var CSS='#qv{position:fixed;inset:0;z-index:100000;background:var(--bg,#f5f5f7);overflow:auto;font-family:var(--font-sans,-apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif);color:var(--tx,#1d1d1f);animation:qvIn .25s ease}'+
@@ -107,7 +107,8 @@ var CSS='#qv{position:fixed;inset:0;z-index:100000;background:var(--bg,#f5f5f7);
  '#qv .qv-q:focus{border-color:#0071e3;box-shadow:0 0 0 4px rgba(0,113,227,.15)}'+
  '#qv .qv-g{margin-bottom:26px}#qv .qv-gh{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--mut,#6e6e73);margin:0 0 10px 4px}'+
  '#qv .qv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}'+
- '#qv .qv-t{display:flex;flex-direction:column;align-items:center;gap:8px;padding:18px 10px 14px;border-radius:18px;border:1px solid var(--bd,#e5e5ea);background:var(--card,#fff);cursor:pointer;transition:transform .12s,box-shadow .12s;color:inherit;font:inherit;text-align:center}'+
+ '#qv .qv-ed{position:absolute;top:8px;right:8px;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-size:14px;background:var(--bd,#e5e5ea);color:var(--mut,#6e6e73);opacity:0;transition:opacity .12s}#qv .qv-t:hover .qv-ed,#qv .qv-t:focus-within .qv-ed{opacity:1}#qv .qv-ed:hover{background:#0071e3;color:#fff}@media (hover:none){#qv .qv-ed{opacity:1}}'+
+ '#qv .qv-t{position:relative;display:flex;flex-direction:column;align-items:center;gap:8px;padding:18px 10px 14px;border-radius:18px;border:1px solid var(--bd,#e5e5ea);background:var(--card,#fff);cursor:pointer;transition:transform .12s,box-shadow .12s;color:inherit;font:inherit;text-align:center}'+
  '#qv .qv-t:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.08)}#qv .qv-t:active{transform:scale(.97)}'+
  '#qv .qv-av{width:56px;height:56px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:700;font-size:19px}'+
  '#qv .qv-n{font-weight:700;font-size:14.5px;line-height:1.2}#qv .qv-c{font-size:11.5px;color:var(--mut,#6e6e73);line-height:1.25;min-height:14px}'+
@@ -127,11 +128,13 @@ function pintar(qs){
   var cur=(meU()||{}).login,qn=norm(qs);
   var L=users().filter(function(u){return u.ativo!==false&&(!qn||norm(nomeCurto(u)+' '+u.nome+' '+u.cargo+' '+u.setor).indexOf(qn)>=0)});
   var usados={};
+  /* v194 (20/11): ✎ para Gestor — só com alguém já identificado neste computador */
+  var podeEditar=!!(window.V194&&localStorage.getItem(KEY)&&isGestor());
   var html=GRUPOS.map(function(g){var its=L.filter(function(u){if(usados[u.login])return false;var ok=g[1].length?g[1].indexOf(u.perfil)>=0:true;if(ok)usados[u.login]=1;return ok})
       .sort(function(a,b){if(g[0]==='Gestão'){var oa=ORDEM_GESTAO(a),ob=ORDEM_GESTAO(b);if(oa!==ob)return oa-ob}return nomeCurto(a).localeCompare(nomeCurto(b),'pt-BR')});
     if(!its.length)return '';
     return '<div class="qv-g"><div class="qv-gh">'+E(g[0])+'</div><div class="qv-grid">'+its.map(function(u){var n=nomeCurto(u);
-      return '<button class="qv-t'+(u.login===cur&&localStorage.getItem(KEY)?' cur':'')+'" onclick="QUEM.entrar(\''+E(u.login)+'\')"><span class="qv-av" style="background:'+cor(u.login)+'">'+E(ini(n))+'</span><span class="qv-n">'+E(n)+'</span></button>'}).join('')+'</div></div>'}).join('');
+      return '<button class="qv-t'+(u.login===cur&&localStorage.getItem(KEY)?' cur':'')+'" onclick="QUEM.entrar(\''+E(u.login)+'\')">'+(podeEditar?'<span class="qv-ed" role="button" title="Editar '+E(n)+' (nome, cor, desligar…)" onclick="event.stopPropagation();V194.deQuem(\''+E(u.login)+'\')">✎</span>':'')+'<span class="qv-av" style="background:'+cor(u.login)+'">'+E(ini(n))+'</span><span class="qv-n">'+E(n)+'</span></button>'}).join('')+'</div></div>'}).join('');
   document.getElementById('qv-list').innerHTML=html||'<div class="qv-none">Nenhum nome encontrado.</div>';
 }
 function entrar(login){
