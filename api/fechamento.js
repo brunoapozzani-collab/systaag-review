@@ -5,7 +5,7 @@
                          se hoje for o dia escolhido na Base, se já passou da hora escolhida e se a semana ainda não foi enviada
    POST ?modo=enviar&confirmo=sim → envia agora (botão "Fechar a semana" / "Enviar agora")
    POST ?modo=config   → grava envio_auto / envio_dia / envio_hora / emails_painel (cartão da Base)
-   Remetente: SMTP_USER (programacao04@taagbrasil.com.br) com SMTP_PASS — variáveis do projeto na Vercel. */
+   Remetente: SMTP_USER (hoje cotacaoeorcamentostaag@gmail.com, o mesmo que o SysTaag/Render usa) com SMTP_PASS — variáveis do projeto na Vercel. */
 import nodemailer from 'nodemailer';
 import { agoraSP, semanaDe, fmtBR, lerTabelas, cfg, cfgSet, gravar, resumo, corpoEmail, assunto, nomePdf, gerarPdf } from './_fech/core.js';
 
@@ -26,7 +26,7 @@ async function montar() {
 
 async function enviar(T, R, por, semSnapshot) {
   const lista = destinatarios(T);
-  if (!lista.length) return { enviado: false, motivo: 'Nenhum destinatário (Base › Envio semanal do CRM)' };
+  if (!lista.length) return { enviado: false, motivo: 'Nenhum destinatário (Base › Relacionamento (CRM) › Envio semanal)' };
   if (!process.env.SMTP_USER || !process.env.SMTP_PASS) return { enviado: false, motivo: 'Remetente não configurado na Vercel (SMTP_USER / SMTP_PASS)' };
   let pdf = null, aviso = '';
   try { pdf = await gerarPdf(R, geradoEm()); } catch (e) { aviso = ' (sem anexo: ' + (e && e.message || e) + ')'; }
@@ -50,7 +50,7 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   if (req.method === 'OPTIONS') { res.setHeader('Access-Control-Allow-Methods', 'GET,POST'); res.setHeader('Access-Control-Allow-Headers', 'content-type'); return res.status(204).end(); }
   try {
-    if (modo === 'resumo') { const { T, a, w, R } = await montar(); return res.status(200).json({ ok: true, agora: a, semana: w, agenda: agenda(T), destinatarios: destinatarios(T), remetente_ok: !!(process.env.SMTP_USER && process.env.SMTP_PASS), R }); }
+    if (modo === 'resumo') { const { T, a, w, R } = await montar(); return res.status(200).json({ ok: true, agora: a, semana: w, agenda: agenda(T), destinatarios: destinatarios(T), remetente_ok: !!(process.env.SMTP_USER && process.env.SMTP_PASS), remetente: process.env.SMTP_USER || '', R }); }
     if (modo === 'pdf') { const { R } = await montar(); const pdf = await gerarPdf(R, geradoEm()); res.setHeader('Content-Type', 'application/pdf'); res.setHeader('Content-Disposition', 'inline; filename="' + nomePdf(R) + '"'); return res.status(200).send(pdf); }
     if (modo === 'auto') {
       const { T, a, w, R } = await montar(); const g = agenda(T);
