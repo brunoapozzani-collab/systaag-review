@@ -38,11 +38,11 @@ function carregar(){if(carregando)return;carregando=true;
 function redesenha(){try{if(cur()==='dbenvio'&&typeof render==='function')render()}catch(e){}}
 const cur=()=>(location.hash||'').replace(/^#\/?/,'').split(/[/?]/)[0];
 
-function proxima(a){if(!EST)return '';const ag=EST.agenda,ag0=EST.agora;if(!ag.ligado)return 'Desligado — nada será enviado.';
-  const semIni=EST.semana.ini;let falta=(ag.dia-ag0.dow+7)%7;let jaFoi=ag.semana_enviada===semIni;
-  if(falta===0&&(ag0.hora>=ag.hora||jaFoi))falta=jaFoi||ag0.hora>=ag.hora?7:0;
-  if(falta===0)return 'Hoje às '+ag.hora;
-  const d=new Date(ag0.iso+'T12:00:00Z');d.setUTCDate(d.getUTCDate()+falta);return DIAS[ag.dia]+', '+br(d.toISOString())+' às '+ag.hora}
+function proxima(){if(!EST)return '';const ag=EST.agenda,ag0=EST.agora;if(!ag.ligado)return 'Desligado — nada será enviado.';
+  let falta=(ag.dia-ag0.dow+7)%7;if(falta===0&&ag0.hora>=ag.hora)falta=7;
+  let d=addD(ag0.iso,falta);/* a semana do envio já foi enviada (ex.: enviada antes por causa de feriado) → pula para a semana seguinte */
+  const ini=addD(d,-(((new Date(d+'T12:00:00Z').getUTCDay())+6)%7));if(ag.semana_enviada===ini){d=addD(d,7);falta+=7}
+  if(falta===0)return 'Hoje às '+ag.hora;return DIAS[ag.dia]+', '+br(d)+' às '+ag.hora}
 
 function css(){if(document.getElementById('v193-css'))return;const s=document.createElement('style');s.id='v193-css';s.textContent=`
 .v193-g{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
@@ -65,7 +65,7 @@ function css(){if(document.getElementById('v193-css'))return;const s=document.cr
 [data-theme=dark] .v193-k div{border-color:rgba(255,255,255,.15)}`;document.head.appendChild(s)}
 
 function tela(){css();
-  const hd=T(()=>head('Envio semanal do CRM','O fechamento da semana do CRM (PDF de 2 páginas + resumo no corpo) sai por e-mail sozinho, no dia e na hora escolhidos aqui. Remetente: <b>programacao04@taagbrasil.com.br</b>.'),'<h1 class="h1">Envio semanal do CRM</h1>');
+  const hd=T(()=>head('Envio semanal do CRM','O fechamento da semana do CRM (PDF de 2 páginas + resumo no corpo) sai por e-mail sozinho, no dia e na hora escolhidos aqui. Remetente: <b>'+E((EST&&EST.remetente)||'—')+'</b>.'),'<h1 class="h1">Envio semanal do CRM</h1>');
   if(!EST&&!ERR){carregar();return hd+'<div class="card p-4" style="border-radius:18px"><div class="sub">Lendo o servidor…</div></div>'}
   if(!EST)return hd+`<div class="card p-4" style="border-radius:18px"><div class="sub" style="color:#b23">Não consegui falar com o servidor: ${E(ERR)}</div><button class="btn-apple mt-2" onclick="V193.recarregar()">Tentar de novo</button></div>`;
   const ag=EST.agenda,R=EST.R,ed=pode(),dis=ed?'':' disabled';
@@ -110,7 +110,7 @@ try{const _rn=window.renderNav;if(typeof _rn==='function'&&!_rn.__v193){const g=
 function ligaCRM(){try{if(!window.CRM_SERVER||CRM_SERVER.__v193)return false;const api0=CRM_SERVER.api;
   CRM_SERVER.api=function(payload){let req=null;try{req=JSON.parse(payload||'{}')}catch(e){}
     if(req&&req.action==='enviarPainel'){post('enviar',{por:quemSou()||'FECHAR A SEMANA',sem_snapshot:true},'&confirmo=sim').then(j=>toast_(j.ok&&j.enviado?'Fechamento enviado para '+j.para.length+' pessoa(s)':'Não enviou: '+(j.erro||j.motivo))).catch(e=>toast_('Não enviou: '+e.message));
-      return JSON.stringify({ok:true,result:{enviado:true,para:T(()=>EST.destinatarios,[]),de:'programacao04@taagbrasil.com.br',anexo:true}})}
+      return JSON.stringify({ok:true,result:{enviado:true,para:T(()=>EST.destinatarios,[]),de:T(()=>EST.remetente,''),anexo:true}})}
     if(req&&req.action==='enviarAutomatico'){post('enviar',{por:quemSou()||'ENVIAR AGORA (CRM)'},'&confirmo=sim').then(j=>toast_(j.ok&&j.enviado?'Teste enviado para '+j.para.length+' pessoa(s)':'Não enviou: '+(j.erro||j.motivo))).catch(e=>toast_('Não enviou: '+e.message));
       return JSON.stringify({ok:true,result:{enviado:true,para:[],simulado:false}})}
     if(req&&req.action==='gatilhoSemanal'){post('config',{envio_auto:!!req.ligar}).catch(()=>{});return JSON.stringify({ok:true,result:req.ligar?{proximo:'conforme Base › Envio semanal do CRM'}:{removido:true}})}
