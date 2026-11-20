@@ -24,7 +24,8 @@ const gestor=()=>T(()=>QUEM.isGestor(),false);
 const save_=()=>{try{save()}catch(e){console.error('v194 save',e)}};
 const toast_=(m,bad)=>{try{toast(m,bad)}catch(e){}};
 const redraw=()=>{try{renderMain()}catch(e){try{render()}catch(e2){}}};
-const ini=n=>String(n||'?').split(' ').filter(Boolean).map(x=>x[0]).join('').slice(0,2).toUpperCase();
+const limpo=n=>String(n||'').replace(/\s*\([^)]*\)+\s*$/,'').trim()||String(n||'');
+const ini=n=>limpo(n||'?').split(' ').filter(Boolean).map(x=>x[0]).join('').slice(0,2).toUpperCase();
 const hoje=()=>new Date().toISOString().slice(0,10);
 const desligada=p=>p.ativo===false||!!p.desligado;
 
@@ -40,7 +41,10 @@ const FAMILIAS=[
   ['Focal',       '#be185d',/focal/]
 ];
 const SEM_DEP=['Outros','#6e6e73'];
-const familia=p=>{const d=norm((p&&(p.dep||p.departamento))||'');const f=FAMILIAS.find(x=>x[2].test(d));return f?[f[0],f[1]]:SEM_DEP};
+const PERFIL_FAM={diretoria:'Gestão',ti:'Gestão',gestao:'Gestão',comercial:'Comercial',prevendas:'Comercial',marketing:'Comercial',estoque:'Estoque',financeiro:'Financeiro',admin:'Financeiro',chefetec:'Operação',obras:'Operação',tecnico:'Operação',projetos:'Projetos',posvenda:'Pós-venda'};
+const familia=p=>{const d=norm((p&&(p.dep||p.departamento))||'');let f=FAMILIAS.find(x=>x[2].test(d));
+  if(!f&&p&&p.id){const u=(S.db.usuarios||[]).find(x=>x.pessoa_id===p.id);const k=u&&PERFIL_FAM[u.perfil];if(k)f=FAMILIAS.find(x=>x[0]===k)}/* "Todos"/vazio: segue o perfil de acesso */
+  return f?[f[0],f[1]]:SEM_DEP};
 const PALETA=['#0071e3','#0891b2','#16a34a','#65a30d','#d97706','#ea580c','#dc2626','#be185d','#7c3aed','#4f46e5','#475569','#1d1d1f'];
 const corDe=p=>(p&&p.cor)||familia(p)[1];
 const corDoLogin=login=>{const u=(db().usuarios||[]).find(x=>x.login===login);const p=u&&pes(u.pessoa_id);return p?corDe(p):null};
@@ -74,8 +78,7 @@ function darAcesso(p){if(usuarioDe(p.id))return usuarioDe(p.id);
 function corrigir(){
   if(window.__TREINO||db().__v194b)return;
   const undo=[];
-  pessoas().forEach(p=>{const m=/^(.*?)\s*\((consultor\(a\)|consultora?)\)\s*$/i.exec(p.nome||'');
-    if(m&&m[1]){undo.push({id:p.id,nome:p.nome});renomear(p,m[1].trim())}});
+  /* (o "Felipe (Consultor(a))" NÃO é cópia: a v123 põe o cargo entre parênteses quando duas pessoas ativas têm o mesmo primeiro nome) */
   (db().perfis||[]).forEach(r=>{if(r.pessoa_id)return;const p=pessoas().find(x=>[x.nome,x.nomeCompleto].some(n=>norm(n)===norm(r.nome)));
     if(p){undo.push({perfil:r.id,pessoa_id:null});r.pessoa_id=p.id;r.nome=p.nome}});
   db().__v194_undo=undo;db().__v194b=new Date().toISOString();save_();try{redraw()}catch(e){}
@@ -87,7 +90,7 @@ const CSS=`
 .v194-seg{display:inline-flex;background:var(--bd,#e5e5ea);border-radius:12px;padding:3px;gap:2px;margin-bottom:16px}
 .v194-seg button{border:0;background:transparent;padding:7px 16px;border-radius:9px;font-weight:600;font-size:14px;color:var(--mut,#6e6e73);cursor:pointer}
 .v194-seg button.on{background:var(--card,#fff);color:var(--tx,#1d1d1f);box-shadow:0 1px 3px rgba(0,0,0,.12)}
-.v194-top{display:flex;flex-wrap:wrap;align-items:center;gap:22px;padding:18px 22px;border-radius:18px;margin-bottom:18px}
+.v194-top{display:flex!important;flex-direction:row!important;flex-wrap:wrap;align-items:center;gap:22px;padding:18px 22px;border-radius:18px;margin-bottom:18px}
 .v194-big{font-size:38px;font-weight:800;line-height:1}
 .v194-eq{font-size:14px;color:var(--mut,#6e6e73)} .v194-eq a{cursor:pointer;color:inherit;text-decoration:underline dotted}
 .v194-q{margin-left:auto;min-width:260px;max-width:360px;border-radius:12px}
@@ -131,7 +134,7 @@ const ORDEM=FAMILIAS.map(f=>f[0]).concat([SEM_DEP[0]]);
 function busca(p){const u=usuarioDe(p.id);return norm([p.nome,p.nomeCompleto,p.cargo,p.dep,u&&u.login].concat(p.apelidos||[]).join(' '))}
 function cartao(p){const u=usuarioDe(p.id),off=desligada(p);
   const tag=off?'desligado':(!u||u.ativo===false?'sem acesso':'');
-  return `<button class="v194-c${off?' off':''}" onclick="V194.abrir('${J(p.id)}')" title="Editar ${E(p.nome)}">${tag?`<span class="v194-tag">${tag}</span>`:''}<span class="v194-av" style="background:${corDe(p)}">${E(ini(p.nome))}</span><span class="v194-n">${E(p.nome)}</span><span class="v194-s">${E(p.cargo||'')}</span></button>`}
+  return `<button class="v194-c${off?' off':''}" onclick="V194.abrir('${J(p.id)}')" title="Editar ${E(p.nome)}">${tag?`<span class="v194-tag">${tag}</span>`:''}<span class="v194-av" style="background:${corDe(p)}">${E(ini(p.nome))}</span><span class="v194-n">${E(limpo(p.nome))}</span><span class="v194-s">${E(p.cargo||'')}</span></button>`}
 function grade(){
   css();const all=pessoas(),on=all.filter(p=>!desligada(p)),off=all.length-on.length;
   const semAcesso=on.filter(p=>{const u=usuarioDe(p.id);return !u||u.ativo===false}).length;
@@ -139,7 +142,7 @@ function grade(){
   const grupos={};L.forEach(p=>{const f=familia(p);(grupos[f[0]]=grupos[f[0]]||{c:f[1],l:[]}).l.push(p)});
   const corpo=ORDEM.filter(k=>grupos[k]).map(k=>`<div class="v194-gh"><i style="background:${grupos[k].c}"></i>${E(k)} · ${grupos[k].l.length}</div><div class="v194-grid">${grupos[k].l.sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR')).map(cartao).join('')}</div>`).join('')
     ||'<div class="card p-4 text-center sub" style="border-radius:18px">Ninguém encontrado.</div>';
-  const top=`<div class="card v194-top"><div><div class="v194-big">${all.length}</div><div class="v194-eq">pessoas na Base</div></div>
+  const top=`<div class="card v194-top"><div style="text-align:center"><div class="v194-big">${all.length}</div><div class="v194-eq">pessoas na Base</div></div>
     <div class="v194-eq">= <b>${on.length}</b> ativas <span style="opacity:.7">(${on.length-semAcesso} entram no SYSTAAG + ${semAcesso} sem acesso)</span><br>+ <a onclick="V194.desl(${ST.desl?0:1})"><b>${off}</b> desligadas</a> ${ST.desl?'· mostrando':''}</div>
     <input class="form-control v194-q" id="v194-q" placeholder="Buscar nome, cargo, departamento…" value="${E(ST.q)}" oninput="V194.busca(this.value)"></div>`;
   const aviso=gestor()?'':`<div class="card p-2 mb-3 sub" style="border-radius:12px"><i class="bi bi-lock me-1"></i>Só Gestor (Diretoria ou Tecnologia) muda pessoas. Você pode ver.</div>`;
@@ -174,7 +177,7 @@ function painel(){
   const autoCor=familia(Object.assign({},p,{dep:ED.dep}))[1];
   const h=`<button class="x" onclick="V194.fechar()" title="Fechar">×</button>
    <div class="hero"><span class="v194-av" id="v194-av" style="background:${cor}">${E(ini(ED.nome||p.nome))}</span>
-     <div style="font-weight:800;font-size:20px">${E(ED.nome||p.nome)}</div>
+     <div style="font-weight:800;font-size:20px">${E(limpo(ED.nome||p.nome))}</div>
      <div class="sub">${off?'<b style="color:#dc2626">Desligado</b>'+(p.desligado_em?' desde '+E(p.desligado_em.split('-').reverse().join('/')):''):(u&&u.ativo!==false?'Entra no SYSTAAG como <b>'+E(u.login)+'</b>':'Ainda sem acesso ao SYSTAAG')}</div></div>
    <div class="blk">
      <div class="fld"><label>Nome (como aparece no sistema)</label><input id="v194-nome" value="${E(ED.nome)}"${dis} oninput="V194.campo('nome',this.value)"></div>
@@ -221,8 +224,8 @@ function salvar(){
   save_();fechar();redraw();toast_('«'+E(p.nome)+'» salvo: '+mud.join(', ')+'.')}
 function ativo(on){if(!gestor())return;const p=pes(ED.id);if(!p)return;
   const eu=T(()=>me(),null);if(!on&&eu&&eu.pessoa_id===p.id){toast_('Ninguém desliga a si mesmo.',true);return}
-  marcarAtivo(p,!!on);save_();abrir(p.id);redraw();toast_(on?'«'+E(p.nome)+'» religado.':'«'+E(p.nome)+'» desligado — saiu do “Quem é você?”. O nome continua nos negócios antigos.')}
-function acesso(){if(!gestor())return;const p=pes(ED.id);if(!p)return;const u=darAcesso(p);save_();abrir(p.id);redraw();
+  marcarAtivo(p,!!on);save_();redraw();painel();toast_(on?'«'+E(p.nome)+'» religado.':'«'+E(p.nome)+'» desligado — saiu do “Quem é você?”. O nome continua nos negócios antigos.')}
+function acesso(){if(!gestor())return;const p=pes(ED.id);if(!p)return;const u=darAcesso(p);ED.perfil=u.perfil;save_();redraw();painel();
   toast_('«'+E(p.nome)+'» já aparece no “Quem é você?” (login '+E(u.login)+', perfil A definir — escolha o perfil e salve).')}
 function excluir(){if(!gestor())return;const p=pes(ED.id);if(!p)return;
   const V=window.V155;if(!V||typeof V.plano!=='function'||typeof V.mover!=='function'){toast_('A Lixeira não está disponível agora.',true);return}
@@ -231,14 +234,19 @@ function excluir(){if(!gestor())return;const p=pes(ED.id);if(!p)return;
   if(!x){toast_('Pessoa não encontrada — talvez já esteja na Lixeira.',true);return}
   if(x.bloqs&&x.bloqs.length){toast_('Não dá para excluir: '+x.bloqs.join(' '),true);return}
   const junto=(x.own||[]).length-1,solta=(x.patches||[]).length;
-  const msg='Excluir «'+p.nome+'»?\n\n'+(junto>0?'Vão junto para a Lixeira '+junto+' registro(s) dela (login, equipe, técnico…).\n':'')+(solta>0?solta+' ligação(ões) em obras/propostas ficam sem essa pessoa.\n':'')+'\nVolta com um clique em Base › Lixeira › Restaurar.';
-  if(!confirm(msg))return;
-  try{V.mover(x);fechar();redraw();toast_('«'+E(p.nome)+'» foi para a Lixeira. <a href="#/dblixeira">Abrir a Lixeira</a>')}catch(e){toast_(e.message||String(e),true)}}
+  const pn=document.getElementById('v194-pn');if(!pn)return;
+  const box=document.createElement('div');box.className='blk';box.id='v194-conf';box.style.cssText='border:2px solid #dc2626;margin-top:12px';
+  box.innerHTML=`<b style="color:#dc2626">Excluir «${E(limpo(p.nome))}»?</b><div class="note" style="margin:6px 0 10px">${junto>0?'Vão junto para a Lixeira '+junto+' registro(s) dela (login, equipe, técnico…). ':''}${solta>0?solta+' ligação(ões) em obras/propostas ficam sem essa pessoa. ':''}Volta com um clique em Base › Lixeira › Restaurar.</div>
+    <div class="row2"><button class="bt red" style="background:#dc2626;color:#fff" onclick="V194.excluirSim()">Sim, excluir</button><button class="bt sec" onclick="this.closest('#v194-conf').remove()">Cancelar</button></div>`;
+  const old=document.getElementById('v194-conf');if(old)old.remove();pn.appendChild(box);box.scrollIntoView({behavior:'smooth',block:'end'});
+  ED.plano=x}
+function excluirSim(){if(!ED||!ED.plano)return;const p=pes(ED.id);const nome=p?limpo(p.nome):'';
+  try{window.V155.mover(ED.plano);fechar();redraw();toast_('«'+E(nome)+'» foi para a Lixeira. <a href="#/dblixeira">Abrir a Lixeira</a>')}catch(e){toast_(e.message||String(e),true)}}
 function deQuem(login){const u=(db().usuarios||[]).find(x=>x.login===login);if(!u||!u.pessoa_id){toast_('Este login não está ligado a uma pessoa da Base.',true);return}
   try{QUEM.fechar()}catch(e){const q=document.getElementById('qv');if(q)q.remove()}
   ST.vista='pessoas';if(!/^#\/equipe/.test(location.hash))location.hash='#/equipe';setTimeout(()=>abrir(u.pessoa_id),250)}
 
-window.V194={abrir,fechar,salvar,ativo,acesso,excluir,deQuem,corDe,corDoLogin,familia,gestor,
+window.V194={abrir,fechar,salvar,ativo,acesso,excluir,excluirSim,deQuem,corDe,corDoLogin,familia,gestor,
   campo(k,v){if(!ED)return;ED[k]=v;if(k==='nome'){const a=document.getElementById('v194-av');if(a)a.textContent=ini(v)}if(k==='dep')painel()},
   cor(c){if(!ED||!gestor())return;ED.cor=c;painel()},
   vista(v){ST.vista=v;redraw()},
