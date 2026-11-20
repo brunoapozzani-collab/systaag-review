@@ -51,5 +51,10 @@
   ],
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
-  "framework": null
+  "framework": null,
+  "functions": {
+    "api/fechamento.js": {
+      "maxDuration": 60
+    }
+  }
 }
