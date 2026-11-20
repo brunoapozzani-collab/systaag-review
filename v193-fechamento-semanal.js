@@ -104,7 +104,11 @@ window.V193={recarregar(){EST=null;ERR='';carregar()},
 /* 20/11 (Bruno): o envio semanal mora DENTRO da Base › Relacionamento (CRM), numa aba depois de "Log" — não num item solto da Base */
 function ligaAba(){try{const orig=SCREENS.dbcrm;if(typeof orig!=='function'||orig.__v193)return false;
   const g=function(arg){if(arg!=='envio')return String(orig.apply(this,arguments)).replace(/(href="#\/dbcrm\/log">[\s\S]*?<\/a>)/,'$1'+abaLink(false));
-    let h=String(orig.call(this,'__envio'));h=h.replace(/(href="#\/dbcrm\/log">[\s\S]*?<\/a>)/,'$1'+abaLink(true));return h+tela(true)};
+    /* o original não conhece a aba "envio": desenha o Resumo e fica só com o cabeçalho + a fileira de abas */
+    let h=String(orig.call(this,'resumo'));const iL=h.indexOf('href="#/dbcrm/log"');if(iL<0)return h;
+    const fimA=h.indexOf('</a>',iL)+4,fimD=h.indexOf('</div>',fimA);
+    const topo=h.slice(0,fimA).split('background:var(--apple-subtle,#e0f2fe);font-weight:700').join('')+abaLink(true)+h.slice(fimA,fimD+6);
+    return topo+tela(true)};
   g.__v193=true;SCREENS.dbcrm=g;return true}catch(e){console.error('v193 aba',e);return false}}
 function abaLink(on){return `<a class="btn-soft" style="font-size:12px;${on?'background:var(--apple-subtle,#e0f2fe);font-weight:700':''}" href="#/dbcrm/envio">Envio semanal</a>`}
 if(!ligaAba()){let n=0;const t=setInterval(()=>{if(ligaAba()||++n>60)clearInterval(t)},500)}
