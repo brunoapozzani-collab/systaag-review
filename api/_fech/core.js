@@ -60,8 +60,16 @@ export async function gravar(regs, por) {
 /* ───────── Pipeline do protótipo (mesma regra do pipelineRows / oppStatus do CRM no protótipo) ───────── */
 const DEAL_ETAPA = { desenvolver: 'DESENVOLVER PROPOSTA', desenvolvida: 'PROPOSTA DESENVOLVIDA', aguardando: 'AGUARDANDO APRESENTAÇÃO', enviada: 'PROPOSTA ENVIADA', revisao: 'REVISÃO DE PROPOSTA' };
 const oppStatus = n => n.status_pipeline || (n.resultado === 'fechada' ? 'FECHADO' : n.resultado === 'perdida' ? 'PERDIDO' : n.resultado === 'futuro' ? 'FUTURO' : DEAL_ETAPA[n.etapa] || 'DESENVOLVER PROPOSTA');
+/* 19/11 (Bruno: "o Pipeline da Vercel agora tem a informação certa"): cada negociação da Pipeline guarda a SUA linha da
+   planilha To Do Comercial (n.planilha.c — as 17 colunas como estão). O fechamento lê essas colunas, exatamente como o
+   Code.gs do Tito lia a aba Pipeline: STATUS, CONSULTOR, RECEBIMENTO DA INDICAÇÃO, DATA DE ENVIO, DATA DE DECISÃO.
+   Negociação sem linha da planilha (saiu dela) não entra — a Pipeline é a planilha. */
+const isoBR = v => { const m = String(v || '').match(/(\d{2})\/(\d{2})\/(\d{4})/); return m ? m[3] + '-' + m[2] + '-' + m[1] : (/^\d{4}-\d{2}-\d{2}/.test(String(v || '')) ? String(v).slice(0, 10) : ''); };
 export function pipeline(negs) {
-  return (negs || []).filter(n => !n.demo).map(n => ({ consultor: n.consultor, status: oppStatus(n), data_indicacao: n.criado || '', data_envio: n.data_envio || '', data_decisao: n.data_decisao || '' }));
+  const vivas = (negs || []).filter(n => !n.demo);
+  const daPlanilha = vivas.filter(n => n.planilha && Array.isArray(n.planilha.c));
+  if (daPlanilha.length) return daPlanilha.map(n => { const c = n.planilha.c; return { consultor: c[4], status: String(c[10] || '').toUpperCase(), data_indicacao: isoBR(c[1]), data_envio: isoBR(c[11]), data_decisao: isoBR(c[13]) }; });
+  return vivas.map(n => ({ consultor: n.consultor, status: oppStatus(n), data_indicacao: n.criado || '', data_envio: n.data_envio || '', data_decisao: n.data_decisao || '' }));
 }
 
 /* ───────── os números (= resumoServidor do Code.gs 2.9.0) ───────── */
