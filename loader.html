@@ -71,8 +71,8 @@ var V=window.__V195=(function(){
   var alvo={};[].forEach.call(document.querySelectorAll('link[rel=preload]'),function(l){try{alvo[new URL(l.href,location.href).href]=1;tot++}catch(e){}});
   /* v196: a barra anda pelo TEMPO que este computador costuma levar (mediana das últimas aberturas) — a mesma animação
      continua na tela seguinte (v195-tela.js), sem voltar ao zero */
-  var E=12000;try{var tt=JSON.parse(g0.call(LS,'qv0:tempos')||'[]').slice().sort(function(a,b){return a-b});if(tt.length)E=Math.max(2500,tt[Math.floor(tt.length/2)])}catch(e){}
-  function pinta(){var b=document.getElementById('ld-b');if(!b||b.__v196)return;b.__v196=1;b.className='p';b.style.cssText='display:block;height:100%;width:100%;transform-origin:0 50%;transform:scaleX(0);animation:v196b '+E+'ms cubic-bezier(.2,.65,.35,1) -'+Math.round(performance.now())+'ms forwards'}
+  var DUR=12000;try{var tt=JSON.parse(g0.call(LS,'qv0:tempos')||'[]').slice().sort(function(a,b){return a-b});if(tt.length)DUR=Math.max(2500,tt[Math.floor(tt.length/2)])}catch(e){}
+  function pinta(){var b=document.getElementById('ld-b');if(!b||b.__v196)return;b.__v196=1;b.className='p';b.style.cssText='display:block;height:100%;width:100%;transform-origin:0 50%;transform:scaleX(0);animation:v196b '+DUR+'ms cubic-bezier(.2,.65,.35,1) -'+Math.round(performance.now())+'ms forwards'}
   try{new PerformanceObserver(function(l){l.getEntries().forEach(function(e){if(alvo[e.name]){alvo[e.name]=0;ok++}});pinta()}).observe({type:'resource',buffered:true})}catch(e){}
   function abrindo(l){var n=nomeDe(l),el=document.getElementById('ld-n');if(el)el.textContent=n?'Olá, '+n.split(' ')[0]:'';var s=document.getElementById('ld-s');if(s)s.textContent='Abrindo o seu SYSTAAG…';pinta()}
   function desenha(q){var qn=norm(q),h=(lista||[]).map(function(g){var its=g.its.filter(function(u){return !qn||norm(u.n+' '+u.l).indexOf(qn)>=0});if(!its.length)return '';
