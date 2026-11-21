@@ -16,7 +16,7 @@ window.NUVEM_CONFIG={url:'https://qptluvvsfhtkbbjaphad.supabase.co',key:'sb_publ
   setInterval(function(){try{if(!document.body||document.getElementById('somenteLeitura'))return;var d=document.createElement('div');d.id='somenteLeitura';d.style.cssText='position:fixed;left:12px;bottom:12px;z-index:2147483646;background:#b42318;color:#fff;font:700 12px/1.2 system-ui,-apple-system,sans-serif;padding:7px 12px;border-radius:999px;pointer-events:none';d.textContent='CÓPIA DE TESTE · só leitura — nada é gravado';document.body.appendChild(d)}catch(e){}},2000);
   var f0=window.fetch.bind(window);
   window.fetch=function(input,init){try{var u=typeof input==='string'?input:(input&&input.url)||'';var m=String((init&&init.method)||(input&&input.method)||'GET').toUpperCase();
-    if(u.indexOf(base)===0&&m!=='GET'&&m!=='HEAD'){if(!window.__avisoLeitura){window.__avisoLeitura=1;console.warn('SYSTAAG: cópia de teste ('+location.hostname+') — só leitura; nada é gravado na base compartilhada')}
+    if(u.indexOf(base)===0&&m!=='GET'&&m!=='HEAD'){try{var bd=(init&&init.body)||'';var arr=JSON.parse(bd);window.__bloqueados=(window.__bloqueados||0)+(Array.isArray(arr)?arr.length:1)}catch(x){window.__bloqueados=(window.__bloqueados||0)+1}if(!window.__avisoLeitura){window.__avisoLeitura=1;console.warn('SYSTAAG: cópia de teste ('+location.hostname+') — só leitura; nada é gravado na base compartilhada')}
       return Promise.resolve(new Response('[]',{status:201,headers:{'content-type':'application/json'}}))}}catch(e){}
     return f0.apply(window,arguments)};
 }catch(e){}})();
