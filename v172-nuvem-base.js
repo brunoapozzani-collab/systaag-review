@@ -58,7 +58,18 @@ function persiste(){clearTimeout(_tF);_tF=0;try{localStorage.setItem(FILA_KEY,JS
 function setFila(f){FILA=f;if(!_tF)_tF=setTimeout(persiste,1500)}
 ['pagehide','beforeunload'].forEach(function(ev){window.addEventListener(ev,function(){if(_tF)persiste()},{capture:true})});
 var seq=0;
-function enfileira(regs){if(!regs.length)return;var f=fila(),por=quem();regs.forEach(function(r){r.tabela=PRE+r.tabela;r.atualizado_em=agoraServidor();r.por=por;r.origem=CLI;r._s=++seq;var i=f.findIndex(function(x){return x.tabela===r.tabela&&x.id===r.id});if(i>=0)f[i]=r;else f.push(r)});setFila(f);enviar()}
+/* v197 — TRAVA DE SEGURANÇA 2 (21/11/2026): uma única passada nunca apaga mais de 150 registros da base compartilhada.
+   No incidente de 21/11 uma aba apagou milhares de uma vez (produtos, pessoas, atendimentos…). Agora exclusões em massa
+   ficam PRESAS neste computador (systaag_nuvem_presos), aparecem num aviso vermelho e não chegam à nuvem. Quem precisa
+   mesmo apagar muito (Base › Zona de risco) liga window.__v172ApagarEmMassa=true antes. */
+var LIMITE_APAGAR=150;
+function trava(regs){var ap=regs.filter(function(r){return r.apagado});if(ap.length<=LIMITE_APAGAR||window.__v172ApagarEmMassa)return regs;
+  try{var p=JSON.parse(localStorage.getItem('systaag_nuvem_presos')||'[]');p.push({quando:new Date().toISOString(),n:ap.length,regs:ap.slice(0,5000)});localStorage.setItem('systaag_nuvem_presos',JSON.stringify(p.slice(-5)))}catch(e){}
+  console.error('v197: '+ap.length+' exclusões de uma vez — BLOQUEADAS (não foram para a nuvem)');
+  try{var d=document.getElementById('v197aviso');if(!d){d=document.createElement('div');d.id='v197aviso';d.style.cssText='position:fixed;left:50%;top:14px;transform:translateX(-50%);z-index:2147483646;background:#b42318;color:#fff;font:600 13px/1.3 system-ui,-apple-system,sans-serif;padding:10px 16px;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.2);max-width:92vw';document.body.appendChild(d)}
+    d.textContent='Proteção da base: este computador tentou apagar '+ap.length+' registros de uma vez e foi bloqueado. Nada foi apagado. Avise o Bruno.'}catch(e){}
+  return regs.filter(function(r){return !r.apagado})}
+function enfileira(regs){regs=trava(regs);if(!regs.length)return;var f=fila(),por=quem();regs.forEach(function(r){r.tabela=PRE+r.tabela;r.atualizado_em=agoraServidor();r.por=por;r.origem=CLI;r._s=++seq;var i=f.findIndex(function(x){return x.tabela===r.tabela&&x.id===r.id});if(i>=0)f[i]=r;else f.push(r)});setFila(f);enviar()}
 var enviando=false;
 function enviar(){if(enviando)return;var f=fila();if(!f.length){pinta();return}enviando=true;var lote=f.slice(0,150);var corpo=lote.map(function(r){var o={};Object.keys(r).forEach(function(k){if(k!=='_s')o[k]=r[k]});return o});
   fetch(CFG.url+'/rest/v1/'+TAB+'?on_conflict=tabela,id',{method:'POST',headers:Object.assign({'Prefer':'resolution=merge-duplicates,return=minimal'},H),body:JSON.stringify(corpo)})

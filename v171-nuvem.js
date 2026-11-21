@@ -45,7 +45,9 @@ function diff(a,b){var out=[];TODAS.forEach(function(t){b[t].forEach(function(v,
 /* ───── fila de saída (sobrevive a fechar a aba; v169 leva para o IndexedDB) ───── */
 function fila(){try{return JSON.parse(localStorage.getItem(FILA_KEY)||'[]')}catch(e){return []}}
 function setFila(f){try{localStorage.setItem(FILA_KEY,JSON.stringify(f))}catch(e){}}
-function enfileira(regs){if(!regs.length)return;var f=fila(),agora=new Date().toISOString(),por=quem();regs.forEach(function(r){r.atualizado_em=agora;r.por=por;r.origem=CLI;var i=f.findIndex(function(x){return x.tabela===r.tabela&&x.id===r.id});if(i>=0)f[i]=r;else f.push(r)});setFila(f);enviar()}
+/* v197 — trava de segurança: o CRM também não apaga mais de 150 registros de uma vez (ver v172) */
+function trava(regs){var ap=regs.filter(function(r){return r.apagado});if(ap.length<=150||window.__v172ApagarEmMassa)return regs;console.error('v197 CRM: '+ap.length+' exclusões de uma vez — BLOQUEADAS');try{var p=JSON.parse(localStorage.getItem('systaag_nuvem_presos_crm')||'[]');p.push({quando:new Date().toISOString(),n:ap.length,regs:ap.slice(0,3000)});localStorage.setItem('systaag_nuvem_presos_crm',JSON.stringify(p.slice(-5)))}catch(e){}return regs.filter(function(r){return !r.apagado})}
+function enfileira(regs){regs=trava(regs);if(!regs.length)return;var f=fila(),agora=new Date().toISOString(),por=quem();regs.forEach(function(r){r.atualizado_em=agora;r.por=por;r.origem=CLI;var i=f.findIndex(function(x){return x.tabela===r.tabela&&x.id===r.id});if(i>=0)f[i]=r;else f.push(r)});setFila(f);enviar()}
 var enviando=false;
 function enviar(){if(enviando)return;var f=fila();if(!f.length){pinta();return}enviando=true;var lote=f.slice(0,200);
   fetch(CFG.url+'/rest/v1/'+TAB+'?on_conflict=tabela,id',{method:'POST',headers:Object.assign({'Prefer':'resolution=merge-duplicates,return=minimal'},H),body:JSON.stringify(lote)})
