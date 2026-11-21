@@ -34,7 +34,13 @@ function agoraServidor(){return new Date(Date.now()+desvio).toISOString()}
 /* ───── a foto da base: tabela → (id → texto) ───── */
 var ANT={};            /* última foto por tabela: {txt: JSON da tabela inteira, map: Map(id→json)} */
 function comId(arr){return Array.isArray(arr)&&arr.length>0&&arr.every(function(x){return x&&typeof x==='object'&&x.id!==undefined&&x.id!==null&&x.id!==''})}
-function mapa(k,v){var m=new Map();if(comId(v)){v.forEach(function(r){m.set(String(r.id),JSON.stringify(r))})}else if(v!==undefined){m.set(k,JSON.stringify({v:v}))}return m}
+/* v196 (21/11/2026): comparação pelo CONTEÚDO, não pela ordem das chaves. A nuvem (jsonb) devolve cada registro com as chaves
+   noutra ordem; uma camada que mexe no registro sem mudar nada voltava a ordem antiga — e a v172 achava que TODAS as 918
+   negociações tinham mudado e subia-as de novo a cada abertura, em todo computador (medido 21/11: 918 registros por abertura,
+   que todos os outros computadores tinham de baixar na abertura seguinte). Agora a mesma coisa em outra ordem = igual. */
+function ordenado(x){if(Array.isArray(x))return x.map(ordenado);if(x&&typeof x.toJSON==='function')return ordenado(x.toJSON());if(x&&typeof x==='object'){var o={};Object.keys(x).sort().forEach(function(k){o[k]=ordenado(x[k])});return o}return x}
+function canon(x){return JSON.stringify(ordenado(x))}
+function mapa(k,v){var m=new Map();if(comId(v)){v.forEach(function(r){m.set(String(r.id),canon(r))})}else if(v!==undefined){m.set(k,canon({v:v}))}return m}
 function tabelaDe(k,v){return comId(v)?k:'_k'}
 /* compara a base atual com a última foto; devolve registros que mudaram; actualiza a foto */
 function comparar(){var out=[];var db=S.db;var vistos={};
@@ -74,11 +80,11 @@ function lerNuvem(desde){var out=[],off=0,lim=1000;function pg(){var q=CFG.url+'
   return fetch(q,{headers:H}).then(function(r){if(!r.ok)return r.text().then(function(t){throw new Error(r.status+' '+t.slice(0,200))});var dh=r.headers.get('date');if(dh){var ms=Date.parse(dh);if(ms)desvio=ms-Date.now()}return r.json()}).then(function(j){out=out.concat(j);if(j.length===lim){off+=lim;return pg()}return out})}return pg()}
 function aplicar(regs,primeira){if(!regs.length)return 0;var db=S.db,n=0;var tabelasNuvem={};
   regs.forEach(function(r){var t=r.tabela.slice(PRE.length),id=String(r.id),d=r.dados;
-    if(t==='_k'){if(r.apagado){if(id in db){delete db[id];n++}}else{var nv=d&&d.v;var txt=JSON.stringify(nv);if(JSON.stringify(db[id])!==txt){db[id]=nv;n++}}return}
+    if(t==='_k'){if(r.apagado){if(id in db){delete db[id];n++}}else{var nv=d&&d.v;var txt=canon(nv);if(canon(db[id])!==txt){db[id]=nv;n++}}return}
     tabelasNuvem[t]=tabelasNuvem[t]||{};tabelasNuvem[t][id]=1;
     var arr=db[t];if(!Array.isArray(arr)){if(r.apagado)return;arr=db[t]=[]}
     var i=-1;for(var q=0;q<arr.length;q++){if(arr[q]&&String(arr[q].id)===id){i=q;break}}
-    if(r.apagado){if(i>=0){arr.splice(i,1);n++}}else{var j=JSON.stringify(d);if(i>=0){if(JSON.stringify(arr[i])!==j){arr[i]=d;n++}}else{arr.push(d);n++}}});
+    if(r.apagado){if(i>=0){arr.splice(i,1);n++}}else{var j=canon(d);if(i>=0){if(canon(arr[i])!==j){arr[i]=d;n++}}else{arr.push(d);n++}}});
   if(primeira){/* nuvem é a verdade: numa tabela que a nuvem tem, o que só existe aqui sai */Object.keys(tabelasNuvem).forEach(function(t){var arr=db[t];if(!Array.isArray(arr))return;var antes=arr.length;db[t]=arr.filter(function(x){return x&&tabelasNuvem[t][String(x.id)]});n+=antes-db[t].length})}
   return n}
 var _tR=0;

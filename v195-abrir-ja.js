@@ -44,6 +44,35 @@ try{if(window.QUEM){var _e=QUEM.entrar,_s=QUEM.sair;
   QUEM.entrar=function(){var r=_e.apply(this,arguments);espelho();return r};
   QUEM.sair=function(){var r=_s.apply(this,arguments);espelho();return r}}}catch(e){}
 espelho();
+/* ───── v196 (21/11/2026): a FOTO DO INÍCIO ─────
+   Pedido do Bruno: "Início usável em ~2 s" em TODA abertura. O sistema leva ~6–8 s a montar-se (mais de 200 camadas);
+   enquanto isso, a tela de abertura (v195-tela.js) mostra a última foto do Início deste computador — guardada aqui,
+   já com os números da nuvem, só quando o Início está à vista e sem janela aberta. A foto é da pessoa que está neste
+   computador; outra pessoa (ou foto com mais de 14 dias) → não aparece. Vive em systaag_v195_tela (a base local). */
+var H=document.documentElement;
+function fotoInicio(){try{
+  if(window.__TREINO||document.hidden)return;
+  var k='';try{k=route().k}catch(e){}if(k&&k!=='home')return;
+  if(document.getElementById('abrindo-sistema')||document.querySelector('.modal.show,dialog[open],#qv'))return;
+  var quem=LS.getItem(KEY);if(!quem)return;
+  var b=document.body.cloneNode(true);
+  var vivos=[].slice.call(document.body.querySelectorAll('canvas')),copias=[].slice.call(b.querySelectorAll('canvas'));
+  copias.forEach(function(c,i){var v=vivos[i];try{var r=v.getBoundingClientRect();if(!r.width||!r.height){c.remove();return}var cs=getComputedStyle(v),im=document.createElement('img');
+    im.src=v.toDataURL('image/webp',0.82);['position','top','left','right','bottom','width','height','opacity','zIndex','transform','pointerEvents','display','maxWidth'].forEach(function(p){im.style[p]=cs[p]});im.className=c.className;c.replaceWith(im)}catch(e){c.remove()}});
+  [].forEach.call(b.querySelectorAll('script,noscript,iframe,template,#abrindo-sistema,#boot127,#nuvemChip,.toast,.modal:not(.show)'),function(e){e.remove()});
+  var css=[].slice.call(document.querySelectorAll('style')).map(function(s){return s.textContent}).join('\n')
+    .replace(/(?<![\w.#-])(?::root|html)(?![\w-])/g,':host').replace(/:host((?:\[[^\]]*\]|\.[\w-]+)+)/g,':host($1)').replace(/(?<![\w.#-])body(?![\w-])/g,'.sb');
+  var links=[].slice.call(document.querySelectorAll('link[rel=stylesheet]')).map(function(l){return l.href}).filter(Boolean);
+  var attrs=[].slice.call(H.attributes).filter(function(a){return /^data-|^class$/.test(a.name)}).map(function(a){return [a.name,a.value]});
+  var html=b.innerHTML;if(html.length+css.length>3e6)return;
+  LS.setItem('systaag_v195_tela',JSON.stringify({quem:quem,quando:Date.now(),html:html,css:css,links:links,attrs:attrs}));
+}catch(e){console.warn('v196 foto do Início',e)}}
+var fotoDepois=function(ms){setTimeout(function(){(window.requestIdleCallback||function(f){setTimeout(f,0)})(fotoInicio,{timeout:4000})},ms)};
+window.addEventListener('v172-pronta',function(){fotoDepois(4000)});if(window.__v172pronto)fotoDepois(4000);
+window.addEventListener('hashchange',function(){var k='';try{k=route().k}catch(e){}if(!k||k==='home')fotoDepois(2500)});
+document.addEventListener('visibilitychange',function(){if(document.visibilityState==='hidden'&&window.__v172pronto)fotoInicio()});
+setInterval(function(){if(window.__v172pronto)fotoInicio()},300000);
+
 /* a lista só é guardada DEPOIS da primeira leitura da nuvem (v172-pronta): antes disso S.db ainda é a semente embutida
    (medido 21/11: 74 nomes antigos em vez dos 36 reais) — guardar cedo faria a próxima abertura mostrar a lista errada */
 var depoisDaNuvem=function(){setTimeout(function(){guardaLista();espelho()},500)};
