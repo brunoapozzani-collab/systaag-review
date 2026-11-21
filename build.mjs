@@ -33,7 +33,7 @@ let extraidos=0;
    ficava BRANCA por 5–10 s. Agora a mesma tela "taag · Abrindo o sistema…" da porta de entrada continua na frente até o
    sistema se dar por pronto (a marca pronto127 da v127) — só aparência: nada do sistema muda, e ela sai sozinha (ou em 30 s, no máximo). */
 let telaPosta=false;
-const TELA='<div id="abrindo-sistema" style="visibility:visible!important;position:fixed;inset:0;z-index:2147483647;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:#f4f5f7;color:#1f2430;font:600 15px/1.4 &quot;Plus Jakarta Sans&quot;,system-ui,-apple-system,sans-serif;transition:opacity .25s ease"><div style="font:300 44px/1 &quot;Plus Jakarta Sans&quot;,system-ui,sans-serif;letter-spacing:.06em">taag</div><div style="opacity:.6;font-weight:500">Abrindo o sistema…</div><div style="width:160px;height:4px;border-radius:999px;background:rgba(0,0,0,.08);overflow:hidden"><i style="display:block;height:100%;width:40%;background:#1f2430;border-radius:999px;animation:abrindo-sistema 1.1s ease-in-out infinite"></i></div><style>@keyframes abrindo-sistema{0%{transform:translateX(-100%)}100%{transform:translateX(400%)}}#boot127{display:none!important}</style></div><script>(function(){var el=document.getElementById("abrindo-sistema"),H=document.documentElement;function some(){if(!el)return;var e=el;el=null;e.style.opacity="0";e.style.pointerEvents="none";setTimeout(function(){try{e.remove()}catch(x){}},280)}window.__abrindoSome=some;/* sai quando o sistema se dá por pronto (a mesma marca da tela de abertura antiga, v127) */try{new MutationObserver(function(){if(H.classList.contains("pronto127"))some()}).observe(H,{attributes:true,attributeFilter:["class"]})}catch(x){window.addEventListener("load",function(){setTimeout(some,400)})}setTimeout(some,30000)})();</script><!--ABRINDO-->';
+const TELA='<div id="abrindo-sistema" style="visibility:visible!important;position:fixed;inset:0;z-index:2147483647;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:#f4f5f7;color:#1f2430;font:600 15px/1.4 &quot;Plus Jakarta Sans&quot;,system-ui,-apple-system,sans-serif;transition:opacity .25s ease"><div style="font:300 44px/1 &quot;Plus Jakarta Sans&quot;,system-ui,sans-serif;letter-spacing:.06em">taag</div><div style="opacity:.6;font-weight:500">Quase pronto — montando as telas…</div><div style="width:160px;height:4px;border-radius:999px;background:rgba(0,0,0,.08);overflow:hidden"><i style="display:block;height:100%;width:40%;background:#1f2430;border-radius:999px;animation:abrindo-sistema 1.1s ease-in-out infinite"></i></div><style>@keyframes abrindo-sistema{0%{transform:translateX(-100%)}100%{transform:translateX(400%)}}#boot127{display:none!important}</style></div><script>(function(){var el=document.getElementById("abrindo-sistema"),H=document.documentElement;function some(){if(!el)return;var e=el;el=null;e.style.opacity="0";e.style.pointerEvents="none";setTimeout(function(){try{e.remove()}catch(x){}},280)}window.__abrindoSome=some;/* sai quando o sistema se dá por pronto (a mesma marca da tela de abertura antiga, v127) */try{new MutationObserver(function(){if(H.classList.contains("pronto127"))some()}).observe(H,{attributes:true,attributeFilter:["class"]})}catch(x){window.addEventListener("load",function(){setTimeout(some,400)})}setTimeout(some,30000)})();</script><!--ABRINDO-->';
 async function html(src){
   const parts=src.split(/(<script\b[^>]*>[\s\S]*?<\/script>|<style\b[^>]*>[\s\S]*?<\/style>)/);
   let out='',i=0;
@@ -63,6 +63,7 @@ async function html(src){
   return out;
 }
 /* a foto da nuvem: a tabela inteira lida por chave (não pula registro), conferida pela contagem antes e depois */
+let FOTO_REGS=null;
 async function fotoDaNuvem(){
   try{
     const cfg=readFileSync('nuvem-config.js','utf8');const url=(cfg.match(/url:'([^']+)'/)||[])[1],key=(cfg.match(/key:'([^']+)'/)||[])[1];
@@ -80,7 +81,7 @@ async function fotoDaNuvem(){
       if(antes===depois&&mapa.size===depois&&mapa.size>0){
         const regs=[...mapa.values()];const corpo=JSON.stringify({gerada:new Date().toISOString(),n:regs.length,regs});
         const href=publica('foto-'+dig(corpo)+'.json',corpo);console.log('foto: '+regs.length+' registros = nuvem ·',Math.round(corpo.length/1048576*10)/10,'MB ·',href);
-        return {url:href,n:regs.length};
+        FOTO_REGS=regs;return {url:href,n:regs.length};
       }
       console.warn('foto: contagem não bateu (tentativa '+tent+'): antes',antes,'lidos',mapa.size,'depois',depois);
     }
@@ -97,7 +98,10 @@ for(const f of readdirSync('.')){
   else copyFileSync(f,join(OUT,f));
 }
 {
-  const s=readFileSync('index.html','utf8');let o=await html(s);
+  let s=readFileSync('index.html','utf8');
+  /* v195 (21/11/2026): a camada "abrir já" entra logo depois da v194 (a fonte index.html não muda) */
+  if(!/v195-abrir-ja\.js/.test(s)){const t='<script src="v194-pessoas-editor.js"></script>';if(s.includes(t))s=s.replace(t,t+'<script src="v195-abrir-ja.js"></script>');else console.warn('v195: âncora v194 não encontrada — publicado sem a camada')}
+  let o=await html(s);
   /* cada <script src> local leva a impressão digital do arquivo publicado (antes: o commit — tudo era baixado de novo a cada publicação) */
   const V=String(process.env.VERCEL_GIT_COMMIT_SHA||Date.now()).slice(0,10);
   o=o.replace(/(<script\b[^>]*\bsrc=")([A-Za-z0-9_.-]+\.js)(?:\?[^"]*)?"/g,(m,a,b)=>{if(!selo[b])return a+b+'?v='+V+'"';pre.push([b+'?v='+selo[b],'script']);return a+b+'?v='+selo[b]+'"'});
@@ -110,8 +114,18 @@ for(const f of readdirSync('.')){
   L=L.replace(anc,"var APP='"+app+"';");
   /* a porta de entrada manda baixar já, em paralelo, tudo o que o app.html vai pedir (na ordem da página) */
   const vistos=new Set();const links=pre.filter(([h])=>!vistos.has(h)&&vistos.add(h)).map(([h,t])=>'<link rel="preload" as="'+t+'" href="'+h+'">').join('');
+  /* v195 (21/11/2026): a lista do "Quem é você?" publicada junto com o site — o computador novo vê-a na hora.
+     A regra é a MESMA função da v195 (QUEM0_CALC), lida daqui; se algo falhar, publica sem lista (a v166 pergunta como antes). */
+  let quem0=null;
+  try{if(FOTO_REGS){const vm=await import('node:vm');const ctx={window:{}};vm.runInNewContext(readFileSync('v195-abrir-ja.js','utf8'),ctx);
+    const viva=(t)=>FOTO_REGS.filter(r=>r.tabela===t&&!r.apagado&&r.dados).map(r=>r.dados);
+    quem0=ctx.window.QUEM0_CALC(viva('base:usuarios'),viva('base:pessoas'));console.log('quem0:',quem0.reduce((n,g)=>n+g.its.length,0),'pessoas em',quem0.length,'grupos')}}
+  catch(e){console.warn('quem0: falhou — publicação sem lista (',String(e&&e.message||e).slice(0,160),')');quem0=null}
+  /* o que vai primeiro: a foto da nuvem (a maior espera) e o tempo real; depois o código, na ordem da página */
+  const primeiro=(foto?'<link rel="preload" as="fetch" crossorigin="anonymous" fetchpriority="high" href="'+foto.url+'">':'')+'<link rel="preload" as="image" href="taag-wordmark.png">';
+  const depois='<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin><link rel="preload" as="script" href="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js" fetchpriority="low">';
   const cab='<!--PRECARGA-->';if(!L.includes(cab))throw new Error('loader.html: âncora PRECARGA não encontrada');
-  L=L.replace(cab,'<link rel="preconnect" href="'+((readFileSync('nuvem-config.js','utf8').match(/url:'([^']+)'/)||[])[1]||'')+'" crossorigin><script>window.__FOTO='+JSON.stringify(foto)+';window.__PUBLICADO='+JSON.stringify(V)+'</script>'+links);
+  L=L.replace(cab,'<link rel="preconnect" href="'+((readFileSync('nuvem-config.js','utf8').match(/url:'([^']+)'/)||[])[1]||'')+'" crossorigin><script>window.__FOTO='+JSON.stringify(foto)+';window.__PUBLICADO='+JSON.stringify(V)+';window.__QUEM0='+JSON.stringify(quem0).replace(/</g,'\\u003c')+'</script>'+primeiro+links+depois);
   L=L.replace(/(<script\b[^>]*\bsrc=")([A-Za-z0-9_.-]+\.js)(?:\?[^"]*)?"/g,(m,a,b)=>selo[b]?a+b+'?v='+selo[b]+'"':m);
   writeFileSync(join(OUT,'index.html'),L);saved+=s.length-o.length;
   console.log('index.html → app.html',s.length,'→',o.length,'·',extraidos,'blocos em arquivos próprios ·',vistos.size,'pré-cargas · index.html = loader');

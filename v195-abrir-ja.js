@@ -1,0 +1,51 @@
+/* v195 — ABRIR JÁ (Bruno, 21/11/2026)
+   Pedido: "um usuário novo esperou quase 3 minutos só para ver a tela de escolher o perfil — tem de abrir como o Google".
+   Medido no Chrome dele (computador "novo", 21/11): 20 s até o sistema ficar pronto numa boa ligação — o tempo vai em
+   baixar ~4,5 MB (código + foto da nuvem) e montar ~100 camadas. Num computador mais fraco / ligação fraca vira minutos.
+   O que muda (sem mexer em nenhum dado nem em nenhuma tela):
+     · a porta de entrada (loader.html) desenha o "Quem é você?" NA HORA (menos de 1 s), com a lista de pessoas guardada
+       — a pessoa escolhe o nome enquanto o sistema baixa por trás, em vez de olhar para um "Abrindo o sistema…";
+     · quem já escolheu antes vê "Abrindo o SYSTAAG · Olá, <nome>" com uma barra de progresso de verdade.
+   Esta camada só faz duas coisas, no fim da abertura:
+     1. guarda NESTE computador (localStorage "qv0:lista") a lista exata que o "Quem é você?" mostra — a próxima abertura
+        desenha-a sem esperar o sistema; computador novo usa a lista publicada junto com o site (build.mjs);
+     2. mantém o espelho "qv0:quem" (quem está neste computador) igual à escolha da v166 — inclusive em Trocar pessoa / Sair.
+   QUEM0_CALC é a mesma regra da v166 (grupos, ordem da Gestão, cor da v194) — o build.mjs usa esta mesma função. */
+(function(){
+'use strict';
+var norm=function(s){return String(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9 ]/g,' ').replace(/\s+/g,' ').trim()};
+/* usuarios / pessoas = as listas da Base (S.db.usuarios, S.db.pessoas) → [{g:grupo, its:[{l:login,n:nome,c:cor,i:iniciais}]}] */
+function QUEM0_CALC(usuarios,pessoas){
+  usuarios=usuarios||[];pessoas=pessoas||[];
+  var P={};pessoas.forEach(function(p){if(p&&p.id)P[p.id]=p});
+  var GRUPOS=[['Gestão',['diretoria','ti']],['Comercial',['comercial','prevendas','marketing']],['Estoque e compras',['estoque']],['Financeiro e administração',['financeiro','admin']],['Operação',['chefetec','obras','gestao']],['Técnicos',['tecnico']],['Projetos',['projetos']],['Pós-venda',['posvenda']],['Outros',[]]];
+  var FAM=[['Gestão','#475569',/diretoria|desenvolvimento|tecnologia|gestao|gerencia/],['Comercial','#0071e3',/comercial|pre vendas|marketing/],['Estoque','#16a34a',/estoque|compras/],['Financeiro','#d97706',/financeir|rh|pessoas|cultura|facilities|administra/],['Operação','#7c3aed',/obras|operac|programac|tecnic/],['Projetos','#0891b2',/projet|acustica/],['Pós-venda','#dc2626',/pos venda/],['Focal','#be185d',/focal/]];
+  var PERFIL_FAM={diretoria:'Gestão',ti:'Gestão',gestao:'Gestão',comercial:'Comercial',prevendas:'Comercial',marketing:'Comercial',estoque:'Estoque',financeiro:'Financeiro',admin:'Financeiro',chefetec:'Operação',obras:'Operação',tecnico:'Operação',projetos:'Projetos',posvenda:'Pós-venda'};
+  var CORES=['#0071e3','#be185d','#16a34a','#d97706','#7c3aed','#0891b2','#dc2626','#475569'];
+  var familiaCor=function(p){var d=norm(p.dep||p.departamento||'');var f=null;for(var i=0;i<FAM.length;i++)if(FAM[i][2].test(d)){f=FAM[i];break}
+    if(!f){var u=usuarios.find(function(x){return x.pessoa_id===p.id});var k=u&&PERFIL_FAM[u.perfil];if(k)f=FAM.find(function(x){return x[0]===k})}return f?f[1]:'#6e6e73'};
+  var cor=function(u){var p=P[u.pessoa_id];if(p)return p.cor||familiaCor(p);var h=0,l=String(u.login);for(var i=0;i<l.length;i++)h=(h*31+l.charCodeAt(i))&0xffff;return CORES[h%CORES.length]};
+  var nomeCurto=function(u){return u.nome||((P[u.pessoa_id]||{}).nome)||u.login};
+  var ini=function(n){return String(n||'?').split(' ').filter(Boolean).map(function(x){return x[0]}).join('').slice(0,2).toUpperCase()};
+  var ORDEM_GESTAO=function(u){var n=norm(nomeCurto(u)+' '+u.login);return /\bcesar\b/.test(n)?0:/\brodolfo\b/.test(n)?1:/\bbruno\b/.test(n)?2:9};
+  var L=usuarios.filter(function(u){return u&&u.login&&u.ativo!==false}),usados={};
+  return GRUPOS.map(function(g){var its=L.filter(function(u){if(usados[u.login])return false;var ok=g[1].length?g[1].indexOf(u.perfil)>=0:true;if(ok)usados[u.login]=1;return ok})
+    .sort(function(a,b){if(g[0]==='Gestão'){var oa=ORDEM_GESTAO(a),ob=ORDEM_GESTAO(b);if(oa!==ob)return oa-ob}return nomeCurto(a).localeCompare(nomeCurto(b),'pt-BR')});
+    return {g:g[0],its:its.map(function(u){var n=nomeCurto(u);return {l:u.login,n:n,c:cor(u),i:ini(n)}})}}).filter(function(g){return g.its.length});
+}
+window.QUEM0_CALC=QUEM0_CALC;
+if(typeof S==='undefined'||!S.db)return;
+
+var LS=window.localStorage,KEY='systaag_quem';
+function guardaLista(){try{var l=QUEM0_CALC(S.db.usuarios,S.db.pessoas);if(l.length)LS.setItem('qv0:lista',JSON.stringify({quando:Date.now(),lista:l}))}catch(e){console.warn('v195 lista',e)}}
+function espelho(){try{var q=LS.getItem(KEY);if(q)LS.setItem('qv0:quem',q);else LS.removeItem('qv0:quem')}catch(e){}}
+/* Trocar pessoa / Sair / escolher: o espelho acompanha a v166 */
+try{if(window.QUEM){var _e=QUEM.entrar,_s=QUEM.sair;
+  QUEM.entrar=function(){var r=_e.apply(this,arguments);espelho();return r};
+  QUEM.sair=function(){var r=_s.apply(this,arguments);espelho();return r}}}catch(e){}
+espelho();
+/* depois da abertura (a nuvem pode ter trazido gente nova): guarda a lista atual */
+var feito=function(){setTimeout(function(){guardaLista();espelho()},1500)};
+if(document.readyState==='complete')feito();else window.addEventListener('load',feito);
+setTimeout(guardaLista,60000);
+})();

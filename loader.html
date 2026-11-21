@@ -5,10 +5,22 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>SYSTAAG</title>
 <!--PRECARGA-->
-<style>html,body{margin:0;height:100%;background:#f4f5f7;font:600 15px/1.4 "Plus Jakarta Sans",system-ui,-apple-system,sans-serif;color:#1f2430}#ld{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px}#ld .w{font:300 44px/1 "Plus Jakarta Sans",system-ui,sans-serif;letter-spacing:.06em}#ld .s{opacity:.6;font-weight:500}#ld .b{width:160px;height:4px;border-radius:999px;background:rgba(0,0,0,.08);overflow:hidden}#ld .b i{display:block;height:100%;width:40%;background:#1f2430;border-radius:999px;animation:ld 1.1s ease-in-out infinite}@keyframes ld{0%{transform:translateX(-100%)}100%{transform:translateX(400%)}}</style>
+<style>html,body{margin:0;height:100%;background:#f4f5f7;font:600 15px/1.4 "Plus Jakarta Sans",system-ui,-apple-system,sans-serif;color:#1f2430}#ld{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px}#ld .w{font:300 44px/1 "Plus Jakarta Sans",system-ui,sans-serif;letter-spacing:.06em}#ld .s{opacity:.6;font-weight:500}#ld .b{width:160px;height:4px;border-radius:999px;background:rgba(0,0,0,.08);overflow:hidden}#ld .b i{display:block;height:100%;width:40%;background:#1f2430;border-radius:999px;animation:ld 1.1s ease-in-out infinite}@keyframes ld{0%{transform:translateX(-100%)}100%{transform:translateX(400%)}}#ld .b i.p{animation:none;width:0;transition:width .35s ease}#ld .n{font-weight:700;font-size:18px;opacity:.85}
+/* v195 (21/11/2026): o "Quem é você?" desenhado pela porta de entrada, na hora — mesmo desenho da v166 */
+#qv0{position:fixed;inset:0;z-index:5;background:#f5f5f7;overflow:auto;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Plus Jakarta Sans",system-ui,sans-serif;color:#1d1d1f}
+#qv0 .qv-in{max-width:980px;margin:0 auto;padding:56px 22px 60px}#qv0 .qv-logo{display:block;height:34px;margin:0 auto 26px;opacity:.9}
+#qv0 h1{font-size:2.3rem;font-weight:800;letter-spacing:-.8px;text-align:center;margin:0}#qv0 .qv-sub{text-align:center;color:#6e6e73;margin:6px 0 22px;font-size:15px;font-weight:400}
+#qv0 .qv-q{display:block;width:100%;max-width:420px;margin:0 auto 30px;padding:12px 16px;border-radius:14px;border:1px solid #d2d2d7;background:#fff;color:inherit;font-size:16px;outline:none;box-sizing:border-box}#qv0 .qv-q:focus{border-color:#0071e3;box-shadow:0 0 0 4px rgba(0,113,227,.15)}
+#qv0 .qv-g{margin-bottom:26px}#qv0 .qv-gh{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#6e6e73;margin:0 0 10px 4px}
+#qv0 .qv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+#qv0 .qv-t{display:flex;flex-direction:column;align-items:center;gap:8px;padding:18px 10px 14px;border-radius:18px;border:1px solid #e5e5ea;background:#fff;cursor:pointer;transition:transform .12s,box-shadow .12s;color:inherit;font:inherit;text-align:center}
+#qv0 .qv-t:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.08)}#qv0 .qv-t:active{transform:scale(.97)}
+#qv0 .qv-av{width:56px;height:56px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:700;font-size:19px}#qv0 .qv-n{font-weight:700;font-size:14.5px;line-height:1.2}
+#qv0 .qv-none{text-align:center;color:#6e6e73;padding:30px}
+</style>
 </head>
 <body>
-<div id="ld"><div class="w">taag</div><div class="s">Abrindo o sistema…</div><div class="b"><i></i></div></div>
+<div id="ld"><div class="w">taag</div><div class="n" id="ld-n"></div><div class="s" id="ld-s">Abrindo o sistema…</div><div class="b"><i id="ld-b"></i></div></div>
 <!-- rápido 3 (18/11/2026): o espelho da nuvem começa a trabalhar já, enquanto o sistema ainda baixa (ver nuvem-espelho.js) -->
 <script src="nuvem-config.js"></script>
 <script src="nuvem-espelho.js"></script>
@@ -29,7 +41,9 @@ var sp=Storage.prototype, g0=sp.getItem, s0=sp.setItem, r0=sp.removeItem, k0=sp.
 var LS=window.localStorage;
 function realKeys(){var o=[],n=l0.call(LS);for(var i=0;i<n;i++)o.push(k0.call(LS,i));return o}
 var APP='app.html'+(location.search?location.search:'');
-function abreApp(){return fetch(APP,/* rápido 3: publicado com ?v=impressão digital → pode vir do que o navegador já guardou */APP.indexOf('?v=')>0?{}:{cache:'no-store'}).then(function(r){if(!r.ok)throw new Error('app.html '+r.status);return r.text()}).then(function(h){
+/* v195: o app.html começa a baixar JÁ (antes esperava a base sair do IndexedDB) */
+var appP=fetch(APP,/* rápido 3: publicado com ?v=impressão digital → pode vir do que o navegador já guardou */APP.indexOf('?v=')>0?{}:{cache:'no-store'}).then(function(r){if(!r.ok)throw new Error('app.html '+r.status);return r.text()});appP.catch(function(){});
+function abreApp(){return appP.then(function(h){try{if(window.__V195)window.__V195.fim()}catch(e){}
   /* document.open() apaga os ouvintes da janela — os nossos entram depois dele */
   document.open();if(window.__BIGSTORE)escuta();
   /* rápido 3b (18/11/2026): com o código já guardado no navegador, o sistema monta-se de uma vez só (5–10 s) e o navegador não
@@ -41,6 +55,42 @@ function abreApp(){return fetch(APP,/* rápido 3: publicado com ?v=impressão di
   return new Promise(function(ok){var feito=false,fim=function(){if(feito)return;feito=true;ok()};
     try{requestAnimationFrame(function(){requestAnimationFrame(function(){window.__abrindoPintada=Date.now();fim()})})}catch(e){fim()}
     setTimeout(fim,700)}).then(function(){document.write(h.slice(corte));document.close()})})}
+
+/* ───── v195 — ABRIR JÁ (21/11/2026): a primeira tela aparece na hora ─────
+   · ninguém escolhido neste computador → o "Quem é você?" (lista guardada / publicada) — a pessoa escolhe enquanto baixa;
+   · já escolhido → "Olá, <nome>" + barra de progresso de verdade (arquivos baixados / total).
+   A escolha é gravada em systaag_quem (a mesma chave da v166) ANTES de o sistema arrancar — a v166 entra direto. */
+var V=window.__V195=(function(){
+  var MIR='qv0:quem',ld=document.getElementById('ld'),esc=null,resolve=null,lista=null,tot=0,ok=0,fim=false;
+  var E=function(x){return String(x==null?'':x).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})};
+  var norm=function(x){return String(x||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9 ]/g,' ').replace(/\s+/g,' ').trim()};
+  try{var g=JSON.parse(g0.call(LS,'qv0:lista')||'null');if(g&&Array.isArray(g.lista)&&g.lista.length)lista=g.lista}catch(e){}
+  if(!lista&&Array.isArray(window.__QUEM0)&&window.__QUEM0.length)lista=window.__QUEM0;
+  var nomeDe=function(l){var n='';(lista||[]).forEach(function(g){g.its.forEach(function(u){if(u.l===l)n=u.n})});return n};
+  /* progresso: os arquivos que a porta de entrada mandou baixar + a foto da nuvem */
+  var alvo={};[].forEach.call(document.querySelectorAll('link[rel=preload]'),function(l){try{alvo[new URL(l.href,location.href).href]=1;tot++}catch(e){}});
+  function pinta(){if(fim)return;var b=document.getElementById('ld-b');if(!b)return;b.className='p';b.style.width=Math.round(8+82*(tot?ok/tot:0))+'%'}
+  try{new PerformanceObserver(function(l){l.getEntries().forEach(function(e){if(alvo[e.name]){alvo[e.name]=0;ok++}});pinta()}).observe({type:'resource',buffered:true})}catch(e){}
+  function abrindo(l){var n=nomeDe(l),el=document.getElementById('ld-n');if(el)el.textContent=n?'Olá, '+n.split(' ')[0]:'';var s=document.getElementById('ld-s');if(s)s.textContent='Abrindo o seu SYSTAAG…';pinta()}
+  function desenha(q){var qn=norm(q),h=(lista||[]).map(function(g){var its=g.its.filter(function(u){return !qn||norm(u.n+' '+u.l).indexOf(qn)>=0});if(!its.length)return '';
+      return '<div class="qv-g"><div class="qv-gh">'+E(g.g)+'</div><div class="qv-grid">'+its.map(function(u){return '<button class="qv-t" data-l="'+E(u.l)+'"><span class="qv-av" style="background:'+E(u.c)+'">'+E(u.i)+'</span><span class="qv-n">'+E(u.n)+'</span></button>'}).join('')+'</div></div>'}).join('');
+    document.getElementById('qv0-list').innerHTML=h||'<div class="qv-none">Nenhum nome encontrado.</div>'}
+  function picker(){var d=document.createElement('div');d.id='qv0';d.setAttribute('role','dialog');d.setAttribute('aria-label','Quem é você?');
+    d.innerHTML='<div class="qv-in"><img class="qv-logo" src="taag-wordmark.png" alt="taag" onerror="this.style.display=\'none\'"><h1>Quem é você?</h1><div class="qv-sub">Toque no seu nome para ver o seu SYSTAAG.</div><input class="qv-q" id="qv0-q" placeholder="Buscar seu nome…" autocomplete="off"><div id="qv0-list"></div></div>';
+    document.body.appendChild(d);var q=document.getElementById('qv0-q');q.oninput=function(){desenha(q.value)};desenha('');
+    d.addEventListener('click',function(ev){var t=ev.target.closest&&ev.target.closest('.qv-t');if(!t)return;var l=t.getAttribute('data-l');esc=l;try{s0.call(LS,MIR,l)}catch(e){}d.remove();abrindo(l);if(resolve)resolve(l)});
+    setTimeout(function(){try{q.focus({preventScroll:true})}catch(e){}},60)}
+  /* decide já pelo espelho síncrono; quem não tem espelho espera a resposta do IndexedDB (≤ 250 ms) */
+  var mir=null;try{mir=g0.call(LS,MIR)}catch(e){}
+  if(mir)abrindo(mir);
+  return {
+    decide:function(quem){/* quem = systaag_quem guardado (ou null) */
+      if(quem){try{s0.call(LS,MIR,quem)}catch(e){}abrindo(quem);return Promise.resolve(null)}
+      if(!lista){pinta();return Promise.resolve(null)}         /* sem lista: a v166 pergunta depois, como antes */
+      picker();return new Promise(function(r){resolve=r})},
+    escolhido:function(){return esc},
+    fim:function(){var s=document.getElementById('ld-s'),b=document.getElementById('ld-b');if(s)s.textContent='Quase pronto — montando as telas…';if(b){b.className='p';b.style.width='94%'}fim=true}};
+})();
 
 /* ───── IndexedDB ───── */
 var db=null;
@@ -74,8 +124,13 @@ function instala(){
   window.__BIGSTORE={tamanho:function(){var t=0;M.forEach(function(v){t+=v.length*2});return t},chaves:function(){return Array.from(M.keys())},pendentes:function(){return pend.size+pendRm.size},db:DBN}}
 
 /* ───── arranque ───── */
+var pega1=function(k){return new Promise(function(ok){try{var r=db.transaction(ST).objectStore(ST).get(k);r.onsuccess=function(){ok(r.result==null?null:String(r.result))};r.onerror=function(){ok(null)}}catch(e){ok(null)}})};
+var escolha=null;
 try{
   await open();
+  /* v195: quem está neste computador? (uma leitura só — a base inteira vem a seguir, sem segurar a tela) */
+  var q0=await pega1('systaag_quem');if(!q0)try{q0=g0.call(LS,'systaag_quem')}catch(e){}
+  escolha=V.decide(q0);
   M=await lerTudo();
   /* 1. primeira vez: a base que está no localStorage sobe para o IndexedDB (e só sai do localStorage depois de confirmada) */
   var velhas=realKeys().filter(function(k){return RE.test(k)});
@@ -93,7 +148,10 @@ try{
 }catch(e){
   /* sem IndexedDB (modo privado antigo, bloqueio): o sistema abre como sempre, direto no localStorage */
   console.error('v169: IndexedDB indisponível — a base fica no localStorage',e);
+  if(!escolha)try{escolha=V.decide(g0.call(LS,'systaag_quem'))}catch(e2){escolha=null}
 }
+/* v195: espera a pessoa escolher (o sistema continua a baixar por trás) e grava a escolha na chave da v166 */
+try{var lg=await escolha;if(lg){localStorage.setItem('systaag_quem',lg)}}catch(e){console.warn('v195 escolha',e)}
 try{await abreApp()}catch(e){document.getElementById('ld').innerHTML='<div class="w">taag</div><div class="s">Não deu para abrir o sistema ('+String(e.message||e).replace(/</g,'&lt;')+'). Recarregue a página.</div>'}
 })();
 </script>
