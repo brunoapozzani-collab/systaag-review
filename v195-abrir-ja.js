@@ -44,8 +44,9 @@ try{if(window.QUEM){var _e=QUEM.entrar,_s=QUEM.sair;
   QUEM.entrar=function(){var r=_e.apply(this,arguments);espelho();return r};
   QUEM.sair=function(){var r=_s.apply(this,arguments);espelho();return r}}}catch(e){}
 espelho();
-/* depois da abertura (a nuvem pode ter trazido gente nova): guarda a lista atual */
-var feito=function(){setTimeout(function(){guardaLista();espelho()},1500)};
-if(document.readyState==='complete')feito();else window.addEventListener('load',feito);
-setTimeout(guardaLista,60000);
+/* a lista só é guardada DEPOIS da primeira leitura da nuvem (v172-pronta): antes disso S.db ainda é a semente embutida
+   (medido 21/11: 74 nomes antigos em vez dos 36 reais) — guardar cedo faria a próxima abertura mostrar a lista errada */
+var depoisDaNuvem=function(){setTimeout(function(){guardaLista();espelho()},500)};
+if(window.__v172pronto)depoisDaNuvem();else window.addEventListener('v172-pronta',depoisDaNuvem);
+setInterval(function(){if(window.__v172pronto)guardaLista()},300000);
 })();
