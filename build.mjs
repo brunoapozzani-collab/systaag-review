@@ -116,6 +116,7 @@ for(const f of readdirSync('.')){
   const V=String(process.env.VERCEL_GIT_COMMIT_SHA||Date.now()).slice(0,10);
   o=o.replace(/(<script\b[^>]*\bsrc=")([A-Za-z0-9_.-]+\.js)(?:\?[^"]*)?"/g,(m,a,b)=>{if(!selo[b])return a+b+'?v='+V+'"';pre.push([b+'?v='+selo[b],'script']);return a+b+'?v='+selo[b]+'"'});
   /* 08/11/2026 (v169): o sistema é publicado como app.html; index.html é a porta de entrada (loader.html) */
+  if(process.env.VERCEL_GIT_COMMIT_REF==='perf-probe'){let k=0;o=o.replace(/<script\b[^>]*>[\s\S]*?<\/script>/g,(m)=>{const nm=(m.match(/src="([^"?]+)/)||[])[1]||('inline#'+(++k));return '<script>(window.__T=window.__T||[]).push(["'+nm+'",performance.now()])</script>'+m});o=o.replace('</body>','<script>(window.__T=window.__T||[]).push(["END",performance.now()])</script></body>')}
   const app=publica('app.html',o);
   const foto=await fotoDaNuvem();
   let L=readFileSync('loader.html','utf8');
