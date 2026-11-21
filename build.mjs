@@ -103,6 +103,13 @@ for(const f of readdirSync('.')){
   let s=readFileSync('index.html','utf8');
   /* v195 (21/11/2026): a camada "abrir já" entra logo depois da v194 (a fonte index.html não muda) */
   if(!/v195-abrir-ja\.js/.test(s)){const t='<script src="v194-pessoas-editor.js"></script>';if(s.includes(t))s=s.replace(t,t+'<script src="v195-abrir-ja.js"></script>');else console.warn('v195: âncora v194 não encontrada — publicado sem a camada')}
+  /* EXPERIMENTO boot1 (só nos ramos boot*): durante a montagem, as ~200 camadas mandam redesenhar a tela dezenas de vezes;
+     aqui o redesenho fica suspenso até a última camada e acontece UMA vez no fim. */
+  if(/^boot/.test(process.env.VERCEL_GIT_COMMIT_REF||'')||process.env.BOOT1){
+    const marca='function render(){renderNav();renderMain()}';const i=s.indexOf(marca);const j=i<0?-1:s.indexOf('</script>',i);
+    if(j>0){s=s.slice(0,j+9)+'<script>(function(){var rm=renderMain;window.__BOOT=1;window.__bootN=0;window.__E=[];window.addEventListener("error",function(e){__E.push(String(e.message)+" @"+String(e.filename).split("/").pop().split("?")[0]+":"+e.lineno)});renderMain=function(){if(window.__BOOT){window.__bootN++;return}return rm.apply(this,arguments)}})();</script>'+s.slice(j+9);
+      const k=s.lastIndexOf('</body>');s=s.slice(0,k)+'<script>window.__BOOT=0;window.__tFim=performance.now();try{render()}catch(e){__E.push("render final: "+e.message)}window.__tRender=performance.now();</script>'+s.slice(k);console.log('boot1: redesenho suspenso durante a montagem')}
+    else console.warn('boot1: marca não encontrada')}
   let o=await html(s);
   /* cada <script src> local leva a impressão digital do arquivo publicado (antes: o commit — tudo era baixado de novo a cada publicação) */
   const V=String(process.env.VERCEL_GIT_COMMIT_SHA||Date.now()).slice(0,10);
