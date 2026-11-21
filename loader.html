@@ -43,6 +43,8 @@ function realKeys(){var o=[],n=l0.call(LS);for(var i=0;i<n;i++)o.push(k0.call(LS
 var APP='app.html'+(location.search?location.search:'');
 /* v195: o app.html começa a baixar JÁ (antes esperava a base sair do IndexedDB) */
 var appP=fetch(APP,/* rápido 3: publicado com ?v=impressão digital → pode vir do que o navegador já guardou */APP.indexOf('?v=')>0?{}:{cache:'no-store'}).then(function(r){if(!r.ok)throw new Error('app.html '+r.status);return r.text()});appP.catch(function(){});
+/* v198: a geração da base é pedida JÁ, em paralelo (antes atrasava o "Quem é você?" até 2,5 s) */
+var GERACAO=(function(){try{var C0=window.NUVEM_CONFIG||{};if(!C0.url||!C0.key)return Promise.resolve(null);return Promise.race([fetch(C0.url+'/rest/v1/crm_registros?select=dados&tabela=eq.base:_k&id=eq.__geracao',{headers:{apikey:C0.key,Authorization:'Bearer '+C0.key},cache:'no-store'}).then(function(r){return r.ok?r.json():null}).then(function(j){return j&&j[0]&&j[0].dados&&j[0].dados.v}).catch(function(){return null}),new Promise(function(ok){setTimeout(function(){ok(null)},2500)})])}catch(e){return Promise.resolve(null)}})();
 function abreApp(){return appP.then(function(h){try{if(window.__V195)window.__V195.fim()}catch(e){}
   /* document.open() apaga os ouvintes da janela — os nossos entram depois dele */
   document.open();if(window.__BIGSTORE)escuta();
@@ -131,13 +133,16 @@ var pega1=function(k){return new Promise(function(ok){try{var r=db.transaction(S
 var escolha=null;
 try{
   await open();
+  /* v195/v198: o "Quem é você?" decide-se já (a pessoa fica guardada mesmo quando a cópia local é descartada) */
+  var q0=await pega1('systaag_quem');if(!q0)try{q0=g0.call(LS,'systaag_quem')}catch(e){}
+  escolha=V.decide(q0);
   /* v198 — GERAÇÃO DA BASE (21/11/2026, depois do incidente): quando a base compartilhada é restaurada, a nuvem guarda
      uma "geração" nova (base:_k / __geracao). Um computador cuja cópia local é de uma geração anterior joga essa cópia
      fora ANTES de o sistema arrancar e abre como computador novo (a partir da nuvem) — assim uma cópia estragada nunca
      mais devolve dados velhos à base. A pessoa escolhida (systaag_quem) fica. O que estivesse na fila de envio é guardado
      à parte (qv0:fila_guardada) para conferência, nunca enviado. Sem resposta da nuvem em 2,5 s, segue como antes. */
   try{var CFG=window.NUVEM_CONFIG||{};if(CFG.url&&CFG.key){
-    var ger=await Promise.race([fetch(CFG.url+'/rest/v1/crm_registros?select=dados&tabela=eq.base:_k&id=eq.__geracao',{headers:{apikey:CFG.key,Authorization:'Bearer '+CFG.key},cache:'no-store'}).then(function(r){return r.ok?r.json():null}).then(function(j){return j&&j[0]&&j[0].dados&&j[0].dados.v}),new Promise(function(ok){setTimeout(function(){ok(null)},2500)})]);
+    var ger=await GERACAO;
     var minha=g0.call(LS,'qv0:geracao');
     if(ger&&minha!==String(ger)){
       var tem=await new Promise(function(ok){try{var c=db.transaction(ST).objectStore(ST).count();c.onsuccess=function(){ok(c.result)};c.onerror=function(){ok(0)}}catch(e){ok(0)}});
@@ -151,8 +156,6 @@ try{
         console.warn('v198: cópia local de uma geração anterior da base — descartada; abre a partir da nuvem ('+ger+')')}
       s0.call(LS,'qv0:geracao',String(ger))}}}catch(e){console.warn('v198 geração',e)}
   /* v195: quem está neste computador? (uma leitura só — a base inteira vem a seguir, sem segurar a tela) */
-  var q0=await pega1('systaag_quem');if(!q0)try{q0=g0.call(LS,'systaag_quem')}catch(e){}
-  escolha=V.decide(q0);
   M=await lerTudo();
   /* 1. primeira vez: a base que está no localStorage sobe para o IndexedDB (e só sai do localStorage depois de confirmada) */
   var velhas=realKeys().filter(function(k){return RE.test(k)});
