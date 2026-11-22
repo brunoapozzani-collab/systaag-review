@@ -133,3 +133,16 @@ factory data and proves nothing about a real computer.
   metas, pipeline, obras/Painel, CRM classification. Each block ported and proven equal against the legacy DOM with
   `prova-abertura.mjs`. Estimate: 8–12 work blocks like tonight's. Order: data layer (read + unpack + indexes) → hero/tiles →
   Comercial/metas → Estoque → Operações/Projetos → Relacionamento → Financeiro/Pós-venda → panels → switch-over.
+
+## 22 Nov 2026 (sixth block, Chrome still offline) — v218 ready on branch (stacked on v217), not published
+- Re-thought the native Início before building it: its visible result (true Início on screen at once) is what the stored
+  screen copy (v206) already gives IF the copy is current. A native Início would only add number-click panels ~1 s earlier,
+  for 8–12 blocks of work. So first make the copy provably current and MEASURE it:
+  v218 re-takes the copy 3 s after any change to the open screen and when the tab is hidden, and at every open compares the
+  text of the copy shown with the settled real screen (1,5 s without changes, cap 10 s; skipped if the person clicks/types).
+  Scoreboard: localStorage `qv0:fotoConf` {iguais, diferentes, ultima:{tela, igual, idadeMin, nuvemJaChegou, onde}}.
+- Local loop: second and later opens equal; after an edit + reopen equal. Known noise: screens whose late banners arrive
+  after the settle window (pipeline "✉ 37 propostas…") can count as different.
+- Decision rule for the native Início: after a few days of real use, read qv0:fotoConf on Bruno's Chrome. If the copy is
+  equal in nearly every open, the instant screen IS the real one and the rewrite buys little; if not, the differences listed
+  in `onde` say exactly what must be computed natively first.
