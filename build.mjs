@@ -106,10 +106,23 @@ for(const f of readdirSync('.')){
   /* v199 — MONTAGEM SEM REDESENHOS (Bruno, 21/11/2026: "ainda parece lento"): durante a montagem, as ~200 camadas mandam redesenhar a tela dezenas de vezes;
      aqui o redesenho fica suspenso até a última camada e acontece UMA vez no fim. */
   /* 21/11/2026: conferido em cópia só-leitura — 206 telas idênticas à versão anterior, 0 erros; as camadas terminam em ~3,3 s (antes ~5,8 s) */
+  /* v208 — MONTAGEM SEM TRABALHO REPETIDO (22/11/2026). Medido: durante a montagem as camadas chamam render() e save() dezenas de vezes e cada
+     chamada refaz varreduras inteiras (parceiros, vínculos, cópias) — a v199 só suspendia o desenho final (renderMain), não esse trabalho.
+     Aqui render e save passam a ser portas: enquanto window.__BOOT estiver ligado, a chamada só fica anotada; no fim acontece UM save e UM render.
+     As duas declarações do núcleo viram atribuições para que a porta (um acessor em window) continue valendo quando as camadas embrulham a função. */
+  if(!process.env.SEM_BOOT1&&!process.env.SEM_BOOT2){
+    const mS="function save(){try{localStorage.setItem('systaag_erp1',JSON.stringify(S.db))}catch(e){}}",mR='function render(){renderNav();renderMain()}';
+    const iS=s.indexOf(mS),iR=s.indexOf(mR);const i0=iS<0?-1:s.lastIndexOf('<script>',iS);
+    if(iS>0&&iR>iS&&i0>0&&s.indexOf(mS,iS+1)<0&&s.indexOf(mR,iR+1)<0){
+      s=s.slice(0,iR)+'render=function(){renderNav();renderMain()};'+s.slice(iR+mR.length);
+      s=s.slice(0,iS)+"save=function(){try{localStorage.setItem('systaag_erp1',JSON.stringify(S.db))}catch(e){}};"+s.slice(iS+mS.length);
+      const porta='<script>(function(){window.__BOOT=1;var P=window.__bootP={render:0,save:0};function porta(n){var cur;function tr(f){if(typeof f!=="function"||f.__b208)return f;var t=function(){if(window.__BOOT){P[n]++;return}return f.apply(this,arguments)};t.__b208=1;return t}/* não configurável: a v153 tenta pôr o acessor dela em save e, como hoje (declaração de função), cai no embrulho simples */Object.defineProperty(window,n,{configurable:false,enumerable:true,get:function(){return cur},set:function(f){cur=tr(f)}})}porta("render");porta("save")})();</script>';
+      s=s.slice(0,i0)+porta+s.slice(i0);console.log('boot2: render e save viram portas durante a montagem')}
+    else console.warn('boot2: marcas não encontradas — publicado sem a v208')}
   if(!process.env.SEM_BOOT1){
-    const marca='function render(){renderNav();renderMain()}';const i=s.indexOf(marca);const j=i<0?-1:s.indexOf('</script>',i);
+    const marca=/render=function\(\)\{renderNav\(\);renderMain\(\)\};/.test(s)?'render=function(){renderNav();renderMain()};':'function render(){renderNav();renderMain()}';const i=s.indexOf(marca);const j=i<0?-1:s.indexOf('</script>',i);
     if(j>0){s=s.slice(0,j+9)+'<script>(function(){var rm=renderMain;window.__BOOT=1;window.__bootN=0;window.__E=[];window.addEventListener("error",function(e){__E.push(String(e.message)+" @"+String(e.filename).split("/").pop().split("?")[0]+":"+e.lineno)});renderMain=function(){if(window.__BOOT){window.__bootN++;return}return rm.apply(this,arguments)}})();</script>'+s.slice(j+9);
-      const k=s.lastIndexOf('</body>');s=s.slice(0,k)+'<script>window.__BOOT=0;window.__tFim=performance.now();try{render()}catch(e){__E.push("render final: "+e.message)}window.__tRender=performance.now();/* o sistema já está desenhado: a tela de abertura sai agora (não espera mais o evento load + 300 ms) */try{document.documentElement.classList.add("pronto127")}catch(e){}</script>'+s.slice(k);console.log('boot1: redesenho suspenso durante a montagem')}
+      const k=s.lastIndexOf('</body>');s=s.slice(0,k)+'<script>window.__BOOT=0;window.__tFim=performance.now();try{if(window.__bootP&&__bootP.save)save()}catch(e){__E.push("save final: "+e.message)}try{var __d=Object.getOwnPropertyDescriptor(window,"render"),__d2=Object.getOwnPropertyDescriptor(window,"save");if(window.__bootP&&(!__d.get||!__d2.get))__E.push("v208: porta perdida")}catch(e){}try{render()}catch(e){__E.push("render final: "+e.message)}window.__tRender=performance.now();/* o sistema já está desenhado: a tela de abertura sai agora (não espera mais o evento load + 300 ms) */try{document.documentElement.classList.add("pronto127")}catch(e){}</script>'+s.slice(k);console.log('boot1: redesenho suspenso durante a montagem')}
     else console.warn('boot1: marca não encontrada')}
   let o=await html(s);
   /* cada <script src> local leva a impressão digital do arquivo publicado (antes: o commit — tudo era baixado de novo a cada publicação) */
