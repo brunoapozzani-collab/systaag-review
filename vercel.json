@@ -4,6 +4,15 @@
       "source": "/(.*)",
       "headers": [
         {
+          "key": "Document-Policy",
+          "value": "js-profiling"
+        }
+      ]
+    },
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
           "key": "x-content-type-options",
           "value": "nosniff"
         }
