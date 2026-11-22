@@ -230,3 +230,18 @@ source — no worker start-up), the page itself refreshes the cached entry and r
   (`prova-entrada-sw.mjs`). To test on prova with his Chrome: 2nd open has src cache and L:inicio drops; push a trivial
   change to prova → first open reloads once onto it; offline (Wi-Fi off is his call — or DevTools offline) still opens;
   kill switch = sw.js with DESLIGA=true. Local main == origin/main + notes commits only (sw is NOT merged).
+
+## 22 Nov 2026, 12:50 São Paulo (15:50 UTC) — GOAL MET on the real link; v225 LIVE (41030a2)
+v223+v224 measured on the real link (Mac, warm): five reloads in a row 822 / 779 / 768 / 795 / 720 ms; arriving from another
+site 893 / 927 / 908; first opening after the Mac had been away 1.118 (247 ms waiting for the server).
+v225 (entry page from the browser's own cache, static routing, no worker code per request) tested on prova with his Chrome:
+navigation answered in 2–3 ms from the cache; after a new publish the first opening swapped the copy and reloaded once onto
+the new version; then published. Real link before/after: 180 Base tables, 13 CRM tables, queues, Início, rest of the page
+identical; 0 errors; DB 14.128 live / 36 active; pair exact; scoreboard 37 equal / 1 different (the one different was not
+identified — `ultima` had already been overwritten; watch it).
+v225 on the real link: five reloads in a row 777 / 710 / 713 / 713 / 706 ms (page code starts at 14–16 ms); from another
+site 828 / 851; Comercial tile clicked right after opening → Gestão.
+Not tested: opening with the network off (cannot switch his network), Safari/Firefox (no static routing → works as before).
+Open: first opening after a publish (downloads the new files — 1,3 s to 40 s seen), first opening on a new computer,
+never-visited screens, Clientes default view (his call), leaving within ~20 s of a save still re-takes the copy (65 ms).
+Kill switch for v225: publish sw.js with DESLIGA=true.
