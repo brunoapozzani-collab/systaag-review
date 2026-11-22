@@ -153,3 +153,21 @@ factory data and proves nothing about a real computer.
   same ratio on a hot machine). Ready ≈ 1.440–1.500 ms. After ready: cloud apply ≈ 440, single re-draw ≈ 220.
 - qv0:fotoConf on Bruno's Chrome after 3 opens: 3 equal / 0 different. Read it again after real use.
 - Lesson: absolute timings taken after hours of test loops on his fanless Mac are inflated ~2,5×; compare ratios, or re-measure rested.
+
+## 22 Nov 2026, ~09:30 São Paulo — v219 READY on branch `v219` (also on `prova`), NOT published (Chrome offline again)
+Bruno ordered the new Início now, "like Amazon". Início's own code is ~270 KB across v130/v149/v155/v124-diretoria plus the
+engines — a hand rewrite is far beyond the 8–12 blocks I quoted (my estimate was wrong). What sites like that do is serve the
+stored rendered page at once and let the application take over ("hydrate"), replaying the clicks made meanwhile. v219 does that:
+- exact copy: each stored copy carries a fingerprint of the base (sampled hash + lengths of systaag_erp1z and systaag_crm_t +
+  day); if the base on this computer is still the same, the copy is shown clean (no bar, no "updating" pill) — `__v219exata`.
+- click replay: a click on a non-link element of the copy is stored (path from nearest id + tag + text) and given to the same
+  element of the real page at takeover; nothing matching delete words is replayed — `__v219clique`, `__v219log`.
+- the invisible copy keeps receiving clicks for 0,35 s after takeover: clicks physically made before takeover (ev.timeStamp)
+  resolve against the copy the person saw; later ones are forwarded to the real element under the pointer; the copy never
+  leaves between pointer down and click.
+- same-screen re-draws no longer throw the page to the top; a smooth scroll asked < 1,6 s ago (Visão executiva) is resumed.
+- copy re-taken when the stored base changes without the screen changing (20 s check).
+Local loop: `prova-clique-copia.mjs` 7 of 8 timings OK (one miss ≈ 1,5 s after ready, same class as before), `prova-clique.mjs`
+7 of 7, 12 screens + base equal, opening DOM equal on Início and Pipeline.
+To publish: test on prova with real data (exata true on 2nd open, click a number on the copy right after navigating, Início
+hash/base digest equal), then merge v219 to main, verify on the real link.
