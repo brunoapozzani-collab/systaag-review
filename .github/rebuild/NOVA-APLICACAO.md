@@ -81,3 +81,20 @@ factory data and proves nothing about a real computer.
   After opening: long tasks 284 / 340 / 259 / 418 ms (re-draws), save ≈ at 2.500.
 - Next candidates: layers-on-real-data phase (profile with js-profiling branch), Início draw (400), remaining factory phase,
   index.html revalidation (service worker / stale-while-revalidate), post-open re-draws.
+
+## 22 Nov 2026 (third block) — v213–v215 live: fewer freezes right after opening
+- Profile (Mac, real data) of what is left before ready: decompress 120 · other factory 85 · layers 600 (spread: a375 67,
+  v123-partners 63, v161d-regras 31, v123-flow 29, ad192 28 …; no single hot spot) · Início draw 400 (v130 build 92,
+  prodInv 88, v149 blocos 77, CANON 61 …).
+- After ready there were 4 full re-draws in ~1,3 s (inline depoisDoBoot, v124-demo, v161e-final, v124-guia go).
+  v213: opening on Início, re-draw requests are held for 1,4 s (or until the first click/key/screen change) and done once.
+  NOT applied on other entry screens: Financeiro › Hoje and Comercial › Gestão end up different (layers depend on the sequence).
+  v214/v215: the held re-draw never happens between pointer down and the click being delivered (first click was lost in v213).
+- Proof: `prova-abertura.mjs` (opening DOM after 12 s, no interaction, per entry screen) equal on Início; `prova-clique.mjs`
+  (real mouse click 150/600/1300/2500 ms after ready navigates); real link: tile click 250 ms after ready opens Gestão.
+- After ready now (Mac): ~230 ms small tasks, then v171 cloud CRM apply ≈ 416 ms (each `aplicar` runs a full save ≈ 180 ms),
+  one re-draw ≈ 364 ms at +1,4 s, v172 cloud apply ≈ 315 + 418 ms.
+- CAUTION for Chrome tests: the tab viewport changes between loads (1470×835 vs 1336×759); read element positions with JS
+  right before clicking.
+- Next candidates: cost of save() itself (sync@a375, repair@c69ff — every action pays it); v171/v172 apply on open when
+  nothing changed; decompress; index.html revalidation; Clientes / Base › Clientes draw (6–7 s).
