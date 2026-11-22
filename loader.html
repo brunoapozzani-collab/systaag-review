@@ -41,6 +41,28 @@ var MK=function(n){try{performance.mark(n)}catch(e){}};MK('L:inicio');
 var sp=Storage.prototype, g0=sp.getItem, s0=sp.setItem, r0=sp.removeItem, k0=sp.key, c0=sp.clear, ld=Object.getOwnPropertyDescriptor(sp,'length'), l0=ld&&ld.get;
 var LS=window.localStorage;
 function realKeys(){var o=[],n=l0.call(LS);for(var i=0;i<n;i++)o.push(k0.call(LS,i));return o}
+/* ───── v225 (22/11/2026): a página de entrada vem do próprio navegador (ver sw.js) ─────
+   Só no endereço oficial e no de prova. A cada abertura a página do servidor é buscada por trás; se for outra versão, a cópia
+   guardada é trocada e, se a pessoa ainda não clicou nem digitou, a página recarrega já na versão nova (uma vez só). */
+var SWC='systaag-entrada-1';
+(function(){try{
+  if(!('serviceWorker' in navigator)||!window.caches||window.__SEM_SW)return;
+  if(!/^(systaag-review-tau\.vercel\.app|systaag-review-git-prova-[a-z0-9-]+\.vercel\.app|localhost)$/.test(location.hostname)||location.pathname!=='/'||location.search)return;
+  navigator.serviceWorker.register('/sw.js').catch(function(){});
+  var minha=String(window.__PUBLICADO||'');
+  fetch('/',{cache:'no-cache',credentials:'same-origin'}).then(function(r){return r.ok?r.text():null}).then(function(novo){
+    if(!novo||novo.indexOf('window.__PUBLICADO=')<0||novo.indexOf('systaag_base')<0)return;   /* só a página de entrada de verdade é guardada */
+    return caches.open(SWC).then(function(c){return c.match('/').then(function(m){return m?m.text():null}).then(function(velho){
+      if(velho===novo)return;
+      return c.put('/',new Response(novo,{headers:{'content-type':'text/html; charset=utf-8','x-content-type-options':'nosniff'}})).then(function(){
+        var mm=/window\.__PUBLICADO=("[^"]*")/.exec(novo),pubNovo=mm?JSON.parse(mm[1]):'';
+        if(!pubNovo||pubNovo===minha)return;                         /* esta página já é a versão nova */
+        var mexeu=false;try{mexeu=!!(navigator.userActivation&&navigator.userActivation.hasBeenActive)}catch(e){}
+        var ult=0;try{ult=+sessionStorage.getItem('v225:recarga')||0}catch(e){}
+        if(mexeu||Date.now()-ult<60000)return;                       /* a pessoa já está a usar (ou acabou de recarregar): fica para a próxima abertura */
+        try{sessionStorage.setItem('v225:recarga',String(Date.now()))}catch(e){}
+        location.reload()})})})}).catch(function(){});
+}catch(e){}})();
 var APP='app.html'+(location.search?location.search:'');
 /* v195: o app.html começa a baixar JÁ (antes esperava a base sair do IndexedDB) */
 var appP=fetch(APP,/* rápido 3: publicado com ?v=impressão digital → pode vir do que o navegador já guardou */APP.indexOf('?v=')>0?{}:{cache:'no-store'}).then(function(r){if(!r.ok)throw new Error('app.html '+r.status);return r.text()});appP.catch(function(){});
@@ -199,7 +221,7 @@ try{
 }
 /* v195: espera a pessoa escolher (o sistema continua a baixar por trás) e grava a escolha na chave da v166 */
 try{var lg=await escolha;if(lg){localStorage.setItem('systaag_quem',lg)}}catch(e){console.warn('v195 escolha',e)}
-try{await abreApp()}catch(e){document.getElementById('ld').innerHTML='<div class="w">taag</div><div class="s">Não deu para abrir o sistema ('+String(e.message||e).replace(/</g,'&lt;')+'). Recarregue a página.</div>'}
+try{await abreApp()}catch(e){try{if(window.caches)caches.delete(SWC)}catch(e4){}document.getElementById('ld').innerHTML='<div class="w">taag</div><div class="s">Não deu para abrir o sistema ('+String(e.message||e).replace(/</g,'&lt;')+'). Recarregue a página.</div>'}
 })();
 </script>
 </body>
