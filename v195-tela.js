@@ -79,14 +79,27 @@ if(foto){
     window.__v196foto=true;
   }catch(e){foto=null}
 }
-if(!foto){/* sem foto: a tela "taag" de sempre, agora com a barra que anda pelo tempo esperado e quanto falta */
-  var s=el.querySelector('div[style*="opacity:.6"]');if(s)s.textContent='Quase pronto — cerca de '+seg+' s';
-  var b=el.querySelector('i');if(b){b.style.cssText='display:block;height:100%;width:100%;background:#1f2430;border-radius:999px;transform-origin:0 50%;transform:scaleX(0);animation:v196b '+E+'ms cubic-bezier(.2,.65,.35,1) -'+ja+'ms forwards'}}
+/* v226 (22/11/2026): a mesma conta da porta de entrada continua aqui — barra, porcentagem e quanto falta */
+var mao=null;try{mao=window.__CARGA&&window.__CARGA.mao}catch(e){}
+if(!foto){
+  var b=el.querySelector('i'),tx=document.getElementById('v226t'),nn=document.getElementById('v226n');
+  if(mao){
+    var p0=Math.min(.96,Math.max(0,mao.p)),EB=mao.EB,dec=Math.max(0,performance.now()-mao.t);
+    if(nn&&mao.nome)nn.textContent=mao.nome;
+    var st2=document.createElement('style');st2.textContent='@keyframes v226b{from{transform:scaleX('+p0.toFixed(4)+')}to{transform:scaleX(.97)}}';el.appendChild(st2);
+    if(b)b.style.cssText='display:block;height:100%;width:100%;background:#0071e3;border-radius:999px;transform-origin:0 50%;transform:scaleX('+p0.toFixed(4)+');animation:v226b '+EB+'ms cubic-bezier(.3,.6,.4,1) -'+Math.round(dec)+'ms forwards';
+    var diz=function(){if(!el||!tx)return;var t=performance.now()-mao.t,rest=EB-t,q=Math.min(.97,p0+(.97-p0)*Math.min(1,t/EB));
+      tx.textContent=Math.round(q*100)+'% · '+(rest<=600?'quase lá…':'faltam cerca de '+Math.ceil(rest/1000)+' s')};
+    diz();var tmd=setInterval(function(){if(!el){clearInterval(tmd);return}diz()},200)}
+  else{var s=el.querySelector('div[style*="opacity:.6"]');if(s)s.textContent='Quase pronto — cerca de '+seg+' s';
+    if(b){b.style.cssText='display:block;height:100%;width:100%;background:#0071e3;border-radius:999px;transform-origin:0 50%;transform:scaleX(0);animation:v196b '+E+'ms cubic-bezier(.2,.65,.35,1) -'+ja+'ms forwards'}}}
 
 /* ───── 3. sai quando o sistema está pronto ───── */
 function some(porTempo){if(!el)return;var e=el;el=null;
   /* guarda quanto levou (só aberturas normais: sem escolher nome na porta de entrada e sem o limite de 30 s) */
   try{if(porTempo!==true&&!(window.__V195&&window.__V195.escolhido&&window.__V195.escolhido())){var t=Math.round(performance.now());tempos.push(t);LS.setItem('qv0:tempos',JSON.stringify(tempos.slice(-5)))}}catch(x){}
+  /* v226: quanto este computador levou a MONTAR (da passagem da porta de entrada até pronto) — a estimativa da próxima carga */
+  try{if(porTempo!==true&&mao){var mt=JSON.parse(LS.getItem('qv0:monta')||'[]');mt.push(Math.round(performance.now()-mao.t));LS.setItem('qv0:monta',JSON.stringify(mt.slice(-5)))}}catch(x){}
   /* v219c: a rolagem do conteúdo passa para a tela real */
   try{if(sh){var mc=sh.getElementById('main'),mr=document.getElementById('main');if(mc&&mr&&mc.scrollTop)mr.scrollTop=mc.scrollTop}}catch(x){}
   e.style.transition='opacity '+(exata?'.08s':'.25s')+' ease';e.style.opacity='0';saiu=true;tSaiu=performance.now();capa=e;/* v219d: a cópia, já invisível, ainda recebe os cliques por 0,35 s — um clique feito enquanto o sistema montava chega agora e é resolvido pela posição que a pessoa VIU (a tela real ainda está a assentar) *//* não sai no meio de um clique (entre apertar e soltar): esse clique se perderia */var tira=function(){if(seg&&performance.now()-tSeg<2000){setTimeout(tira,80);return}try{e.remove()}catch(x){}};setTimeout(tira,350);

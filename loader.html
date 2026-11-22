@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>SYSTAAG</title>
 <!--PRECARGA-->
-<style>html,body{margin:0;height:100%;background:#f4f5f7;font:600 15px/1.4 "Plus Jakarta Sans",system-ui,-apple-system,sans-serif;color:#1f2430}#ld{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px}#ld .w{font:300 44px/1 "Plus Jakarta Sans",system-ui,sans-serif;letter-spacing:.06em}#ld .s{opacity:.6;font-weight:500}#ld .b{width:160px;height:4px;border-radius:999px;background:rgba(0,0,0,.08);overflow:hidden}#ld .b i{display:block;height:100%;width:40%;background:#1f2430;border-radius:999px;animation:ld 1.1s ease-in-out infinite}@keyframes ld{0%{transform:translateX(-100%)}100%{transform:translateX(400%)}}#ld .b i.p{width:100%}@keyframes v196b{from{transform:scaleX(.02)}to{transform:scaleX(.96)}}#ld .n{font-weight:700;font-size:18px;opacity:.85}
+<style>html,body{margin:0;height:100%;background:#f4f5f7;font:600 15px/1.4 "Plus Jakarta Sans",system-ui,-apple-system,sans-serif;color:#1f2430}#ld{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px}#ld .w{font:300 44px/1 "Plus Jakarta Sans",system-ui,sans-serif;letter-spacing:.06em}#ld .s{opacity:.6;font-weight:500}#ld .b{width:280px;max-width:70vw;height:8px;border-radius:999px;background:rgba(0,0,0,.09);overflow:hidden}#ld .t{font:600 13.5px/1.3 "Plus Jakarta Sans",system-ui,-apple-system,sans-serif;opacity:.75;min-height:18px;font-variant-numeric:tabular-nums}#ld .n{font-size:17px}#ld .b i{display:block;height:100%;width:40%;background:#1f2430;border-radius:999px;animation:ld 1.1s ease-in-out infinite}@keyframes ld{0%{transform:translateX(-100%)}100%{transform:translateX(400%)}}#ld .b i.p{width:100%}@keyframes v196b{from{transform:scaleX(.02)}to{transform:scaleX(.96)}}#ld .n{font-weight:700;font-size:18px;opacity:.85}
 /* v195 (21/11/2026): o "Quem é você?" desenhado pela porta de entrada, na hora — mesmo desenho da v166 */
 #qv0{position:fixed;inset:0;z-index:5;background:#f5f5f7;overflow:auto;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Plus Jakarta Sans",system-ui,sans-serif;color:#1d1d1f}
 #qv0 .qv-in{max-width:980px;margin:0 auto;padding:56px 22px 60px}#qv0 .qv-logo{display:block;height:34px;margin:0 auto 26px;opacity:.9}
@@ -20,7 +20,39 @@
 </style>
 </head>
 <body>
-<div id="ld"><div class="w">taag</div><div class="n" id="ld-n"></div><div class="s" id="ld-s">Abrindo o sistema…</div><div class="b"><i id="ld-b"></i></div></div>
+<div id="ld"><div class="w">taag</div><div class="n" id="ld-n"></div><div class="s" id="ld-s">Abrindo o sistema…</div><div class="b"><i id="ld-b"></i></div><div class="t" id="ld-t"></div></div>
+<script>
+/* ───── v226 (22/11/2026): A TELA DE CARGA DIZ QUANTO FALTA ─────
+   Pedido do Bruno: "put a bar or something showing that the system is loading and how long it will take to finish".
+   Antes: uma barrinha de 160×4 px e, na porta de entrada, nenhum tempo; a estimativa vinha das aberturas rápidas deste
+   computador (errada justamente quando a carga é longa: computador novo, primeira abertura depois de uma publicação).
+   Agora, uma conta só, nas duas telas (porta de entrada e "montando as telas"):
+     · BAIXAR: o que já chegou ÷ o que foi pedido (os arquivos da lista + o app) → o ritmo real desta ligação dá o tempo que falta;
+     · MONTAR: quanto este computador levou a montar nas últimas aberturas (qv0:monta; 4 s se nunca abriu).
+   Este bloco fica logo depois da tela, ANTES dos arquivos da nuvem: numa ligação lenta eles demoram, e a barra já tem de andar.
+   Mostra a barra, a porcentagem e "faltam cerca de N s". Nunca anda para trás; se passar da conta, diz "quase lá". */
+window.__CARGA=(function(){
+  var t0=0,tot=1,ok=0,alvo={},p=0,parou=false,tm=null;
+  try{[].forEach.call(document.querySelectorAll('link[rel=preload]'),function(l){try{alvo[new URL(l.href,location.href).href]=1;tot++}catch(e){}})}catch(e){}
+  function chegou(){try{performance.getEntriesByType('resource').forEach(function(e){if(alvo[e.name]){alvo[e.name]=0;ok++}})}catch(e){}}
+  var EB=4000;try{var mm=JSON.parse(localStorage.getItem('qv0:monta')||'[]').slice().sort(function(a,b){return a-b});if(mm.length)EB=Math.min(20000,Math.max(700,Math.round(mm[Math.floor(mm.length/2)]*1.25)))}catch(e){}
+  function frase(rest){if(rest==null)return 'calculando o tempo…';var n=Math.ceil(rest/1000);if(rest<=600)return 'quase lá…';return 'faltam cerca de '+n+' s'}
+  function conta(){chegou();var t=performance.now()-t0,f=Math.min(1,(ok+(window.__appChegou?1:0))/tot),rest=null,q;
+    if(f>=0.999){rest=EB;q=t/(t+EB)}
+    else if(f>0.04&&t>400){var ED=t/f;rest=(ED-t)+EB;q=t/(ED+EB)}
+    else{q=f*0.3}
+    p=Math.min(.97,Math.max(p,q));return rest}
+  function pinta(){if(parou)return;var rest=conta(),b=document.getElementById('ld-b'),tx=document.getElementById('ld-t');
+    if(b){if(!b.__v226){b.__v226=1;b.className='';b.style.cssText='display:block;height:100%;width:100%;background:#0071e3;border-radius:999px;transform-origin:0 50%;transform:scaleX(0);transition:transform .25s linear;animation:none'}b.style.transform='scaleX('+p.toFixed(4)+')'}
+    if(tx)tx.textContent=Math.round(p*100)+'% · '+frase(rest)}
+  tm=setInterval(pinta,200);pinta();
+  return {passa:function(){/* a tela do sistema continua desta porcentagem (ver v195-tela.js) */
+      var rest=conta();parou=true;try{clearInterval(tm)}catch(e){}
+      var n='';try{n=(document.getElementById('ld-n')||{}).textContent||''}catch(e){}
+      this.mao={p:p,t:performance.now(),EB:EB,nome:n}},
+    mao:null,frase:frase};
+})();
+</script>
 <!-- rápido 3 (18/11/2026): o espelho da nuvem começa a trabalhar já, enquanto o sistema ainda baixa (ver nuvem-espelho.js) -->
 <script src="nuvem-config.js"></script>
 <script src="nuvem-espelho.js"></script>
@@ -65,10 +97,10 @@ var SWC='systaag-entrada-1';
 }catch(e){}})();
 var APP='app.html'+(location.search?location.search:'');
 /* v195: o app.html começa a baixar JÁ (antes esperava a base sair do IndexedDB) */
-var appP=fetch(APP,/* rápido 3: publicado com ?v=impressão digital → pode vir do que o navegador já guardou */APP.indexOf('?v=')>0?{}:{cache:'no-store'}).then(function(r){if(!r.ok)throw new Error('app.html '+r.status);return r.text()});appP.catch(function(){});
+var appP=fetch(APP,/* rápido 3: publicado com ?v=impressão digital → pode vir do que o navegador já guardou */APP.indexOf('?v=')>0?{}:{cache:'no-store'}).then(function(r){if(!r.ok)throw new Error('app.html '+r.status);return r.text()}).then(function(h){try{window.__appChegou=performance.now()}catch(e){}return h});appP.catch(function(){});
 /* v198: a geração da base é pedida JÁ, em paralelo (antes atrasava o "Quem é você?" até 2,5 s) */
 var GERACAO=(function(){try{var C0=window.NUVEM_CONFIG||{};if(!C0.url||!C0.key)return Promise.resolve(null);return Promise.race([fetch(C0.url+'/rest/v1/crm_registros?select=dados&tabela=eq.base:_k&id=eq.__geracao',{headers:{apikey:C0.key,Authorization:'Bearer '+C0.key},cache:'no-store'}).then(function(r){return r.ok?r.json():null}).then(function(j){return j&&j[0]&&j[0].dados&&j[0].dados.v}).catch(function(){return null}),new Promise(function(ok){setTimeout(function(){ok(null)},2500)})])}catch(e){return Promise.resolve(null)}})();
-function abreApp(){return appP.then(function(h){try{if(window.__V195)window.__V195.fim()}catch(e){}
+function abreApp(){return appP.then(function(h){try{if(window.__V195)window.__V195.fim()}catch(e){}try{if(window.__CARGA)window.__CARGA.passa()}catch(e){}
   /* document.open() apaga os ouvintes da janela — os nossos entram depois dele */
   MK('L:escreve1');document.open();if(window.__BIGSTORE)escuta();
   /* rápido 3b (18/11/2026): com o código já guardado no navegador, o sistema monta-se de uma vez só (5–10 s) e o navegador não
@@ -97,7 +129,7 @@ var V=window.__V195=(function(){
   /* v196: a barra anda pelo TEMPO que este computador costuma levar (mediana das últimas aberturas) — a mesma animação
      continua na tela seguinte (v195-tela.js), sem voltar ao zero */
   var DUR=12000;try{var tt=JSON.parse(g0.call(LS,'qv0:tempos')||'[]').slice().sort(function(a,b){return a-b});if(tt.length)DUR=Math.max(2500,tt[Math.floor(tt.length/2)])}catch(e){}
-  function pinta(){var b=document.getElementById('ld-b');if(!b||b.__v196)return;b.__v196=1;b.className='p';b.style.cssText='display:block;height:100%;width:100%;transform-origin:0 50%;transform:scaleX(0);animation:v196b '+DUR+'ms cubic-bezier(.2,.65,.35,1) -'+Math.round(performance.now())+'ms forwards'}
+  function pinta(){if(window.__CARGA)return;var b=document.getElementById('ld-b');if(!b||b.__v196)return;b.__v196=1;b.className='p';b.style.cssText='display:block;height:100%;width:100%;transform-origin:0 50%;transform:scaleX(0);animation:v196b '+DUR+'ms cubic-bezier(.2,.65,.35,1) -'+Math.round(performance.now())+'ms forwards'}
   try{new PerformanceObserver(function(l){l.getEntries().forEach(function(e){if(alvo[e.name]){alvo[e.name]=0;ok++}});pinta()}).observe({type:'resource',buffered:true})}catch(e){}
   function abrindo(l){var n=nomeDe(l),el=document.getElementById('ld-n');if(el)el.textContent=n?'Olá, '+n.split(' ')[0]:'';var s=document.getElementById('ld-s');if(s)s.textContent='Abrindo o seu SYSTAAG…';pinta()}
   function desenha(q){var qn=norm(q),h=(lista||[]).map(function(g){var its=g.its.filter(function(u){return !qn||norm(u.n+' '+u.l).indexOf(qn)>=0});if(!its.length)return '';
