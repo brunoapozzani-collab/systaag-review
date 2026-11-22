@@ -53,6 +53,8 @@ espelho();
    só da pessoa que está neste computador, com validade de 14 dias. O estilo das telas é guardado uma vez só.
    Vivem na base local (systaag_v195_*), nunca sobem para a nuvem e não entram na reserva de fecho da aba. */
 var H=document.documentElement,IDX='systaag_v195_idx',CSSK='systaag_v195_css',PK='systaag_v195_t:',MAXF=8,MAXB=700000;
+/* v219: impressão digital da base (igual à da tela de abertura, v195-tela.js) */
+function fpBase(){try{var z=LS.getItem('systaag_erp1z')||'',c=LS.getItem('systaag_crm_t')||'',h=2166136261;var mix=function(x){var n=x.length,p=Math.max(1,Math.floor(n/4000));for(var i=0;i<n;i+=p){h^=x.charCodeAt(i);h=Math.imul(h,16777619)}h^=n;h=Math.imul(h,16777619)};mix(z);mix(c);var d=new Date();return (h>>>0)+'|'+z.length+'|'+c.length+'|'+d.getFullYear()+'-'+d.getMonth()+'-'+d.getDate()}catch(e){return ''}}
 function hashAtual(){var h=location.hash||'';return (!h||h==='#'||h==='#/')?'#/home':h}
 function leIdx(){try{var a=JSON.parse(LS.getItem(IDX)||'[]');return Array.isArray(a)?a:[]}catch(e){return []}}
 function fotoDaTela(){try{
@@ -73,7 +75,7 @@ function fotoDaTela(){try{
     var links=[].slice.call(document.querySelectorAll('link[rel=stylesheet]')).map(function(l){return l.href}).filter(Boolean);
     LS.setItem(CSSK,JSON.stringify({tam:tam,css:css,links:links}))}
   var attrs=[].slice.call(H.attributes).filter(function(a){return /^data-|^class$/.test(a.name)}).map(function(a){return [a.name,a.value]});
-  LS.setItem(PK+h,JSON.stringify({quem:quem,quando:Date.now(),html:html,attrs:attrs,titulo:document.title}));
+  LS.setItem(PK+h,JSON.stringify({quem:quem,quando:Date.now(),html:html,attrs:attrs,titulo:document.title,fp:fpBase()}));
   var idx=leIdx().filter(function(x){return x!==h});idx.unshift(h);idx.splice(MAXF).forEach(function(x){try{LS.removeItem(PK+x)}catch(e){}});LS.setItem(IDX,JSON.stringify(idx));
 }catch(e){console.warn('v206 foto da tela',e)}}
 function esquece(h){try{LS.removeItem(PK+h);LS.setItem(IDX,JSON.stringify(leIdx().filter(function(x){return x!==h})))}catch(e){}}
@@ -89,6 +91,8 @@ setInterval(function(){if(window.__v172pronto&&!document.hidden)fotoDepois(0)},3
    E há uma CONFERÊNCIA a cada abertura: o texto da foto mostrada é comparado com o da tela real assim que ela fica pronta;
    o placar fica em qv0:fotoConf (iguais / diferentes / última) — é com ele que se sabe se a tela instantânea é a verdadeira. */
 try{var _mo=new MutationObserver(function(){if(window.__BOOT||!window.__v172pronto)return;fotoDepois(3000)}),_mm=document.getElementById('main');if(_mm)_mo.observe(_mm,{childList:true,subtree:true,characterData:true})}catch(e){}
+/* v219: se a base gravada mudou sem a tela mudar (uma gravação), a cópia é refeita para levar a impressão digital nova */
+setInterval(function(){try{if(window.__BOOT||!window.__v172pronto||document.hidden)return;var f=JSON.parse(LS.getItem(PK+hashAtual())||'null');if(f&&f.fp!==fpBase())fotoDepois(0)}catch(e){}},20000);
 document.addEventListener('visibilitychange',function(){if(document.hidden&&window.__v172pronto&&!window.__BOOT){try{clearTimeout(_tf);var d=Object.getOwnPropertyDescriptor(Document.prototype,'hidden');/* fotoDaTela recusa aba oculta; aqui é de propósito */Object.defineProperty(document,'hidden',{configurable:true,get:function(){return false}});try{fotoDaTela()}finally{delete document.hidden}}catch(e){}}});
 function textoDe(el){return String(el&&el.textContent||'').replace(/Atualizado às \d\d:\d\d/g,'').replace(/Bom dia|Boa tarde|Boa noite/g,'').replace(/\s+/g,' ').trim()}
 function confere(){try{var h=hashAtual(),bruta=window.__fotoMostrada;if(!bruta||bruta.h!==h)return;var doc=new DOMParser().parseFromString('<div>'+bruta.html+'</div>','text/html');var a=textoDe(doc.getElementById('main')),b=textoDe(document.getElementById('main'));if(!a||!b)return;
