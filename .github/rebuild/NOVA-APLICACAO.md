@@ -171,3 +171,10 @@ Local loop: `prova-clique-copia.mjs` 7 of 8 timings OK (one miss ≈ 1,5 s after
 7 of 7, 12 screens + base equal, opening DOM equal on Início and Pipeline.
 To publish: test on prova with real data (exata true on 2nd open, click a number on the copy right after navigating, Início
 hash/base digest equal), then merge v219 to main, verify on the real link.
+
+## 22 Nov 2026, 10:30 São Paulo — v219 LIVE (9e84551)
+Real data: prova and real link — exact copy on 2nd open (`__v219exata` true), Comercial tile clicked ~250–800 ms after ready →
+Gestão; "Visão executiva" clicked 220 ms after ready → scrolls and stays; base 180 tables, CRM, queues and Início text identical
+before/after; DB 14.128 / 36; scoreboard 4 equal / 0 different. Ready 1.290–1.520 ms.
+Open: never-visited screens (loading bar), first open on a new computer, Clientes default view (Bruno's call), one 2,4 s
+freeze seen once on 22 Nov morning, the ~1,5 s-after-ready click miss seen once in the local loop.
