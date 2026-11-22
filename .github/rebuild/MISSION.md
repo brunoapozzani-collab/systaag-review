@@ -1,6 +1,9 @@
 # Mission: REBUILD-01 — Início loads only what Início needs
 
-**Status:** Draft — awaiting Bruno's go
+**Status:** NOT DISPATCHED — on hold. Ceiling measured 21 Nov 2026 before starting (branch `teto1`, read-only copy, Bruno's Chrome):
+with ALL 93 `v*.js` layers delayed, the first draw comes at ~1.700 ms and it is the OLD, incomplete Início (7 KB instead of 91 KB);
+the code inside `index.html` alone takes ~1.500 ms. So this mission's best possible result for a correct Início is between
+1.700 and 3.100 ms — it cannot reach the program goal of under 1.000 ms. Do not run it for that goal.
 **Orchestrator:** Claude (chat session that wrote this) · **Operator(s):** Claude Code on Bruno's Mac, one session per task group (see §7)
 
 ## 1. Objective
