@@ -116,6 +116,13 @@ for(const f of readdirSync('.')){
   const V=String(process.env.VERCEL_GIT_COMMIT_SHA||Date.now()).slice(0,10);
   o=o.replace(/(<script\b[^>]*\bsrc=")([A-Za-z0-9_.-]+\.js)(?:\?[^"]*)?"/g,(m,a,b)=>{if(!selo[b])return a+b+'?v='+V+'"';pre.push([b+'?v='+selo[b],'script']);return a+b+'?v='+selo[b]+'"'});
   /* 08/11/2026 (v169): o sistema é publicado como app.html; index.html é a porta de entrada (loader.html) */
+  /* TETO (só ramos teto*): mede o MELHOR caso — todas as camadas v*.js do fim da página ficam para depois do primeiro desenho */
+  if(/^teto/.test(process.env.VERCEL_GIT_COMMIT_REF||'')||process.env.TETO){
+    const tags=[...o.matchAll(/<script src="(v\d[^"]+)"><\/script>(?:<!--[\s\S]*?-->)?\s*/g)];
+    const manter=/^(v127-boot|v153-rapido|v154-rapido2|v168-espaco|v171-nuvem|v172-nuvem-base|v195-abrir-ja)\./;
+    const tarde=[];for(const t of tags){if(manter.test(t[1]))continue;tarde.push(t[1]);o=o.replace(t[0],'')}
+    o=o.replace('<script>window.__BOOT=0;','<script>window.__TARDE='+JSON.stringify(tarde)+';window.__carregaTarde=function(){var i=0,t0=performance.now();(function prox(){if(i>=__TARDE.length){window.__tTarde=performance.now()-t0;try{render()}catch(e){}window.__tardePronta=1;return}var s=document.createElement("script");s.src=__TARDE[i++];s.async=false;s.onload=prox;s.onerror=prox;document.body.appendChild(s)})()};window.__BOOT=0;');
+    console.log('teto:',tarde.length,'camadas para depois')}
   const app=publica('app.html',o);
   const foto=await fotoDaNuvem();
   let L=readFileSync('loader.html','utf8');
