@@ -142,8 +142,12 @@ try{
      mais devolve dados velhos à base. A pessoa escolhida (systaag_quem) fica. O que estivesse na fila de envio é guardado
      à parte (qv0:fila_guardada) para conferência, nunca enviado. Sem resposta da nuvem em 2,5 s, segue como antes. */
   try{var CFG=window.NUVEM_CONFIG||{};if(CFG.url&&CFG.key){
-    var ger=await GERACAO;
-    var minha=g0.call(LS,'qv0:geracao');
+    /* v200 (21/11/2026): um computador que já tem a geração guardada não espera mais a resposta da nuvem para abrir
+       (custava ~0,5 s em toda abertura). A conferência corre por trás; se a base tiver sido restaurada desde a última
+       abertura, a página recomeça já — antes de o sistema gravar qualquer coisa (ele só grava depois de ler a nuvem). */
+    var minha=g0.call(LS,'qv0:geracao'),ger=null;
+    if(minha){GERACAO.then(function(g){if(g&&String(g)!==minha){try{r0.call(LS,'qv0:geracao')}catch(e){}location.reload()}})}
+    else ger=await GERACAO;
     if(ger&&minha!==String(ger)){
       var tem=await new Promise(function(ok){try{var c=db.transaction(ST).objectStore(ST).count();c.onsuccess=function(){ok(c.result)};c.onerror=function(){ok(0)}}catch(e){ok(0)}});
       if(tem>1){
