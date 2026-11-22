@@ -165,6 +165,8 @@ try{
       s0.call(LS,'qv0:geracao',String(ger))}}}catch(e){console.warn('v198 geração',e)}
   /* v195: quem está neste computador? (uma leitura só — a base inteira vem a seguir, sem segurar a tela) */
   MK('L:idb0');M=await lerTudo();MK('L:idb1');
+  /* v223: sem base guardada (ou ninguém escolhido) a cópia da nuvem é o caminho — começa já */
+  if(!M.has('systaag_erp1z')||!q0)try{if(window.__espelhoVai)window.__espelhoVai()}catch(e){}
   /* 1. primeira vez: a base que está no localStorage sobe para o IndexedDB (e só sai do localStorage depois de confirmada) */
   var velhas=realKeys().filter(function(k){return RE.test(k)});
   if(velhas.length){var sobe=new Map();velhas.forEach(function(k){var v=g0.call(LS,k);if(v!=null&&!M.has(k))sobe.set(k,v)});
@@ -181,6 +183,7 @@ try{
 }catch(e){
   /* sem IndexedDB (modo privado antigo, bloqueio): o sistema abre como sempre, direto no localStorage */
   console.error('v169: IndexedDB indisponível — a base fica no localStorage',e);
+  try{if(window.__espelhoVai)window.__espelhoVai()}catch(e3){}
   if(!escolha)try{escolha=V.decide(g0.call(LS,'systaag_quem'))}catch(e2){escolha=null}
 }
 /* v195: espera a pessoa escolher (o sistema continua a baixar por trás) e grava a escolha na chave da v166 */

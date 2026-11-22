@@ -57,6 +57,11 @@ var H=document.documentElement,IDX='systaag_v195_idx',CSSK='systaag_v195_css',PK
 function fpBase(){try{var z=LS.getItem('systaag_erp1z')||'',c=LS.getItem('systaag_crm_t')||'',h=2166136261;var mix=function(x){var n=x.length,p=Math.max(1,Math.floor(n/4000));for(var i=0;i<n;i+=p){h^=x.charCodeAt(i);h=Math.imul(h,16777619)}h^=n;h=Math.imul(h,16777619)};mix(z);mix(c);var d=new Date();return (h>>>0)+'|'+z.length+'|'+c.length+'|'+d.getFullYear()+'-'+d.getMonth()+'-'+d.getDate()}catch(e){return ''}}
 function hashAtual(){var h=location.hash||'';return (!h||h==='#'||h==='#/')?'#/home':h}
 function leIdx(){try{var a=JSON.parse(LS.getItem(IDX)||'[]');return Array.isArray(a)?a:[]}catch(e){return []}}
+/* v223 (22/11/2026): assinatura da tela — ao sair da aba (ou recarregar) a cópia só é refeita se a tela ou a base mudaram desde a
+   última cópia. Medido no Mac do Bruno: refazer custava 60–73 ms (o desenho de fundo convertido em imagem) a CADA recarga,
+   antes de a página nova poder começar. */
+var _sigF='';
+function sigTela(){try{var s='',k=document.body.children;for(var i=0;i<k.length;i++){var e=k[i];if(/^(SCRIPT|STYLE|DATALIST|TEMPLATE|NOSCRIPT)$/.test(e.tagName)||e.id==='toasts'||e.id==='nuvemBaseChip'||e.id==='nuvemChip')continue;s+=e.innerHTML}var h=2166136261;for(var j=0;j<s.length;j++){h^=s.charCodeAt(j);h=Math.imul(h,16777619)}return (h>>>0)+'|'+s.length+'|'+hashAtual()+'|'+H.className+'|'+(H.getAttribute('data-theme')||'')+'|'+fpBase()}catch(e){return ''}}
 function fotoDaTela(){try{
   if(window.__TREINO||document.hidden||window.__BOOT)return;
   if(document.getElementById('abrindo-sistema')||document.querySelector('.modal.show,dialog[open],#qv'))return;
@@ -77,6 +82,7 @@ function fotoDaTela(){try{
   var attrs=[].slice.call(H.attributes).filter(function(a){return /^data-|^class$/.test(a.name)}).map(function(a){return [a.name,a.value]});
   LS.setItem(PK+h,JSON.stringify({quem:quem,quando:Date.now(),html:html,attrs:attrs,titulo:document.title,fp:fpBase()}));
   var idx=leIdx().filter(function(x){return x!==h});idx.unshift(h);idx.splice(MAXF).forEach(function(x){try{LS.removeItem(PK+x)}catch(e){}});LS.setItem(IDX,JSON.stringify(idx));
+  _sigF=sigTela();
 }catch(e){console.warn('v206 foto da tela',e)}}
 function esquece(h){try{LS.removeItem(PK+h);LS.setItem(IDX,JSON.stringify(leIdx().filter(function(x){return x!==h})))}catch(e){}}
 try{LS.removeItem('systaag_v195_tela')}catch(e){}   /* a foto única da v196 dá lugar às fotos por tela */
@@ -93,7 +99,7 @@ setInterval(function(){if(window.__v172pronto&&!document.hidden)fotoDepois(0)},3
 try{var _mo=new MutationObserver(function(){if(window.__BOOT||!window.__v172pronto)return;fotoDepois(3000)}),_mm=document.getElementById('main');if(_mm)_mo.observe(_mm,{childList:true,subtree:true,characterData:true})}catch(e){}
 /* v219: se a base gravada mudou sem a tela mudar (uma gravação), a cópia é refeita para levar a impressão digital nova */
 setInterval(function(){try{if(window.__BOOT||!window.__v172pronto||document.hidden)return;var f=JSON.parse(LS.getItem(PK+hashAtual())||'null');if(f&&f.fp!==fpBase())fotoDepois(0)}catch(e){}},20000);
-document.addEventListener('visibilitychange',function(){if(document.hidden&&window.__v172pronto&&!window.__BOOT){try{clearTimeout(_tf);var d=Object.getOwnPropertyDescriptor(Document.prototype,'hidden');/* fotoDaTela recusa aba oculta; aqui é de propósito */Object.defineProperty(document,'hidden',{configurable:true,get:function(){return false}});try{fotoDaTela()}finally{delete document.hidden}}catch(e){}}});
+document.addEventListener('visibilitychange',function(){if(document.hidden&&window.__v172pronto&&!window.__BOOT){try{var sg=sigTela();if(sg&&sg===_sigF){window.__v223pulou=(window.__v223pulou||0)+1;return}clearTimeout(_tf);var d=Object.getOwnPropertyDescriptor(Document.prototype,'hidden');/* fotoDaTela recusa aba oculta; aqui é de propósito */Object.defineProperty(document,'hidden',{configurable:true,get:function(){return false}});try{fotoDaTela()}finally{delete document.hidden}}catch(e){}}});
 function textoDe(el){return String(el&&el.textContent||'').replace(/Atualizado às \d\d:\d\d/g,'').replace(/Bom dia|Boa tarde|Boa noite/g,'').replace(/\s+/g,' ').trim()}
 function confere(){try{var h=hashAtual(),bruta=window.__fotoMostrada;if(!bruta||bruta.h!==h)return;var doc=new DOMParser().parseFromString('<div>'+bruta.html+'</div>','text/html');var a=textoDe(doc.getElementById('main')),b=textoDe(document.getElementById('main'));if(!a||!b)return;
   var c={};try{c=JSON.parse(localStorage.getItem('qv0:fotoConf')||'{}')||{}}catch(e){}var ig=a===b,i=0;if(!ig){while(i<a.length&&a[i]===b[i])i++}

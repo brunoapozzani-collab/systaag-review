@@ -61,7 +61,7 @@ function junta(r){if(!r||r.tabela===undefined||r.id===undefined||r.id===null)thr
   if(cur&&cur.r.atualizado_em===r.atualizado_em&&JSON.stringify(cur.r)===JSON.stringify(r))return 0;
   var v={o:++ord,r:r};mapa.set(k,v);sujos.set(k,v);return 1}
 function desdeISO(t){return new Date(t-MARGEM).toISOString()}
-function oQueMudou(desde){return leNuvem(desde).then(function(regs){var n=0;regs.forEach(function(r){n+=junta(r)});passo('o que mudou desde '+desde,regs.length+' lidos · '+n+' novos/alterados');return n})}
+function oQueMudou(desde,jaPedida){return (jaPedida?jaPedida.catch(function(){return leNuvem(desde)}):leNuvem(desde)).then(function(regs){var n=0;regs.forEach(function(r){n+=junta(r)});passo('o que mudou desde '+desde,regs.length+' lidos · '+n+' novos/alterados');return n})}
 function inteira(){var ini=Date.now()+(E.desvio||0);mapa=new Map();sujos=new Map();ord=0;ate=0;E.limpar=true;
   return leNuvem(null).then(function(regs){regs.forEach(junta);passo('nuvem inteira',regs.length);return conta()}).then(function(n){if(n===mapa.size)return n;
     /* alguém gravou durante a leitura: busca o que mudou desde o começo dela e confere outra vez */
@@ -75,7 +75,7 @@ function ordena(){var a=Array.from(mapa.values());a.forEach(function(v){v.t=ms(v
   a.forEach(function(v){(String(v.r.tabela).indexOf(PRE)===0?base:crm).push(v.r)});return {base:base,crm:crm}}
 
 function prepara(){E.estado='preparando';E.limpar=false;var metaAnt=null;
-  return abre().then(leMeta).then(function(m){metaAnt=m;lida=m?m.quando:null;if(!m||!m.completo)return [];return leTudoLocal()}).then(function(vals){
+  return espera().then(abre).then(leMeta).then(function(m){metaAnt=m;lida=m?m.quando:null;if(!m||!m.completo)return [];return leTudoLocal()}).then(function(vals){
     var temCopia=false;
     if(metaAnt&&metaAnt.completo&&vals.length&&vals.length===metaAnt.n){vals.forEach(function(v){mapa.set(chave(v.r),v);var t=ms(v.r);if(t>ate)ate=t});ord=metaAnt.ord||vals.length;
       /* o ponto de retomada é o da ficha (o mais antigo que alguma aba gravou), nunca mais novo que os registros guardados */
@@ -84,12 +84,13 @@ function prepara(){E.estado='preparando';E.limpar=false;var metaAnt=null;
     return temCopia?true:foto().then(function(ok){if(ok)E.via='foto da publicação';return ok})})
   .then(function(tem){
     if(!tem){E.via='nuvem inteira';return inteira()}
-    var desde=desdeISO(ate);
-    return oQueMudou(desde).then(conta).then(function(n){if(n===mapa.size)return n;passo('contagem não bateu',mapa.size+' aqui · '+n+' na nuvem — relendo');
+    var desde=desdeISO(ate);var usaCedo=!!(cedo&&cedo.t<=ate);ateUsado=ate;if(usaCedo)passo('pedido adiantado aproveitado',desdeISO(cedo.t));
+    return oQueMudou(desde,usaCedo?cedo.p:null).then(conta).then(function(n){if(n===mapa.size)return n;passo('contagem não bateu',mapa.size+' aqui · '+n+' na nuvem — relendo');
       return oQueMudou(desde).then(conta).then(function(n2){if(n2===mapa.size)return n2;passo('contagem não bateu de novo',mapa.size+' aqui · '+n2+' na nuvem — refazendo a cópia inteira');E.via='nuvem inteira (cópia refeita)';return inteira()})})})
   .then(function(n){
     if(n!==mapa.size)throw new Error('a cópia ('+mapa.size+') não bate com a nuvem ('+n+')');
     E.n=n;var d=ordena();E.total={base:d.base.length,crm:d.crm.length};E.estado='pronto';passo('pronto',n+' registros = nuvem · '+E.via);
+    try{if(ateUsado>0)localStorage.setItem(KATE,String(ateUsado));else localStorage.removeItem(KATE)}catch(e){}
     /* guarda sem segurar a abertura; se a gravação falhar, a cópia anterior continua inteira (transação) */
     var s=sujos,l=E.limpar;sujos=new Map();
     E.guardado=(s.size||l||!metaAnt)?grava(s,l,ate,ord,l?Date.now():0).then(function(){passo('cópia guardada',s.size+' registros');return true},function(e){passo('cópia NÃO guardada',String(e&&e.message||e));console.warn('rapido3 espelho: não deu para guardar a cópia',e);return false}):Promise.resolve(true);
@@ -131,6 +132,21 @@ window.fetch=function(input,init){var g=grupo(input,init);
     if(parte.length<lim){fim[g]=true;d[g]=null;passo('entregue à '+(g==='base'?'v172 (Base)':'v171 (CRM)'),E.servidos[g]+' registros')}
     var h={'content-type':'application/json; charset=utf-8'};if(typeof E.desvio==='number')h.date=new Date(Date.now()+E.desvio).toUTCString();
     return new Response(corpo,{status:200,headers:h})})};
+
+/* ───── v223 (22/11/2026): A BASE DESTE COMPUTADOR É LIDA PRIMEIRO ─────
+   Medido no Mac do Bruno: a cópia local da nuvem (18 mil registros, ~20 MB) era lida do IndexedDB no mesmo instante em que a
+   porta de entrada lia a base (3 MB) — a base ficava ~100 ms na fila atrás dela, em toda abertura. A cópia da nuvem só é
+   usada depois de o sistema estar pronto. Agora:
+     · num computador que já abriu antes, a leitura da cópia local espera o sinal "sistema pronto" (window.__espelhoVai, dado
+       pelo sistema depois do primeiro desenho; pela porta de entrada na hora se não há base guardada ou ninguém escolhido;
+       ou 5 s, o que vier primeiro);
+     · o pedido "o que mudou na nuvem" sai JÁ, com o ponto de retomada da abertura anterior (qv0:espAte). Só é aproveitado
+       se esse ponto for igual ou mais antigo que o da cópia lida (ler um pouco a mais nunca perde nada); senão, o pedido é
+       feito de novo como sempre. A conferência da contagem continua igual. */
+var KATE='qv0:espAte',ateUsado=0,cedo=null,jaAbriu=false;
+try{jaAbriu=!!localStorage.getItem('qv0:geracao')}catch(e){}
+try{var a0=+localStorage.getItem(KATE);if(jaAbriu&&a0>0){cedo={t:a0,p:leNuvem(desdeISO(a0))};cedo.p.catch(function(){})}}catch(e){cedo=null}
+function espera(){return new Promise(function(ok){var f=false,vai=function(){if(f)return;f=true;passo('início da leitura da cópia local');ok()};window.__espelhoVai=vai;if(!jaAbriu)return vai();setTimeout(vai,5000)})}
 
 E.pronto=prepara();
 })();
