@@ -225,3 +225,8 @@ Prova vs real differ in 3 tables for a host reason (prova is read-only: 3 negoti
 never reaches the cloud; CRM config ids) — not a version difference.
 Next if any opening is still ≥ 1.000 ms: entry page from the browser's own cache (service worker with static routing, cache
 source — no worker start-up), the page itself refreshes the cached entry and reloads once before any interaction.
+- 15:10 UTC: branch `sw` (v225, a1101dd) is on `prova`, NOT on main. Local: navigation served by static routing from the cache
+  (workerFinalSourceType "cache", workerStart 0), new version → cache swapped + one reload → new version, 12 screens equal
+  (`prova-entrada-sw.mjs`). To test on prova with his Chrome: 2nd open has src cache and L:inicio drops; push a trivial
+  change to prova → first open reloads once onto it; offline (Wi-Fi off is his call — or DevTools offline) still opens;
+  kill switch = sw.js with DESLIGA=true. Local main == origin/main + notes commits only (sw is NOT merged).
