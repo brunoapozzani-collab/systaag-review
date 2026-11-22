@@ -245,3 +245,14 @@ Not tested: opening with the network off (cannot switch his network), Safari/Fir
 Open: first opening after a publish (downloads the new files — 1,3 s to 40 s seen), first opening on a new computer,
 never-visited screens, Clientes default view (his call), leaving within ~20 s of a save still re-takes the copy (65 ms).
 Kill switch for v225: publish sw.js with DESLIGA=true.
+
+## 22 Nov 2026, 15:35 São Paulo (18:35 UTC) — v226 LIVE (ce7858a): the loading screen says how long is left
+Bruno: "put a bar or something showing that the system is loading and how long it will take to finish".
+Found: 160×4 px bar, no time on the entry screen, estimate taken from this computer's fast openings (wrong exactly when the
+load is long), and on a slow connection the bar script waited behind nuvem-config/nuvem-espelho (4 s of empty bar locally).
+Now one count on both screens (entry page and "Montando as telas"): download = arrived ÷ requested (preload list + app) →
+real pace gives the time left; build = this computer's last build times (qv0:monta, default 4 s). 280×8 px bar, "%" and
+"faltam cerca de N s"; never goes back; past the estimate says "quase lá…". The script sits right after the screen markup,
+before the cloud files. Proof: fresh profile at 30 Mbps shows 8% · 8 s → 51% · 5 s → "Montando as telas… 56% · 4 s"
+(`prova-primeira-abertura.mjs`); 12 screens equal (only new key qv0:monta); prova and real link: tables/Início equal, 0 errors,
+warm 690–763 ms. Not seen with his eyes on a new computer; default 4 s build estimate is a guess until a computer has history.
