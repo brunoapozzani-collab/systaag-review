@@ -178,3 +178,20 @@ Gestão; "Visão executiva" clicked 220 ms after ready → scrolls and stays; ba
 before/after; DB 14.128 / 36; scoreboard 4 equal / 0 different. Ready 1.290–1.520 ms.
 Open: never-visited screens (loading bar), first open on a new computer, Clientes default view (Bruno's call), one 2,4 s
 freeze seen once on 22 Nov morning, the ~1,5 s-after-ready click miss seen once in the local loop.
+
+## 22 Nov 2026, ~12:40 São Paulo — v220–v222 LIVE (0a38abd): real system ready at 1.011–1.064 ms
+SIZING of a hand rewrite of Início (Bruno asked to size it first): one draw of Início executes 2.458 functions in 131 files
+(~620 KB of code counted with nesting) and reads ~40 base tables (`cov.mjs` in /tmp/h, Chrome precise coverage). Not a route.
+"Início-first load order" is dead too: only ~1% of the layers phase is in files Início does not use (`pb.mjs`).
+What worked instead (profile on the Mac by named function per phase, then remove repeated work):
+- v220: D.unidadesDe by index (`__ixUP`): the menu's "separação" badge scanned all units per proposal — 112 ms in EVERY draw
+  and 138 ms at load. (The renderNav boot gate added there is dead code: renderNav is redefined later — remove.)
+- v221: partners scoreRec counts occurrences with indexOf instead of split (same count).
+- v222: with a stored base, three sweeps that ran at load AND again at first draw/save run once (partners sweepDup,
+  flow syncTudo, core "uma-obra" sync). Session log lines drop (real data 52 → 47); base, CRM, Início, menu identical.
+- stale-while-revalidate header does NOT apply to the entry page (measured: still a 304 round trip) — removed.
+Timeline now (Mac, warm, real link): page code starts 142–162 (network check of index.html) · IDB +100 · write +27 ·
+base ready +170 (unpack 120) · layers +300 · draw +265 → 1.011–1.064. From page-code start: 880–902 ms.
+Next for < 1 s: the 140 ms before page code starts (service worker serving the entry page from cache, with reload-once when a
+new version is found before any interaction), unpack 120, IDB 100 (read photos lazily), layers leftovers (v150 boot 22,
+ad192 alinharCopias 19, v161d ligaVendas 18, v142 boot 18), draw 265.
