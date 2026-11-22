@@ -134,6 +134,16 @@ for(const f of readdirSync('.')){
     else console.warn('boot3: marcas não encontradas — publicado sem a v212a',s.split(m1).length,s.split(m2).length,s.split(m3).length)}
   /* v212b — A GRAVAÇÃO DO FIM DA MONTAGEM VAI PARA DEPOIS DE A TELA APARECER (22/11/2026): desenha, o navegador pinta, e só então grava. */
   const SAVE_DEPOIS=!process.env.SEM_BOOT1&&!process.env.SEM_BOOT2&&!process.env.SEM_BOOT4;
+  /* v216 — TELA CLIENTES · OBRAS · PROPOSTAS (22/11/2026). Medido no Mac do Bruno: 5,9 s para desenhar; 4,9 s eram uma única conta repetida —
+     para CADA proposta e CADA obra, a lista inteira de clientes era percorrida de novo para achar o cliente da proposta (1.374 × 486 × 1.065).
+     O cliente da proposta passa a ser achado uma vez por proposta. O resultado é o mesmo, letra por letra. */
+  {const m="S.db.obras.filter(o=>o.id===p.obra_id||o.cliente_id===(S.db.clientes.find(c=>c.sigla===p.sigla)||{}).id)";
+    if(s.split(m).length===2){s=s.replace(m,"(cid=>S.db.obras.filter(o=>o.id===p.obra_id||o.cliente_id===cid))((S.db.clientes.find(c=>c.sigla===p.sigla)||{}).id)");const m2="${get('clientes',o.cliente_id)?.sigla} · ${o.nome}</option>`)",m3="function arvoreHtml(){const q=";
+      /* e a sigla do cliente de cada obra da lista "mover para outra obra" é lida uma vez por cliente em cada desenho */
+      if(s.split(m2).length===2&&s.split(m3).length===2){s=s.replace(m2,"${__sg(o.cliente_id)} · ${o.nome}</option>`)").replace(m3,"function arvoreHtml(){const __SG=new Map(),__sg=id=>{if(!__SG.has(id))__SG.set(id,get('clientes',id)?.sigla);return __SG.get(id)};const q=")}
+      else console.warn('v216b: trecho não encontrado');
+      console.log('v216: cliente da proposta achado uma vez por proposta')}
+    else console.warn('v216: trecho não encontrado — publicado sem a v216')}
   if(!process.env.SEM_BOOT1){
     const marca=/render=function\(\)\{renderNav\(\);renderMain\(\)\};/.test(s)?'render=function(){renderNav();renderMain()};':'function render(){renderNav();renderMain()}';const i=s.indexOf(marca);const j=i<0?-1:s.indexOf('</script>',i);
     if(j>0){s=s.slice(0,j+9)+'<script>(function(){var rm=renderMain;window.__BOOT=1;window.__bootN=0;window.__E=[];window.addEventListener("error",function(e){__E.push(String(e.message)+" @"+String(e.filename).split("/").pop().split("?")[0]+":"+e.lineno)});renderMain=function(){if(window.__BOOT){window.__bootN++;return}return rm.apply(this,arguments)}})();</script>'+s.slice(j+9);
