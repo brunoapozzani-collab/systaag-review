@@ -56,7 +56,68 @@ function abreApp(){return appP.then(function(h){try{if(window.__V195)window.__V1
   document.write(h.slice(0,corte));
   return new Promise(function(ok){var feito=false,fim=function(){if(feito)return;feito=true;ok()};
     try{requestAnimationFrame(function(){requestAnimationFrame(function(){window.__abrindoPintada=Date.now();fim()})})}catch(e){fim()}
-    setTimeout(fim,700)}).then(function(){document.write(h.slice(corte));document.close()})})}
+    setTimeout(fim,700)}).then(function(){
+      var resto=h.slice(corte),semFatias=false;try{semFatias=g0.call(LS,'qv0:semfatias')==='1'}catch(e){}
+      if(semFatias||!window.MessageChannel){document.write(resto);document.close();return}
+      return emFatias(resto)})})}
+
+/* ───── v207 — MONTAGEM EM FATIAS (Bruno, 21/11/2026: "abrir como o Google") ─────
+   O sistema leva ~3 s a montar-se e, até aqui, fazia isso de uma vez só: durante esses 3 s a página não respondia a
+   nada (nem rolar, nem clicar). Agora o sistema é escrito na página pedaço a pedaço (um pedaço = até o fim de cada
+   bloco de código), e a cada ~40 ms o navegador recebe a vez — a tela que já está à vista (a cópia da última visita)
+   rola e responde a cliques enquanto o sistema real se monta por trás.
+   Para o sistema se montar EXATAMENTE como antes, tudo o que as camadas agendam "para depois" (setTimeout, setInterval,
+   requestAnimationFrame, requestIdleCallback) fica guardado e só é solto quando a última camada terminar — antes disso
+   também não rodava, porque a montagem era um bloco só. A ordem e os atrasos são respeitados.
+   Desliga neste computador com localStorage['qv0:semfatias']='1'. */
+function emFatias(resto){
+  var W=window,st0=W.setTimeout,ct0=W.clearTimeout,si0=W.setInterval,ci0=W.clearInterval,ra0=W.requestAnimationFrame,ca0=W.cancelAnimationFrame,ri0=W.requestIdleCallback,ki0=W.cancelIdleCallback;
+  var fila=[],mapa={},seq=0,montando=true,agora=function(){return performance.now()};
+  function guarda(tipo,fn,d,args){var id='f'+(++seq);fila.push({id:id,tipo:tipo,fn:fn,d:+d||0,args:args,t:agora()});return id}
+  function tira(id){if(typeof id==='string'&&id.charAt(0)==='f'){for(var i=0;i<fila.length;i++)if(fila[i].id===id){fila.splice(i,1);return true}if(mapa[id]!==undefined){var r=mapa[id];delete mapa[id];return r}return true}return null}
+  W.setTimeout=function(fn,d){if(!montando)return st0.apply(W,arguments);return guarda('t',fn,d,[].slice.call(arguments,2))};
+  W.setInterval=function(fn,d){if(!montando)return si0.apply(W,arguments);return guarda('i',fn,d,[].slice.call(arguments,2))};
+  W.requestAnimationFrame=function(fn){if(!montando)return ra0.call(W,fn);return guarda('r',fn,0,[])};
+  if(ri0)W.requestIdleCallback=function(fn,o){if(!montando)return ri0.call(W,fn,o);return guarda('k',fn,0,[o])};
+  W.clearTimeout=function(id){var r=tira(id);if(r===null)return ct0.call(W,id);if(r!==true)r.c()};
+  W.clearInterval=function(id){var r=tira(id);if(r===null)return ci0.call(W,id);if(r!==true)r.c()};
+  W.cancelAnimationFrame=function(id){var r=tira(id);if(r===null)return ca0.call(W,id);if(r!==true)r.c()};
+  if(ki0)W.cancelIdleCallback=function(id){var r=tira(id);if(r===null)return ki0.call(W,id);if(r!==true)r.c()};
+  /* respostas que chegam "de fora" (rede, armazenamento) também só são entregues às camadas depois da montagem — antes
+     não podiam chegar no meio dela. A rede: a resposta fica retida; o IndexedDB aberto por uma camada: abre depois. */
+  var livre,liberado=new Promise(function(ok){livre=ok});
+  var fetchM=W.fetch;W.fetch=function(){var p=fetchM.apply(this,arguments);if(!montando)return p;return p.then(function(r){return liberado.then(function(){return r})},function(e){return liberado.then(function(){throw e})})};
+  var idbOpen=null;try{idbOpen=IDBFactory.prototype.open;IDBFactory.prototype.open=function(){if(!montando)return idbOpen.apply(this,arguments);
+    var self=this,args=arguments,real=null,ouv={},falso={onsuccess:null,onerror:null,onupgradeneeded:null,onblocked:null,
+      addEventListener:function(t,f){(ouv[t]=ouv[t]||[]).push(f)},removeEventListener:function(t,f){ouv[t]=(ouv[t]||[]).filter(function(x){return x!==f})}};
+    ['result','error','transaction','readyState','source'].forEach(function(k){Object.defineProperty(falso,k,{get:function(){if(!real){if(k==='readyState')return 'pending';throw new DOMException('pedido ainda não concluído','InvalidStateError')}return real[k]}})});
+    liberado.then(function(){real=idbOpen.apply(self,args);['success','error','upgradeneeded','blocked'].forEach(function(t){real.addEventListener(t,function(ev){var h=falso['on'+t];if(typeof h==='function')h.call(falso,ev);(ouv[t]||[]).forEach(function(f){f.call(falso,ev)})})})});
+    return falso}}catch(e){idbOpen=null}
+  function solta(){montando=false;try{if(idbOpen)IDBFactory.prototype.open=idbOpen}catch(e){}try{W.fetch=fetchM}catch(e){}livre();var f=fila;fila=[];var t=agora();
+    f.forEach(function(x){var real;
+      if(x.tipo==='t'){real=st0.apply(W,[function(){delete mapa[x.id];(typeof x.fn==='function'?x.fn:new Function(String(x.fn))).apply(W,x.args)},Math.max(0,x.d-(t-x.t))]);mapa[x.id]={c:function(){ct0.call(W,real)}}}
+      else if(x.tipo==='i'){var iv=null,cancelado=false;real=st0.call(W,function(){if(cancelado)return;iv=si0.apply(W,[x.fn,x.d].concat(x.args));try{(typeof x.fn==='function'?x.fn:new Function(String(x.fn))).apply(W,x.args)}catch(e){st0.call(W,function(){throw e},0)}},Math.max(0,x.d-(t-x.t)));mapa[x.id]={c:function(){cancelado=true;ct0.call(W,real);if(iv!==null)ci0.call(W,iv)}}}
+      else if(x.tipo==='r'){real=ra0.call(W,function(ts){delete mapa[x.id];x.fn(ts)});mapa[x.id]={c:function(){ca0.call(W,real)}}}
+      else{real=ri0.call(W,function(dl){delete mapa[x.id];x.fn(dl)},x.args[0]);mapa[x.id]={c:function(){ki0.call(W,real)}}}})}
+  /* os pedaços: cada um termina no fim de um bloco de código; depois de cada pedaço vai um sinal que só corre quando o
+     bloco anterior terminou de carregar e de executar */
+  var partes=resto.split(/(<\/script>)/i),pedacos=[],buf='';
+  for(var i=0;i<partes.length;i++){buf+=partes[i];if(/^<\/script>$/i.test(partes[i])){pedacos.push(buf);buf=''}}
+  var cauda=buf,n=0,canal=new MessageChannel(),vez=null;canal.port1.onmessage=function(){var f=vez;vez=null;if(f)f()};
+  var passa=function(){return new Promise(function(ok){vez=ok;canal.port2.postMessage(0)})};
+  return new Promise(function(fim){var ultima=agora(),pronto=false,esperando=false;W.__fatias={n:pedacos.length,vezes:0};
+    function acaba(){document.write(cauda);document.close();try{delete W.__ck}catch(e){W.__ck=null}solta();fim()}
+    /* nunca escreve de dentro de outra escrita (o navegador ignora escritas muito aninhadas): um laço só */
+    function bombeia(){
+      while(n<pedacos.length){pronto=false;
+        document.write(pedacos[n]+'<script>__ck('+n+')<\/script>');
+        if(!pronto){esperando=true;return}                 /* o bloco ainda está a carregar: o sinal chama de volta */
+        n++;
+        if(agora()-ultima>40){W.__fatias.vezes++;passa().then(function(){ultima=agora();bombeia()});return}}
+      acaba()}
+    W.__ck=function(k){if(k!==n)return;pronto=true;if(esperando){esperando=false;n++;W.__fatias.vezes++;passa().then(function(){ultima=agora();bombeia()})}};
+    bombeia()})}
+
 
 /* ───── v195 — ABRIR JÁ (21/11/2026): a primeira tela aparece na hora ─────
    · ninguém escolhido neste computador → o "Quem é você?" (lista guardada / publicada) — a pessoa escolhe enquanto baixa;
