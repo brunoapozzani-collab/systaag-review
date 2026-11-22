@@ -10,20 +10,11 @@
       ]
     },
     {
-      "source": "/",
-      "headers": [
-        {
-          "key": "cache-control",
-          "value": "public, max-age=0, stale-while-revalidate=604800"
-        }
-      ]
-    },
-    {
       "source": "/index.html",
       "headers": [
         {
           "key": "cache-control",
-          "value": "public, max-age=0, stale-while-revalidate=604800"
+          "value": "public, max-age=0, must-revalidate"
         }
       ]
     },

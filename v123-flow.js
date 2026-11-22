@@ -294,6 +294,6 @@ safe(()=>{const _rn=window.renderNav;window.renderNav=function(){const r=_rn.app
 safe(()=>{const d=S.db;const rep={};
  if(!d.v123_flow_mig){rep.titulosPV=F.backfillPV();rep.chamados=F.backfillChamados();rep.fat=fatMigra();d.v123_flow_mig={em:T(),...rep}}
  else{fatMigra()}
- syncTudo();F.wrapListas();F.mig=d.v123_flow_mig;if(!d.v123_flow_saved){d.v123_flow_saved=1;safe(()=>save())}},'migração');
+ /* v222: ao abrir com base gravada, a sincronização geral fica para o primeiro desenho (que já a faz) */if(!(window.__BOOT&&window.__gravada))syncTudo();F.wrapListas();F.mig=d.v123_flow_mig;if(!d.v123_flow_saved){d.v123_flow_saved=1;safe(()=>save())}},'migração');
 safe(()=>{if(document.getElementById('main'))render()},'first render');
 })();
