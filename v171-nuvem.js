@@ -67,14 +67,24 @@ CRM_SERVER.api=function(payload){var req=null;try{req=JSON.parse(payload||'{}')}
   return r};
 
 /* ───── entrada: aplicar registros da nuvem por cima da cópia local ───── */
-function aplicar(regs){if(!regs.length)return 0;aplicando=true;var n=0;var ops=[];var CT=window.CRM_T||(window.CRM_T={});
+function ordenado(x){if(Array.isArray(x))return x.map(ordenado);if(x&&typeof x.toJSON==='function')return ordenado(x.toJSON());if(x&&typeof x==='object'){var o={};Object.keys(x).sort().forEach(function(k){o[k]=ordenado(x[k])});return o}return x}
+function canon(x){return JSON.stringify(ordenado(x))}
+function aplicar(regs){if(!regs.length)return 0;aplicando=true;var n=0;var ops=[];var CT=window.CRM_T||(window.CRM_T={});var LP=null,pulados=0;
   try{regs.forEach(function(r){var t=r.tabela,id=String(r.id),d=r.dados||{};if(TODAS.indexOf(t)<0)return;
-    if(t==='parceiros'){if(r.apagado){try{api({action:'deleteRow',table:'parceiros',id:+id})}catch(e){}}else{d.id=+id;ops.push({table:'parceiros',op:'update',row:d})}n++;return}
+    if(t==='parceiros'){
+      /* v202 (21/11/2026): só regrava o parceiro que DIFERE do que este computador já tem. Antes, a cada abertura, os 348
+         parceiros eram regravados um a um mesmo sem mudança nenhuma — e cada regravação refazia contas de várias camadas
+         (medido: 0,7 a 3,4 s de travamento depois de abrir). Igual = mesmo conteúdo, em qualquer ordem de campos. */
+      if(!LP){LP=new Map();linhasParceiros().forEach(function(x){LP.set(String(x.id),x)})}
+      var loc=LP.get(id);
+      if(r.apagado){if(!loc){pulados++;return}try{api({action:'deleteRow',table:'parceiros',id:+id})}catch(e){}}
+      else{d.id=+id;if(loc&&canon(loc)===canon(d)){pulados++;return}ops.push({table:'parceiros',op:'update',row:d})}n++;return}
     var arr=CT[t]||(CT[t]=[]);var i=arr.findIndex(function(x){return String(x.id)===id});
     if(r.apagado){if(i>=0){arr.splice(i,1);n++}}else{d.id=isNaN(+id)?id:+id;if(i>=0){if(JSON.stringify(arr[i])!==JSON.stringify(d)){arr[i]=d;n++}}else{arr.push(d);n++}}});
     if(ops.length){try{api({action:'batch',ops:ops})}catch(e){console.error('v171 parceiros',e)}}
     if(n){try{window.CRM_persistT&&CRM_persistT()}catch(e){}}
   }finally{aplicando=false}
+  window.__v171pulados=(window.__v171pulados||0)+pulados;window.__v171ops=(window.__v171ops||0)+ops.length;
   if(n)recarregaPainel();return n}
 var _tRel=0;
 function recarregaPainel(){clearTimeout(_tRel);_tRel=setTimeout(function(){try{var f=document.getElementById('crmFrame');var w=f&&f.contentWindow;if(!w||!w.systaagReload||!w.systaagReady||!w.systaagReady())return;
