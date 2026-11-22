@@ -1,0 +1,19 @@
+import {chromium} from 'playwright';import {createHash} from 'node:crypto';import {writeFileSync} from 'node:fs';
+const sha=s=>createHash('sha1').update(s).digest('hex').slice(0,10);
+const [,, perfil, modo, saida]=process.argv;
+const INIT=`(()=>{const T=new Date('2026-11-23T15:00:00Z').getTime();const D=Date;function F(...a){if(!new.target)return new D(T).toString();return a.length?new D(...a):new D(T)}F.prototype=D.prototype;F.now=()=>T;F.parse=D.parse;F.UTC=D.UTC;window.Date=F;const cnt={};window.__rnd=0;Math.random=()=>{window.__rnd++;let st='';try{st=(String(new Error().stack).match(/at ([\\w.$]+) \\(/g)||[]).map(x=>x.slice(3,-2)).filter(x=>x!=='t'&&x!=='Math.random').slice(0,4).join('|')}catch(e){}const c=(cnt[st]=(cnt[st]||0)+1);let h=2166136261;const k=st+'#'+c;for(let i=0;i<k.length;i++){h^=k.charCodeAt(i);h=Math.imul(h,16777619)}return ((h>>>0)%1000003)/1000003};
+window.__W=[];const of=window.fetch;window.fetch=function(u,o){try{const m=(o&&o.method||'GET').toUpperCase();if(m!=='GET')__W.push(m+' '+String(u).split('?')[0].split('/').slice(-2).join('/')+' '+String(o&&o.body||'').length)}catch(e){}return of.apply(this,arguments)}})()`;
+const ctx=await chromium.launchPersistentContext(perfil,{executablePath:'/usr/bin/google-chrome',args:['--no-sandbox'],viewport:{width:1440,height:900}});
+await ctx.addInitScript(INIT);const p=ctx.pages()[0]||await ctx.newPage();const pe=[];p.on('pageerror',e=>pe.push(String(e.message).slice(0,140)));
+const pronto=async()=>{for(let i=0;i<400;i++){if(await p.evaluate(()=>!!window.__tRender&&document.documentElement.classList.contains('pronto127')).catch(()=>false))return;const k=await p.$('#qv0 .qv-t, #qv .qv-t');if(k){await k.click().catch(()=>{});}await p.waitForTimeout(500)}throw new Error('nao abriu')};
+await p.goto('http://localhost:4103/');await pronto();
+if(modo==='prepara'){await p.waitForTimeout(15000);for(let i=0;i<2;i++){await p.reload();await pronto();await p.waitForTimeout(15000)}console.log('preparado',await p.evaluate(()=>localStorage.getItem('systaag_quem')));await ctx.close();process.exit(0)}
+await p.waitForTimeout(9000);
+const r=await p.evaluate(async()=>{const ord=x=>Array.isArray(x)?x.map(ord):(x&&typeof x==='object')?Object.keys(x).sort().reduce((o,k)=>(o[k]=ord(x[k]),o),{}):x;
+  const ls={};for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);ls[k]=localStorage.getItem(k)}
+  return {db:JSON.stringify(ord(S.db)),crm:(()=>{try{return JSON.stringify(ord(CRM_T))}catch(e){return 'x'}})(),ls,tRender:Math.round(__tRender),E:(window.__E||[]).slice(0,6),P:window.__bootP||null,rnd:window.__rnd,W:window.__W,home:document.getElementById('main').innerHTML,quem:localStorage.getItem('systaag_quem')}});
+const telas={};const LISTA=process.env.TELAS==='ALL'?await p.evaluate(()=>Object.keys(SCREENS)):(process.env.TELAS||'home,estoque,pipeline,propostas,obras,basedados,fhoje,crm,prjpainel,posobras,copainel,pcpessoas').split(',');
+for(const k of LISTA){telas[k]=await p.evaluate(async k=>{const alvo='#/'+k;if(location.hash!==alvo){await new Promise(r=>{let ok=false;const f=()=>{if(ok)return;ok=true;removeEventListener('hashchange',f);r()};addEventListener('hashchange',f);location.hash=alvo;setTimeout(f,3000)})}await new Promise(r=>setTimeout(r,250));await new Promise(r=>requestAnimationFrame(()=>setTimeout(r,30)));return location.hash+'|'+document.getElementById('main').innerHTML},k).catch(e=>'ERR '+String(e.message).slice(0,80))}
+writeFileSync(saida,JSON.stringify({...r,telas}));
+console.log(saida,'tRender',r.tRender,'db',sha(r.db),r.db.length,'crm',sha(r.crm),'rnd',r.rnd,'W',r.W.length,'E',r.E,'P',JSON.stringify(r.P),'home',sha(r.home),r.home.length,'ls',Object.keys(r.ls).map(k=>k+':'+sha(r.ls[k])).join(' ').slice(0,600),'pe',pe.slice(0,3));
+await ctx.close();

@@ -39,3 +39,29 @@ https://systaag-review-tau.vercel.app/ . Goal: real, working Início in under 1.
 - M3+ Departments, one at a time, same proof.
 
 `MISSION.md` in this folder (REBUILD-01, delay layers) is on hold: its ceiling is above the goal.
+
+---
+## 22 Nov 2026 — measured correction: the old system is NOT stuck at 3 s
+
+Function-level profile (local loop, then Bruno's Chrome on a read-only copy with real data):
+- Defining all the code costs almost nothing (~100 ms of 6.100 ms in the local loop).
+- The start-up time was REPEATED WORK: during start-up the layers called `render()` 28 times and `save()` ~90 times;
+  each call re-ran whole-database sweeps (partners, links, copies). v199 only skipped the final drawing step.
+- **v208** (build.mjs): `render` and `save` become gates while `window.__BOOT` is on → one save + one render at the end.
+  Bruno's Mac, real data, warm: **3.412–3.573 ms → 1.893–1.913 ms**.
+  Proof: same computer state switched from published code to v208 (branch alias `prova`, read-only): 180 Base tables,
+  13 CRM tables, stored base, both sync queues and Início HTML identical; 206 screens draw with 0 errors.
+- Where the remaining 1.900 ms goes (Mac, real data): 350 ms before any script runs (loader, reading the base) ·
+  ~1.000 ms scripts (kits import on factory data 144 · decompress 115 · ~150 small blocks) · final save ~200 · final draw 290.
+
+Tried and NOT equal (do not ship as they are):
+- Giving the stored base to the early blocks (before line ~7790): blocks assume factory data → errors (CQ, PRODLINK…).
+- Skipping the factory kits import when a stored base exists: Estoque screen and an Início counter change.
+- Moving the final save after the draw: one obra's `_auto.propostasPlanilha` changes.
+
+Still open for < 1 s: the 350 ms before scripts, decompress off the main thread, the factory-data phase (112 blocks that
+work on data that is thrown away), the three re-draws right after opening (depoisDoBoot, v161e-final, v124-demo).
+Test tools kept here: `prova-igual.mjs` (same stored state, two builds, compares base/CRM/queues/screens),
+`perfil.mjs` + `perfil-le.mjs` (function-level profile of the start-up).
+Lesson kept: comparisons must start from the SAME stored state on the SAME origin (port); a fresh origin boots from
+factory data and proves nothing about a real computer.
