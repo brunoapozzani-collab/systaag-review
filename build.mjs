@@ -119,6 +119,16 @@ for(const f of readdirSync('.')){
       const porta='<script>(function(){window.__BOOT=1;var P=window.__bootP={render:0,save:0};function porta(n){var cur;function tr(f){if(typeof f!=="function"||f.__b208)return f;var t=function(){if(window.__BOOT){P[n]++;return}return f.apply(this,arguments)};t.__b208=1;return t}/* não configurável: a v153 tenta pôr o acessor dela em save e, como hoje (declaração de função), cai no embrulho simples */Object.defineProperty(window,n,{configurable:false,enumerable:true,get:function(){return cur},set:function(f){cur=tr(f)}})}porta("render");porta("save")})();</script>';
       s=s.slice(0,i0)+porta+s.slice(i0);console.log('boot2: render e save viram portas durante a montagem')}
     else console.warn('boot2: marcas não encontradas — publicado sem a v208')}
+  /* v211 — descompactar a base fora do fio principal: o trabalhador (lzw.js) leva a mesma LZString do sistema; a leitura oficial usa o
+     resultado dele só se for da mesma gravação (z idêntico) */
+  let LZW_COD=null;
+  if(!process.env.SEM_LZW){
+    const mC="const j=LZString.decompressFromUTF16(z);if(j){const db=JSON.parse(j);if(db&&db.obras){S.db=db}}";
+    const iLZ=s.indexOf('var LZString=function(){'),fLZ=iLZ<0?-1:s.indexOf('\n',iLZ);const lz=iLZ<0?'':s.slice(iLZ,fLZ);
+    if(s.split(mC).length===2&&lz&&lz.indexOf('</script')<0){
+      s=s.replace(mC,"const LP=window.__LZP;window.__LZP=null;const j=(LP&&LP.j&&LP.z===z)?(window.__LZusou=1,LP.j):LZString.decompressFromUTF16(z);try{performance.mark('A:base')}catch(e){}if(j){const db=JSON.parse(j);if(db&&db.obras){S.db=db}}");
+      LZW_COD=lz+';onmessage=function(e){var j=null;try{j=LZString.decompressFromUTF16(e.data)}catch(x){}postMessage(j)};';console.log('lzw: descompactação num trabalhador')}
+    else console.warn('lzw: marcas não encontradas — publicado sem a v211')}
   if(!process.env.SEM_BOOT1){
     const marca=/render=function\(\)\{renderNav\(\);renderMain\(\)\};/.test(s)?'render=function(){renderNav();renderMain()};':'function render(){renderNav();renderMain()}';const i=s.indexOf(marca);const j=i<0?-1:s.indexOf('</script>',i);
     if(j>0){s=s.slice(0,j+9)+'<script>(function(){var rm=renderMain;window.__BOOT=1;window.__bootN=0;window.__E=[];window.addEventListener("error",function(e){__E.push(String(e.message)+" @"+String(e.filename).split("/").pop().split("?")[0]+":"+e.lineno)});renderMain=function(){if(window.__BOOT){window.__bootN++;return}return rm.apply(this,arguments)}})();</script>'+s.slice(j+9);
@@ -135,6 +145,7 @@ for(const f of readdirSync('.')){
   const anc="var APP='app.html'+(location.search?location.search:'');";
   if(!L.includes(anc))throw new Error('loader.html: âncora APP não encontrada');
   L=L.replace(anc,"var APP='"+app+"';");
+  if(LZW_COD){const m='var LZW=null;/*LZW*/';if(L.includes(m))L=L.replace(m,"var LZW='"+publica('lzw.js',LZW_COD)+"';");else console.warn('lzw: âncora não encontrada no loader')}
   /* a porta de entrada manda baixar já, em paralelo, tudo o que o app.html vai pedir (na ordem da página) */
   const vistos=new Set();const links=pre.filter(([h])=>!vistos.has(h)&&vistos.add(h)).map(([h,t])=>'<link rel="preload" as="'+t+'" href="'+h+'">').join('');
   /* v195 (21/11/2026): a lista do "Quem é você?" publicada junto com o site — o computador novo vê-a na hora.
@@ -145,7 +156,8 @@ for(const f of readdirSync('.')){
     quem0=ctx.window.QUEM0_CALC(viva('base:usuarios'),viva('base:pessoas'));console.log('quem0:',quem0.reduce((n,g)=>n+g.its.length,0),'pessoas em',quem0.length,'grupos')}}
   catch(e){console.warn('quem0: falhou — publicação sem lista (',String(e&&e.message||e).slice(0,160),')');quem0=null}
   /* o que vai primeiro: a foto da nuvem (a maior espera) e o tempo real; depois o código, na ordem da página */
-  const primeiro=(foto?'<link rel="preload" as="fetch" crossorigin="anonymous" fetchpriority="high" href="'+foto.url+'">':'')+'<link rel="preload" as="image" href="taag-wordmark.png">';
+  /* v211: a foto da nuvem (20 MB) só é pedida de antemão num computador que ainda não abriu o sistema (sem qv0:geracao); os outros já têm a cópia */
+  const primeiro=(foto?'<script>try{if(!localStorage.getItem("qv0:geracao"))document.write(\'<link rel="preload" as="fetch" crossorigin="anonymous" fetchpriority="high" href="'+foto.url+'">\')}catch(e){}</script>':'')+'<link rel="preload" as="image" href="taag-wordmark.png">';
   const depois='<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin><link rel="preload" as="script" href="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js" fetchpriority="low">';
   const cab='<!--PRECARGA-->';if(!L.includes(cab))throw new Error('loader.html: âncora PRECARGA não encontrada');
   L=L.replace(cab,'<link rel="preconnect" href="'+((readFileSync('nuvem-config.js','utf8').match(/url:'([^']+)'/)||[])[1]||'')+'" crossorigin><script>window.__FOTO='+JSON.stringify(foto)+';window.__PUBLICADO='+JSON.stringify(V)+';window.__QUEM0='+JSON.stringify(quem0).replace(/</g,'\\u003c')+'</script>'+primeiro+links+depois);
