@@ -26,27 +26,31 @@ var st=document.createElement('style');st.textContent=css;el.appendChild(st);
 var seg=Math.max(1,Math.round((E-ja)/1000));
 var barraTopo=document.createElement('div');barraTopo.className='v196b';el.appendChild(barraTopo);
 
-/* ───── 1. a foto do Início ───── */
-var foto=null,rota=(location.hash||'').replace(/^#\/?/,'').split('/')[0];
-try{if(!window.__TREINO&&(!rota||rota==='home')){var f=JSON.parse(LS.getItem('systaag_v195_tela')||'null');var quem=LS.getItem('systaag_quem');
-  if(f&&f.html&&f.quem&&f.quem===quem&&Date.now()-f.quando<14*864e5)foto=f}}catch(e){foto=null}
+/* ───── 1. a foto da tela pedida (v206: uma foto por endereço; clicar num atalho troca para a foto dessa tela) ───── */
+var PK='systaag_v195_t:',cssG=null,quem=null,host=null,sh=null,pill=null,foto=null;
+function hashDe(h){return (!h||h==='#'||h==='#/')?'#/home':h}
+function leFoto(h){try{var f=JSON.parse(LS.getItem(PK+h)||'null');if(f&&f.html&&f.quem&&f.quem===quem&&Date.now()-f.quando<14*864e5)return f}catch(e){}return null}
+function poe(f){/* escreve a foto na sombra (nenhuma camada do sistema a enxerga) */
+  (f.attrs||[]).forEach(function(a){try{if(a[0]==='class')String(a[1]).split(/\s+/).filter(Boolean).forEach(function(c){host.classList.add(c)});else host.setAttribute(a[0],a[1])}catch(e){}});
+  sh.innerHTML=(cssG.links||[]).map(function(h){return '<link rel="stylesheet" href="'+String(h).replace(/"/g,'&quot;')+'">'}).join('')+
+    '<style>:host{display:block;position:absolute;inset:0;overflow:hidden;background:#f5f5f7}.sb{margin:0;min-height:100%}</style><style>'+cssG.css+'</style>'+
+    '<div class="sb">'+f.html+'</div>';
+  try{if(f.titulo)document.title=f.titulo}catch(e){}}
+try{if(!window.__TREINO&&el.attachShadow){quem=LS.getItem('systaag_quem');cssG=JSON.parse(LS.getItem('systaag_v195_css')||'null');if(quem&&cssG&&cssG.css)foto=leFoto(hashDe(location.hash))}}catch(e){foto=null}
 var irPara=null;
-if(foto&&el.attachShadow){
+if(foto){
   try{
-    var host=document.createElement('div');host.className='v196h';
-    (foto.attrs||[]).forEach(function(a){try{if(a[0]==='class')String(a[1]).split(/\s+/).filter(Boolean).forEach(function(c){host.classList.add(c)});else host.setAttribute(a[0],a[1])}catch(e){}});
-    var sh=host.attachShadow({mode:'open'});
-    sh.innerHTML=(foto.links||[]).map(function(h){return '<link rel="stylesheet" href="'+String(h).replace(/"/g,'&quot;')+'">'}).join('')+
-      '<style>:host{display:block;position:absolute;inset:0;overflow:hidden;background:#f5f5f7}.sb{margin:0;min-height:100%}</style><style>'+foto.css+'</style>'+
-      '<div class="sb">'+foto.html+'</div>';
-    /* os atalhos da foto: o clique fica guardado e é cumprido quando o sistema real aparecer */
-    host.addEventListener('click',function(ev){var p=ev.composedPath?ev.composedPath():[];for(var i=0;i<p.length;i++){var a=p[i];if(a&&a.getAttribute){var h=a.getAttribute('href')||'';var m=/#\/[\w\-\/]+/.exec(h+' '+(a.getAttribute('onclick')||''));if(m){irPara=m[0];break}}}
-      ev.preventDefault();ev.stopPropagation();var t=el.querySelector('.v196p span');if(t)t.textContent=irPara?'Abrindo essa tela…':'Um instante — atualizando…'},true);
+    host=document.createElement('div');host.className='v196h';sh=host.attachShadow({mode:'open'});poe(foto);
+    /* um clique num atalho: o endereço muda já (o sistema real abre nessa tela) e, se houver foto dela, aparece na hora */
+    host.addEventListener('click',function(ev){var p=ev.composedPath?ev.composedPath():[],alvo=null;for(var i=0;i<p.length&&!alvo;i++){var a=p[i];if(a&&a.getAttribute){var m=/#\/[\w\-\/.:%]*/.exec((a.getAttribute('href')||'')+' '+(a.getAttribute('onclick')||''));if(m)alvo=hashDe(m[0])}}
+      ev.preventDefault();ev.stopPropagation();var t=pill&&pill.querySelector('span');
+      if(!alvo){if(t)t.textContent='Um instante — o sistema está quase pronto…';return}
+      irPara=alvo;try{if(hashDe(location.hash)!==alvo)location.hash=alvo}catch(e){}
+      var f2=leFoto(alvo);if(f2){poe(f2);if(t)t.textContent='Atualizando os números…'}else if(t)t.textContent='Abrindo essa tela…'},true);
     el.style.background='transparent';
-    /* tira o desenho "taag · Abrindo o sistema…" e põe a foto */
     [].slice.call(el.children).forEach(function(c){if(c!==st&&c!==barraTopo)c.style.display='none'});
     el.appendChild(host);
-    var pill=document.createElement('div');pill.className='v196p';pill.innerHTML='<span>Atualizando os números…</span><i><b></b></i>';el.appendChild(pill);
+    pill=document.createElement('div');pill.className='v196p';pill.innerHTML='<span>Atualizando os números…</span><i><b></b></i>';el.appendChild(pill);
     window.__v196foto=true;
   }catch(e){foto=null}
 }
@@ -59,7 +63,7 @@ function some(porTempo){if(!el)return;var e=el;el=null;
   /* guarda quanto levou (só aberturas normais: sem escolher nome na porta de entrada e sem o limite de 30 s) */
   try{if(porTempo!==true&&!(window.__V195&&window.__V195.escolhido&&window.__V195.escolhido())){var t=Math.round(performance.now());tempos.push(t);LS.setItem('qv0:tempos',JSON.stringify(tempos.slice(-5)))}}catch(x){}
   e.style.transition='opacity .25s ease';e.style.opacity='0';e.style.pointerEvents='none';setTimeout(function(){try{e.remove()}catch(x){}},280);
-  if(irPara&&location.hash!==irPara)setTimeout(function(){location.hash=irPara},30)}
+  if(irPara&&hashDe(location.hash)!==irPara)setTimeout(function(){location.hash=irPara},30)}
 window.__abrindoSome=some;
 try{new MutationObserver(function(){if(H.classList.contains('pronto127'))some()}).observe(H,{attributes:true,attributeFilter:['class']})}catch(x){window.addEventListener('load',function(){setTimeout(some,400)})}
 setTimeout(function(){some(true)},30000);

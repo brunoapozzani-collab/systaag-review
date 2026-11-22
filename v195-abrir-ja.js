@@ -44,34 +44,44 @@ try{if(window.QUEM){var _e=QUEM.entrar,_s=QUEM.sair;
   QUEM.entrar=function(){var r=_e.apply(this,arguments);espelho();return r};
   QUEM.sair=function(){var r=_s.apply(this,arguments);espelho();return r}}}catch(e){}
 espelho();
-/* ───── v196 (21/11/2026): a FOTO DO INÍCIO ─────
-   Pedido do Bruno: "Início usável em ~2 s" em TODA abertura. O sistema leva ~6–8 s a montar-se (mais de 200 camadas);
-   enquanto isso, a tela de abertura (v195-tela.js) mostra a última foto do Início deste computador — guardada aqui,
-   já com os números da nuvem, só quando o Início está à vista e sem janela aberta. A foto é da pessoa que está neste
-   computador; outra pessoa (ou foto com mais de 14 dias) → não aparece. Vive em systaag_v195_tela (a base local). */
-var H=document.documentElement;
-function fotoInicio(){try{
-  if(window.__TREINO||document.hidden)return;
-  var k='';try{k=route().k}catch(e){}if(k&&k!=='home')return;
+/* ───── v206 (21/11/2026): FOTO DE CADA TELA ─────
+   Pedido do Bruno: abrir "como o Google" — a tela aparece na hora, em TODA abertura, e não só o Início.
+   O sistema leva ~3 s a montar-se (medido; é o piso deste protótipo). Enquanto isso, a tela de abertura (v195-tela.js)
+   mostra a última foto da tela pedida (o endereço da página) — e, se a pessoa clicar num atalho, a foto da tela clicada.
+   Os números da foto são os da última vez; um aviso "Atualizando…" fica à vista até o sistema real assumir.
+   Aqui as fotos são guardadas: uma por endereço (#/home, #/pipeline, …), as 8 mais recentes, cada uma até 700 KB,
+   só da pessoa que está neste computador, com validade de 14 dias. O estilo das telas é guardado uma vez só.
+   Vivem na base local (systaag_v195_*), nunca sobem para a nuvem e não entram na reserva de fecho da aba. */
+var H=document.documentElement,IDX='systaag_v195_idx',CSSK='systaag_v195_css',PK='systaag_v195_t:',MAXF=8,MAXB=700000;
+function hashAtual(){var h=location.hash||'';return (!h||h==='#'||h==='#/')?'#/home':h}
+function leIdx(){try{var a=JSON.parse(LS.getItem(IDX)||'[]');return Array.isArray(a)?a:[]}catch(e){return []}}
+function fotoDaTela(){try{
+  if(window.__TREINO||document.hidden||window.__BOOT)return;
   if(document.getElementById('abrindo-sistema')||document.querySelector('.modal.show,dialog[open],#qv'))return;
-  var quem=LS.getItem(KEY);if(!quem)return;
+  var quem=LS.getItem(KEY);if(!quem)return;var h=hashAtual();
   var b=document.body.cloneNode(true);
   var vivos=[].slice.call(document.body.querySelectorAll('canvas')),copias=[].slice.call(b.querySelectorAll('canvas'));
   copias.forEach(function(c,i){var v=vivos[i];try{var r=v.getBoundingClientRect();if(!r.width||!r.height){c.remove();return}var cs=getComputedStyle(v),im=document.createElement('img');
     im.src=v.toDataURL('image/webp',0.82);['position','top','left','right','bottom','width','height','opacity','zIndex','transform','pointerEvents','display','maxWidth'].forEach(function(p){im.style[p]=cs[p]});im.className=c.className;c.replaceWith(im)}catch(e){c.remove()}});
-  [].forEach.call(b.querySelectorAll('script,noscript,iframe,template,#abrindo-sistema,#boot127,#nuvemChip,.toast,.modal:not(.show)'),function(e){e.remove()});
-  var css=[].slice.call(document.querySelectorAll('style')).map(function(s){return s.textContent}).join('\n')
-    .replace(/(?<![\w.#-])(?::root|html)(?![\w-])/g,':host').replace(/:host((?:\[[^\]]*\]|\.[\w-]+)+)/g,':host($1)').replace(/(?<![\w.#-])body(?![\w-])/g,'.sb');
-  var links=[].slice.call(document.querySelectorAll('link[rel=stylesheet]')).map(function(l){return l.href}).filter(Boolean);
+  [].forEach.call(b.querySelectorAll('script,noscript,iframe,template,#abrindo-sistema,#boot127,#nuvemChip,#somenteLeitura,#v197aviso,.toast,.modal:not(.show)'),function(e){e.remove()});
+  var html=b.innerHTML;if(html.length>MAXB){esquece(h);return}
+  /* o estilo: uma vez só (regravado quando muda de tamanho) */
+  var folhas=[].slice.call(document.querySelectorAll('style'));var tam=folhas.reduce(function(n,s){return n+s.textContent.length},0);
+  var cssG=null;try{cssG=JSON.parse(LS.getItem(CSSK)||'null')}catch(e){}
+  if(!cssG||cssG.tam!==tam){var css=folhas.map(function(s){return s.textContent}).join('\n')
+      .replace(/(?<![\w.#-])(?::root|html)(?![\w-])/g,':host').replace(/:host((?:\[[^\]]*\]|\.[\w-]+)+)/g,':host($1)').replace(/(?<![\w.#-])body(?![\w-])/g,'.sb');
+    var links=[].slice.call(document.querySelectorAll('link[rel=stylesheet]')).map(function(l){return l.href}).filter(Boolean);
+    LS.setItem(CSSK,JSON.stringify({tam:tam,css:css,links:links}))}
   var attrs=[].slice.call(H.attributes).filter(function(a){return /^data-|^class$/.test(a.name)}).map(function(a){return [a.name,a.value]});
-  var html=b.innerHTML;if(html.length+css.length>3e6)return;
-  LS.setItem('systaag_v195_tela',JSON.stringify({quem:quem,quando:Date.now(),html:html,css:css,links:links,attrs:attrs}));
-}catch(e){console.warn('v196 foto do Início',e)}}
-var fotoDepois=function(ms){setTimeout(function(){(window.requestIdleCallback||function(f){setTimeout(f,0)})(fotoInicio,{timeout:4000})},ms)};
+  LS.setItem(PK+h,JSON.stringify({quem:quem,quando:Date.now(),html:html,attrs:attrs,titulo:document.title}));
+  var idx=leIdx().filter(function(x){return x!==h});idx.unshift(h);idx.splice(MAXF).forEach(function(x){try{LS.removeItem(PK+x)}catch(e){}});LS.setItem(IDX,JSON.stringify(idx));
+}catch(e){console.warn('v206 foto da tela',e)}}
+function esquece(h){try{LS.removeItem(PK+h);LS.setItem(IDX,JSON.stringify(leIdx().filter(function(x){return x!==h})))}catch(e){}}
+try{LS.removeItem('systaag_v195_tela')}catch(e){}   /* a foto única da v196 dá lugar às fotos por tela */
+var _tf=0,fotoDepois=function(ms){clearTimeout(_tf);_tf=setTimeout(function(){(window.requestIdleCallback||function(f){setTimeout(f,0)})(fotoDaTela,{timeout:4000})},ms)};
 window.addEventListener('v172-pronta',function(){fotoDepois(4000)});if(window.__v172pronto)fotoDepois(4000);
-window.addEventListener('hashchange',function(){var k='';try{k=route().k}catch(e){}if(!k||k==='home')fotoDepois(2500)});
-document.addEventListener('visibilitychange',function(){if(document.visibilityState==='hidden'&&window.__v172pronto)fotoInicio()});
-setInterval(function(){if(window.__v172pronto)fotoInicio()},300000);
+window.addEventListener('hashchange',function(){fotoDepois(2500)});
+setInterval(function(){if(window.__v172pronto&&!document.hidden)fotoDepois(0)},300000);
 
 /* a lista só é guardada DEPOIS da primeira leitura da nuvem (v172-pronta): antes disso S.db ainda é a semente embutida
    (medido 21/11: 74 nomes antigos em vez dos 36 reais) — guardar cedo faria a próxima abertura mostrar a lista errada */

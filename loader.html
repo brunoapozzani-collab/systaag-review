@@ -109,7 +109,10 @@ function agenda(){if(agendado)return;agendado=true;setTimeout(flush,0)}
 function flush(){agendado=false;if(!pend.size&&!pendRm.size)return;var p=pend,r=pendRm;pend=new Map();pendRm=new Set();
   grava(p,Array.from(r)).then(function(){falhas=0},function(e){falhas++;console.error('v169 gravar no IndexedDB',e);p.forEach(function(v,k){if(!pend.has(k))pend.set(k,v)});r.forEach(function(k){pendRm.add(k)});if(falhas<5)setTimeout(flush,500*falhas);else reserva()})}
 /* ao fechar: o que não foi confirmado vai para a reserva síncrona */
-function reserva(){try{if(!pend.size&&!pendRm.size)return;pend.forEach(function(v,k){s0.call(LS,FB+k,v)});pendRm.forEach(function(k){s0.call(LS,FB+'rm:'+k,'1')});s0.call(LS,TS,String(Date.now()))}catch(e){console.error('v169 reserva',e)}}
+/* v206: as fotos das telas (systaag_v195_*) são descartáveis e grandes — nunca entram na reserva de fecho (não podem
+   ocupar o espaço que a gravação da base precisa) */
+var DESC=function(k){return k.indexOf('systaag_v195_')===0};
+function reserva(){try{if(!pend.size&&!pendRm.size)return;pend.forEach(function(v,k){if(DESC(k))return;s0.call(LS,FB+k,v)});pendRm.forEach(function(k){s0.call(LS,FB+'rm:'+k,'1')});s0.call(LS,TS,String(Date.now()))}catch(e){console.error('v169 reserva',e)}}
 /* "saindo" liga no primeiro sinal de fecho (ouvintes em captura, registados antes dos do sistema) e, enquanto estiver ligado,
    toda gravação da base vai TAMBÉM, em síncrono, para a reserva — assim a gravação de fecho do próprio sistema (v154
    garanteSync, v148 congela…) nunca depende de um IndexedDB que a aba vai matar */
@@ -120,7 +123,7 @@ function escuta(){['pagehide','beforeunload'].forEach(function(ev){window.addEve
 /* ───── o localStorage que o sistema vê ───── */
 function instala(){
   sp.getItem=function(k){k=String(k);if(this===LS&&RE.test(k))return M.has(k)?M.get(k):null;return g0.call(this,k)};
-  sp.setItem=function(k,v){k=String(k);v=String(v);if(this===LS&&RE.test(k)){M.set(k,v);pend.set(k,v);pendRm.delete(k);if(saindo){try{s0.call(LS,FB+k,v);s0.call(LS,TS,String(Date.now()))}catch(e){console.error('v169 reserva',e)}}agenda();return}return s0.call(this,k,v)};
+  sp.setItem=function(k,v){k=String(k);v=String(v);if(this===LS&&RE.test(k)){M.set(k,v);pend.set(k,v);pendRm.delete(k);if(saindo&&!DESC(k)){try{s0.call(LS,FB+k,v);s0.call(LS,TS,String(Date.now()))}catch(e){console.error('v169 reserva',e)}}agenda();return}return s0.call(this,k,v)};
   sp.removeItem=function(k){k=String(k);if(this===LS&&RE.test(k)){if(M.has(k)){M.delete(k);pend.delete(k);pendRm.add(k);if(saindo){try{r0.call(LS,FB+k);s0.call(LS,FB+'rm:'+k,'1');s0.call(LS,TS,String(Date.now()))}catch(e){}}agenda()}return}return r0.call(this,k)};
   var lista=function(st){var o=[];var n=l0.call(st);for(var i=0;i<n;i++){var kk=k0.call(st,i);if(kk!=null&&!(st===LS&&(RE.test(kk)||kk.indexOf(FB)===0)))o.push(kk)}if(st===LS)M.forEach(function(v,k){o.push(k)});return o};
   sp.key=function(i){var a=lista(this);return i<a.length?a[i]:null};
