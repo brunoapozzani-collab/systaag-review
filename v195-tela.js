@@ -27,7 +27,22 @@ var seg=Math.max(1,Math.round((E-ja)/1000));
 var barraTopo=document.createElement('div');barraTopo.className='v196b';el.appendChild(barraTopo);
 
 /* ───── 1. a foto da tela pedida (v206: uma foto por endereço; clicar num atalho troca para a foto dessa tela) ───── */
-var PK='systaag_v195_t:',cssG=null,quem=null,host=null,sh=null,pill=null,foto=null;
+/* ───── v219 (22/11/2026): A CÓPIA COMPORTA-SE COMO A TELA REAL ("como a Amazon") ─────
+   a) CÓPIA EXATA: cada cópia leva a impressão digital da base de quando foi tirada. Se a base deste computador ainda é a mesma
+      (e o dia é o mesmo), a cópia É a tela que o sistema vai desenhar — aparece limpa, sem barra nem aviso de "atualizando".
+   b) CLIQUE GUARDADO: clicar num número/botão da cópia marca o que foi clicado e, assim que o sistema real assume (≈1 s),
+      o mesmo clique é dado no mesmo elemento da tela real (conferido por posição e por texto). Nada que apague é repetido.
+   c) a rolagem do conteúdo passa da cópia para a tela real. */
+function fpBase(){try{var z=LS.getItem('systaag_erp1z')||'',c=LS.getItem('systaag_crm_t')||'',h=2166136261;var mix=function(x){var n=x.length,p=Math.max(1,Math.floor(n/4000));for(var i=0;i<n;i+=p){h^=x.charCodeAt(i);h=Math.imul(h,16777619)}h^=n;h=Math.imul(h,16777619)};mix(z);mix(c);var d=new Date();return (h>>>0)+'|'+z.length+'|'+c.length+'|'+d.getFullYear()+'-'+d.getMonth()+'-'+d.getDate()}catch(e){return ''}}
+var PK='systaag_v195_t:',cssG=null,quem=null,host=null,sh=null,pill=null,foto=null,exata=false,repete=null;
+function caminho(alvo){/* do elemento com id mais próximo até o alvo: índices dos filhos */var p=[],e=alvo;while(e&&e.nodeType===1&&!e.id){var pai=e.parentNode;if(!pai||!pai.children)return null;p.unshift([].indexOf.call(pai.children,e));e=pai}return (e&&e.id&&e.nodeType===1)?{id:e.id,p:p}:null}
+function achaReal(c){try{var e=document.getElementById(c.id);for(var i=0;e&&i<c.p.length;i++)e=e.children[c.p[i]];return e||null}catch(x){return null}}
+var saiu=false,tSaiu=0,capa=null,seg=false,tSeg=0;
+function daClique(ms){/* v219b: o clique guardado é dado no mesmo elemento da tela real (conferido por posição e por texto) */
+  if(!repete||Date.now()-repete.quando>8000){repete=null;return}var r=repete;repete=null;setTimeout(function(){try{var a=achaReal(r.c);
+    var perigo=function(x){for(var k=0;x&&k<6;k++,x=x.parentNode){if(x.getAttribute&&/excluir|apagar|remover|deletar|askConfirm|zerar|lixeira/i.test((x.getAttribute('onclick')||'')+' '+(x.getAttribute('title')||'')))return true}return false};
+    if(a&&a.tagName===r.tag&&texto(a)===r.txt&&!perigo(a)){window.__v219clique={ok:true,txt:r.txt.slice(0,40)};a.click()}else window.__v219clique={ok:false,motivo:!a?'não achou':a.tagName!==r.tag?'outro elemento':texto(a)!==r.txt?'texto mudou':'ação que apaga'}}catch(x){}},ms||0)}
+function texto(e){return String(e&&e.textContent||'').replace(/\s+/g,' ').trim().slice(0,160)}
 function hashDe(h){return (!h||h==='#'||h==='#/')?'#/home':h}
 function leFoto(h){try{var f=JSON.parse(LS.getItem(PK+h)||'null');if(f&&f.html&&f.quem&&f.quem===quem&&Date.now()-f.quando<14*864e5)return f}catch(e){}return null}
 function poe(f,hf){try{window.__fotoMostrada={h:hf||hashDe(location.hash),html:f.html,quando:f.quando}}catch(e){}/* escreve a foto na sombra (nenhuma camada do sistema a enxerga) */
@@ -42,15 +57,25 @@ if(foto){
   try{
     host=document.createElement('div');host.className='v196h';sh=host.attachShadow({mode:'open'});poe(foto);
     /* um clique num atalho: o endereço muda já (o sistema real abre nessa tela) e, se houver foto dela, aparece na hora */
-    host.addEventListener('click',function(ev){var p=ev.composedPath?ev.composedPath():[],alvo=null;for(var i=0;i<p.length&&!alvo;i++){var a=p[i];if(a&&a.getAttribute){var m=/#\/[\w\-\/.:%]*/.exec((a.getAttribute('href')||'')+' '+(a.getAttribute('onclick')||''));if(m)alvo=hashDe(m[0])}}
-      ev.preventDefault();ev.stopPropagation();var t=pill&&pill.querySelector('span');
-      if(!alvo){if(t)t.textContent='Um instante — o sistema está quase pronto…';return}
+    host.addEventListener('pointerdown',function(){seg=true;tSeg=performance.now()},true);host.addEventListener('pointercancel',function(){seg=false},true);
+    host.addEventListener('click',function(ev){setTimeout(function(){seg=false},0);
+      /* v219d: clique feito DEPOIS de a tela real aparecer (a hora do clique é a do dedo, não a da entrega) vale para o que a pessoa vê agora: a tela real */
+      if(saiu&&ev.timeStamp>tSaiu){ev.preventDefault();ev.stopPropagation();try{if(capa)capa.style.pointerEvents='none';var real=document.elementFromPoint(ev.clientX,ev.clientY);if(real)real.click()}catch(x){}return}
+      var p=ev.composedPath?ev.composedPath():[],alvo=null;for(var i=0;i<p.length&&!alvo;i++){var a=p[i];if(a&&a.getAttribute){var m=/#\/[\w\-\/.:%]*/.exec((a.getAttribute('href')||'')+' '+(a.getAttribute('onclick')||''));if(m)alvo=hashDe(m[0])}}
+      ev.preventDefault();ev.stopPropagation();var t=pill&&pill.querySelector('span');try{(window.__v219log=window.__v219log||[]).push({t:Math.round(performance.now()),rota:alvo,alvo:p[0]&&p[0].tagName,pronto:!!window.__tRender})}catch(x){}
+      if(!alvo){var el0=p[0]&&p[0].nodeType===1?p[0]:(p[0]&&p[0].parentNode),c=el0?caminho(el0):null;
+        if(c){repete={c:c,tag:el0.tagName,txt:texto(el0),quando:Date.now()};try{el0.style.transition='opacity .15s';el0.style.opacity='.55'}catch(x){}}
+        if(saiu){daClique(0);return}
+        if(!pill){pill=document.createElement('div');pill.className='v196p';pill.innerHTML='<span></span><i><b></b></i>';el.appendChild(pill);t=pill.querySelector('span')}
+        if(t)t.textContent=c?'Abrindo…':'Um instante — o sistema está quase pronto…';return}
       irPara=alvo;try{if(hashDe(location.hash)!==alvo)location.hash=alvo}catch(e){}
-      var f2=leFoto(alvo);if(f2){poe(f2,alvo);if(t)t.textContent='Atualizando os números…'}else if(t)t.textContent='Abrindo essa tela…'},true);
+      if(saiu)return;var f2=leFoto(alvo);if(f2){poe(f2,alvo);if(t)t.textContent='Atualizando os números…'}else if(t)t.textContent='Abrindo essa tela…'},true);
     el.style.background='transparent';
     [].slice.call(el.children).forEach(function(c){if(c!==st&&c!==barraTopo)c.style.display='none'});
     el.appendChild(host);
-    pill=document.createElement('div');pill.className='v196p';pill.innerHTML='<span>Atualizando os números…</span><i><b></b></i>';el.appendChild(pill);
+    try{exata=!!(foto.fp&&foto.fp===fpBase())}catch(e){exata=false}window.__v219exata=exata;
+    if(exata){barraTopo.style.display='none'}
+    else{pill=document.createElement('div');pill.className='v196p';pill.innerHTML='<span>Atualizando os números…</span><i><b></b></i>';el.appendChild(pill)}
     window.__v196foto=true;
   }catch(e){foto=null}
 }
@@ -62,7 +87,10 @@ if(!foto){/* sem foto: a tela "taag" de sempre, agora com a barra que anda pelo 
 function some(porTempo){if(!el)return;var e=el;el=null;
   /* guarda quanto levou (só aberturas normais: sem escolher nome na porta de entrada e sem o limite de 30 s) */
   try{if(porTempo!==true&&!(window.__V195&&window.__V195.escolhido&&window.__V195.escolhido())){var t=Math.round(performance.now());tempos.push(t);LS.setItem('qv0:tempos',JSON.stringify(tempos.slice(-5)))}}catch(x){}
-  e.style.transition='opacity .25s ease';e.style.opacity='0';e.style.pointerEvents='none';setTimeout(function(){try{e.remove()}catch(x){}},280);
+  /* v219c: a rolagem do conteúdo passa para a tela real */
+  try{if(sh){var mc=sh.getElementById('main'),mr=document.getElementById('main');if(mc&&mr&&mc.scrollTop)mr.scrollTop=mc.scrollTop}}catch(x){}
+  e.style.transition='opacity '+(exata?'.08s':'.25s')+' ease';e.style.opacity='0';saiu=true;tSaiu=performance.now();capa=e;/* v219d: a cópia, já invisível, ainda recebe os cliques por 0,35 s — um clique feito enquanto o sistema montava chega agora e é resolvido pela posição que a pessoa VIU (a tela real ainda está a assentar) *//* não sai no meio de um clique (entre apertar e soltar): esse clique se perderia */var tira=function(){if(seg&&performance.now()-tSeg<2000){setTimeout(tira,80);return}try{e.remove()}catch(x){}};setTimeout(tira,350);
+  try{if(repete&&!irPara&&porTempo!==true)daClique(60)}catch(x){}
   if(irPara&&hashDe(location.hash)!==irPara)setTimeout(function(){location.hash=irPara},30)}
 window.__abrindoSome=some;
 try{new MutationObserver(function(){if(H.classList.contains('pronto127'))some()}).observe(H,{attributes:true,attributeFilter:['class']})}catch(x){window.addEventListener('load',function(){setTimeout(some,400)})}
