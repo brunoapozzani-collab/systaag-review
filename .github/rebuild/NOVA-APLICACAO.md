@@ -109,3 +109,27 @@ factory data and proves nothing about a real computer.
 - One save on real data ≈ 115 ms with immediate flush (sync@a375 35, c69ff 42, stringify 28) — spread, no single sweep.
 - Self-profiler recipe: branch with only the vercel.json `Document-Policy: js-profiling` header (no loader change) →
   in the page `new Profiler({sampleInterval:1,maxBufferSize:300000})` around the action (see this session's __perfil2).
+
+## 22 Nov 2026 (fifth block) — v217 READY, NOT PUBLISHED (Bruno's Chrome went offline ~04:50 São Paulo)
+- Steady-state `render()` on Início on the Mac is ≈ 825 ms median (boot draw ≈ 400): a third was prodInv scanning all units
+  and all engine rows per product; 17% propsDaObra scanning all proposals per obra.
+- v217 (branch `v217`, build-time): per-instant indexes `__ixU` (units by product), `__ixR` (engine rows by product, WeakMap on
+  the Q.compute result), `__ixP` (proposals by obra, returns a copy). Invalidation: v153 stamp + array identity + length + own
+  timeout. Real data on prova: render median 825 → 515 ms, Início HTML identical, 180 Base tables identical.
+  Local loop: 206 screens identical (only rcom's animated number), base and CRM identical.
+- NOT published because the post-publish check on the real link is impossible while his Chrome is offline. To publish:
+  `git checkout main && git pull --rebase && git merge --ff-only v217 && git push`, then verify on the real link
+  (tR, render median, Início hash before/after, DB count 14.128/36, queue empty).
+- The tab was left on the read-only prova alias (mid-sweep) — return it to https://systaag-review-tau.vercel.app/ .
+- After v217 the draw profile is flat (largest: v123-partners scoreRec+dbJson ≈ 40 ms per draw; rest is DOM building).
+
+### Verdict on "under 1 s" for the real system on this route
+- Reached: 1.450–1.650 ms (from 3.400–3.770). With v217: ≈ 1.350–1.550 expected (draw −100).
+- What is left is flat: page start + reading the base ≈ 280 ms, unpack 120, ~150 code blocks 600 (none above 70), draw ≈ 300.
+  Floor of this route with more small cuts ≈ 1.200 ms. It does not reach 1.000.
+- Under 1 s needs Início drawn WITHOUT waiting for the 250 code blocks: a native Início (new-application route), drawn right
+  after the base is read (≈ 280 + 120 ms), legacy loading behind for every other screen.
+- Size: Início = hero + 8 tiles + 7 management blocks + profitability tile + side panels; numbers come from the stock engine,
+  metas, pipeline, obras/Painel, CRM classification. Each block ported and proven equal against the legacy DOM with
+  `prova-abertura.mjs`. Estimate: 8–12 work blocks like tonight's. Order: data layer (read + unpack + indexes) → hero/tiles →
+  Comercial/metas → Estoque → Operações/Projetos → Relacionamento → Financeiro/Pós-venda → panels → switch-over.
