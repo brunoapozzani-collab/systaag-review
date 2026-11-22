@@ -195,3 +195,33 @@ base ready +170 (unpack 120) · layers +300 · draw +265 → 1.011–1.064. From
 Next for < 1 s: the 140 ms before page code starts (service worker serving the entry page from cache, with reload-once when a
 new version is found before any interaction), unpack 120, IDB 100 (read photos lazily), layers leftovers (v150 boot 22,
 ad192 alinharCopias 19, v161d ligaVendas 18, v142 boot 18), draw 265.
+
+## 22 Nov 2026, ~12:00 São Paulo (15:00 UTC) — v223 + v224 LIVE (e7916ed)
+Measured first, on his Mac, where the time before and around the page code really goes (the "140 ms network check" was wrong):
+- Reload: the server answers in ~50 ms; the next 85 ms were MY v218 code — on leaving the page the screen copy was re-taken
+  (the background canvas → webp: 60–73 ms) before the new page could start. Arriving from another site: ~55 ms network +
+  ~70 ms new process, 1.085–1.090 ms ready (1.458 with a cold connection, 264 ms waiting for the server).
+- "IDB read 100 ms" was not the base: the cloud mirror (nuvem-espelho, 18.098 records, ~20 MB getAll) was issued at the same
+  instant and the base (3 MB, 5–13 ms alone) queued behind it.
+- Unpacking the base: 148 ms; reading the same text already unpacked from IndexedDB: 7 ms; JSON.parse 18 ms.
+v223: (a) leaving/reloading re-takes the copy only if a signature of the screen (innerHTML of the visible parts + address +
+theme + base fingerprint) changed since the last copy → 1 ms; (b) the mirror reads its local copy only after "system ready"
+(window.__espelhoVai: app after first paint; loader at once when there is no stored base or nobody chosen; 5 s cap) and the
+"what changed" request leaves at once with the previous opening's resume point (qv0:espAte), used only if that point is ≤ the
+copy's (reads more, never less); count check unchanged; (c) dead renderNav gate removed.
+v224: database "systaag_cache" (own DB, never in the base's memory map) keeps the pair {z: packed base, j: same text unpacked};
+the loader hands it to the app only if z === stored base (string equality); COP load then skips the unpack (window.__v224=1).
+The save worker (v154) writes the pair off the main thread after each save; if the base was unpacked the normal way, the pair
+is written 6 s after ready (only if the stored base is still the same). Generation discard also deletes systaag_cache.
+Proof: local 12 screens + base + CRM + localStorage equal for first open (no pair) and second open (pair), opening DOM equal;
+pair exact after 3 opens (`prova-par-v224.mjs`); prova with real data: digest identical between v223 and v224, pair exact,
+scoreboard 19 equal / 0 different; real link before/after publish: 180 Base tables, 13 CRM tables, queues, Início, menu
+identical after the cloud settled, 0 errors.
+Prova timings (Mac): ready 786–862 ms when the server answered fast (L:inicio 71–78); from page-code start 703–715 (v224),
+784–791 (v223 only), was 867–902.
+NOT YET MEASURED on the real link warm: his Chrome went offline right after the publish check (the first open after publish
+took 26 s for index.html and 13 s for app.html — his network, or the fresh deployment).
+Prova vs real differ in 3 tables for a host reason (prova is read-only: 3 negotiations get a local history line each day that
+never reaches the cloud; CRM config ids) — not a version difference.
+Next if any opening is still ≥ 1.000 ms: entry page from the browser's own cache (service worker with static routing, cache
+source — no worker start-up), the page itself refreshes the cached entry and reloads once before any interaction.
