@@ -1,0 +1,3 @@
+import http from 'node:http';import {readFile} from 'node:fs/promises';import {join,extname} from 'node:path';
+const dir=process.argv[2],port=+process.argv[3];const T={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css','.json':'application/json','.png':'image/png'};
+http.createServer(async(q,r)=>{let p=decodeURIComponent(q.url.split('?')[0]);if(p==='/')p='/index.html';try{const b=await readFile(join(dir,p));r.writeHead(200,{'content-type':T[extname(p)]||'application/octet-stream','cache-control':'no-store'});r.end(b)}catch(e){r.writeHead(404);r.end('nf')}}).listen(port,()=>console.log('ok',port));
