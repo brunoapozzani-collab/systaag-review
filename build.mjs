@@ -144,6 +144,20 @@ for(const f of readdirSync('.')){
       else console.warn('v216b: trecho não encontrado');
       console.log('v216: cliente da proposta achado uma vez por proposta')}
     else console.warn('v216: trecho não encontrado — publicado sem a v216')}
+  /* v217 — ÍNDICES DE UM DESENHO (22/11/2026). Medido no Mac do Bruno (Início): um terço do desenho era prodInv percorrendo TODAS as unidades
+     e TODAS as linhas do motor do Estoque para CADA produto, e 17% era propsDaObra percorrendo TODAS as propostas para CADA obra.
+     As duas buscas passam a usar um índice montado uma vez (unidades por produto, linhas por produto, propostas por obra), válido só dentro do
+     mesmo instante — a mesma regra da v153: cai a cada gravação, a cada instante novo e sempre que a lista muda de tamanho. Mesma ordem, mesmos itens. */
+  if(!process.env.SEM_IX){
+    const p1="prodInv=(pid,inv)=>{const c=Q.compute();const rows=c.rows.filter(r=>r.pid===pid&&(!inv||invDe(r.pr)===inv));const livre=S.db.unidades.filter(u=>u.produto_id===pid&&u.estado!=='baixado'&&bucketOf(u)==='livre'";
+    const p2="const propsDaObra = oid => S.db.propostas.filter(p => p.obra_id === oid);";
+    const iP=s.indexOf('<script>(function(){window.__BOOT=1;');
+    if(s.split(p1).length===3&&s.split(p2).length===2&&iP>0){
+      s=s.split(p1).join("prodInv=(pid,inv)=>{const c=Q.compute();const rows=__ixR(c,pid).filter(r=>(!inv||invDe(r.pr)===inv));const livre=__ixU(pid).filter(u=>u.estado!=='baixado'&&bucketOf(u)==='livre'");
+      s=s.replace(p2,"const propsDaObra = oid => __ixP(oid);");
+      const ix='<script>(function(){var t=null,uA=null,uL=0,uS="",uM=null,pA=null,pL=0,pS="",pM=null,W=new WeakMap();function arma(){if(t)return;t=setTimeout(function(){t=null;uA=pA=null},0)}function st(){try{return window.__v153_stamp?String(__v153_stamp()):"x"+Math.random()}catch(e){return "x"+Math.random()}}function monta(a,campo){var m=new Map();for(var i=0;i<a.length;i++){var x=a[i],k=x[campo],l=m.get(k);if(!l)m.set(k,l=[]);l.push(x)}return m}window.__ixU=function(pid){var a=S.db.unidades,s=st();if(a!==uA||a.length!==uL||s!==uS){uM=monta(a,"produto_id");uA=a;uL=a.length;uS=s;arma()}return pid!==pid?[]:(uM.get(pid)||[])};window.__ixP=function(oid){var a=S.db.propostas,s=st();if(a!==pA||a.length!==pL||s!==pS){pM=monta(a,"obra_id");pA=a;pL=a.length;pS=s;arma()}return oid!==oid?[]:(pM.get(oid)||[]).slice()};window.__ixR=function(c,pid){var r=c.rows,m=W.get(c);if(!m||m.r!==r||m.n!==r.length){m={r:r,n:r.length,m:monta(r,"pid")};W.set(c,m)}return pid!==pid?[]:(m.m.get(pid)||[])}})();</script>';
+      s=s.slice(0,iP)+ix+s.slice(iP);console.log('v217: índices de um desenho (unidades/linhas por produto, propostas por obra)')}
+    else console.warn('v217: trechos não encontrados — publicado sem a v217',s.split(p1).length,s.split(p2).length)}
   if(!process.env.SEM_BOOT1){
     const marca=/render=function\(\)\{renderNav\(\);renderMain\(\)\};/.test(s)?'render=function(){renderNav();renderMain()};':'function render(){renderNav();renderMain()}';const i=s.indexOf(marca);const j=i<0?-1:s.indexOf('</script>',i);
     if(j>0){s=s.slice(0,j+9)+'<script>(function(){var rm=renderMain;window.__BOOT=1;window.__bootN=0;window.__E=[];window.addEventListener("error",function(e){__E.push(String(e.message)+" @"+String(e.filename).split("/").pop().split("?")[0]+":"+e.lineno)});renderMain=function(){if(window.__BOOT){window.__bootN++;return}return rm.apply(this,arguments)}})();</script>'+s.slice(j+9);
