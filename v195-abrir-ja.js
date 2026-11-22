@@ -82,6 +82,25 @@ var _tf=0,fotoDepois=function(ms){clearTimeout(_tf);_tf=setTimeout(function(){(w
 window.addEventListener('v172-pronta',function(){fotoDepois(4000)});if(window.__v172pronto)fotoDepois(4000);
 window.addEventListener('hashchange',function(){fotoDepois(2500)});
 setInterval(function(){if(window.__v172pronto&&!document.hidden)fotoDepois(0)},300000);
+/* ───── v218 (22/11/2026): A FOTO ACOMPANHA A TELA ─────
+   A foto só era refeita ao trocar de tela, depois da nuvem e de 5 em 5 minutos; quem editava algo e fechava deixava uma foto velha
+   (ao reabrir, os números "pulavam" quando o sistema real assumia). Agora a foto da tela aberta é refeita 3 s depois de cada
+   mudança no conteúdo dela (edição, chegada de dados da nuvem), em momento ocioso, e ao sair da aba.
+   E há uma CONFERÊNCIA a cada abertura: o texto da foto mostrada é comparado com o da tela real assim que ela fica pronta;
+   o placar fica em qv0:fotoConf (iguais / diferentes / última) — é com ele que se sabe se a tela instantânea é a verdadeira. */
+try{var _mo=new MutationObserver(function(){if(window.__BOOT||!window.__v172pronto)return;fotoDepois(3000)}),_mm=document.getElementById('main');if(_mm)_mo.observe(_mm,{childList:true,subtree:true,characterData:true})}catch(e){}
+document.addEventListener('visibilitychange',function(){if(document.hidden&&window.__v172pronto&&!window.__BOOT){try{clearTimeout(_tf);var d=Object.getOwnPropertyDescriptor(Document.prototype,'hidden');/* fotoDaTela recusa aba oculta; aqui é de propósito */Object.defineProperty(document,'hidden',{configurable:true,get:function(){return false}});try{fotoDaTela()}finally{delete document.hidden}}catch(e){}}});
+function textoDe(el){return String(el&&el.textContent||'').replace(/Atualizado às \d\d:\d\d/g,'').replace(/Bom dia|Boa tarde|Boa noite/g,'').replace(/\s+/g,' ').trim()}
+function confere(){try{var h=hashAtual(),bruta=window.__fotoMostrada;if(!bruta||bruta.h!==h)return;var doc=new DOMParser().parseFromString('<div>'+bruta.html+'</div>','text/html');var a=textoDe(doc.getElementById('main')),b=textoDe(document.getElementById('main'));if(!a||!b)return;
+  var c={};try{c=JSON.parse(localStorage.getItem('qv0:fotoConf')||'{}')||{}}catch(e){}var ig=a===b,i=0;if(!ig){while(i<a.length&&a[i]===b[i])i++}
+  c.iguais=(c.iguais||0)+(ig?1:0);c.diferentes=(c.diferentes||0)+(ig?0:1);c.ultima={quando:Date.now(),tela:h,igual:ig,nuvemJaChegou:!!window.__v172pronto,idadeMin:Math.round((Date.now()-(bruta.quando||0))/60000),onde:ig?null:{foto:a.slice(Math.max(0,i-40),i+60),real:b.slice(Math.max(0,i-40),i+60)}};
+  localStorage.setItem('qv0:fotoConf',JSON.stringify(c));window.__fotoConf=c}catch(e){}}
+(function(){var feito=false,vai=function(){if(feito)return;if(H.classList.contains('pronto127')&&!window.__BOOT){feito=true;var h0=hashAtual(),mexeu=false,tq=0,m=document.getElementById('main');if(!m)return;
+  /* compara quando a tela real ASSENTA (1,5 s sem mudar; teto 10 s): as camadas ainda põem enfeites por alguns segundos depois de pronta.
+     Se a pessoa clicar, digitar ou trocar de tela antes disso, esta abertura não entra no placar. */
+  var fim=function(){ob.disconnect();['pointerdown','keydown','hashchange'].forEach(function(e){removeEventListener(e,mx,true)})},mx=function(){mexeu=true;clearTimeout(tq);fim()},
+      quieto=function(){clearTimeout(tq);tq=setTimeout(function(){fim();if(!mexeu&&hashAtual()===h0)confere();mexeu=true},1500)},ob=new MutationObserver(quieto);
+  ob.observe(m,{childList:true,subtree:true,characterData:true});['pointerdown','keydown','hashchange'].forEach(function(e){addEventListener(e,mx,true)});quieto();setTimeout(function(){if(!mexeu){clearTimeout(tq);fim();if(hashAtual()===h0)confere();mexeu=true}},10000)}};vai();if(!feito){var o=new MutationObserver(vai);o.observe(H,{attributes:true,attributeFilter:['class']});setTimeout(function(){o.disconnect()},30000)}})();
 
 /* a lista só é guardada DEPOIS da primeira leitura da nuvem (v172-pronta): antes disso S.db ainda é a semente embutida
    (medido 21/11: 74 nomes antigos em vez dos 36 reais) — guardar cedo faria a próxima abertura mostrar a lista errada */
