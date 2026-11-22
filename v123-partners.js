@@ -367,7 +367,7 @@ function mergeRec(t,win,lose){if(t==='parceiros')return mergeParc(win,lose);let 
 P.mergeRec=mergeRec;
 /* v154: o JSON da base inteira era refeito para CADA registro dentro do sort (3 MB × n) — agora uma vez por tabela e por tick */
 let _J=null,_Jst=null;const dbJson=t=>{const st=(window.__v153_stamp?__v153_stamp():String(Date.now()))+':'+t;if(_Jst!==st){_J=JSON.stringify(Object.assign({},S.db,{[t]:[]}));_Jst=st}return _J};
-function scoreRec(t,r){if(t==='parceiros')return scoreParc(r);let n=0;Object.keys(r).forEach(k=>{if(r[k]!=null&&String(r[k]).trim()!=='')n++});const J=dbJson(t);n+=(J.split('"'+r.id+'"').length-1)*3;if(!r.inativo&&r.ativo!==false)n+=2;return n}
+function scoreRec(t,r){if(t==='parceiros')return scoreParc(r);let n=0;Object.keys(r).forEach(k=>{if(r[k]!=null&&String(r[k]).trim()!=='')n++});const J=dbJson(t);/* v221: conta as ocorrências sem montar a lista de pedaços (a base tem 14 MB de texto) — mesma contagem */{const ag='"'+r.id+'"';let c=0,i=J.indexOf(ag);while(i>=0){c++;i=J.indexOf(ag,i+ag.length)}n+=c*3}if(!r.inativo&&r.ativo!==false)n+=2;return n}
 /* clients are found by sigla in proposals: two clients with the same name but different siglas are left for a person */
 const podeAuto=(t,a,b)=>t!=='clientes'||!a.sigla||!b.sigla||a.sigla===b.sigla;
 function gruposExatos(t){const g=new Map();(S.db[t]||[]).forEach(r=>{if(!vivo(r))return;const k=recKey(t,r);if(!k)return;(g.get(k)||g.set(k,[]).get(k)).push(r)});return [...g.values()].filter(v=>v.length>1)}
