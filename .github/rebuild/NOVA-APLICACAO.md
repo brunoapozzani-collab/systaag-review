@@ -26,7 +26,7 @@ https://systaag-review-tau.vercel.app/ . Goal: real, working Início in under 1.
   records in the same shape; no second copy of the data model.
 
 ## Working loop (proven 21 Nov)
-- Cloud sandbox: `SEM_FOTO=1 node build.mjs` → `node tools/rebuild/serve.mjs dist 4101` → headless
+- Cloud sandbox: `SEM_FOTO=1 node build.mjs` → `node .github/rebuild/serve.mjs dist 4101` → headless
   `/usr/bin/google-chrome` via Playwright. Legacy boots offline there with its built-in data (206 screens,
   read-only lock active). Fast loop for legacy-vs-native comparisons without deploys.
 - Real-data proof: Vercel preview deployment (read-only) opened in Bruno's Chrome.
