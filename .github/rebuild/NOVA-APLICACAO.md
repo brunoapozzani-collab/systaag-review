@@ -146,3 +146,10 @@ factory data and proves nothing about a real computer.
 - Decision rule for the native Início: after a few days of real use, read qv0:fotoConf on Bruno's Chrome. If the copy is
   equal in nearly every open, the instant screen IS the real one and the rewrite buys little; if not, the differences listed
   in `onde` say exactly what must be computed natively first.
+
+## 22 Nov 2026, 07:45 São Paulo — v217 + v218 LIVE (f084b69)
+- Real link before/after: 180 Base tables, CRM tables and queues identical; Início HTML identical except the hero
+  `min-height` (follows the window height). render() median 318 → 238 ms (Mac rested; the 825 → 515 seen at 04:30 was the
+  same ratio on a hot machine). Ready ≈ 1.440–1.500 ms. After ready: cloud apply ≈ 440, single re-draw ≈ 220.
+- qv0:fotoConf on Bruno's Chrome after 3 opens: 3 equal / 0 different. Read it again after real use.
+- Lesson: absolute timings taken after hours of test loops on his fanless Mac are inflated ~2,5×; compare ratios, or re-measure rested.
