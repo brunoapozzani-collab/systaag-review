@@ -21,5 +21,7 @@ function sync(){var mud=0;try{(S.db.propostas||[]).forEach(function(p){if(!p||p.
   if(mud){try{if(window.S&&S.changed&&S.changed.add)S.changed.add('propostas')}catch(e){}}return mud}
 window.V178PV={sync:sync,aprov:APROV};
 var _r=window.render;if(typeof _r==='function'){window.render=function(){sync();return _r.apply(this,arguments)}}
-sync();
+/* v203 (21/11/2026): o acerto não roda mais sozinho no meio da montagem (custava ~0,5 s a cada abertura); ele já roda
+   antes de TODO desenho de tela — inclusive o primeiro, no fim da montagem — então o resultado é o mesmo. */
+if(!window.__BOOT)sync();
 })();
