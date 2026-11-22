@@ -30,7 +30,7 @@ var barraTopo=document.createElement('div');barraTopo.className='v196b';el.appen
 var PK='systaag_v195_t:',cssG=null,quem=null,host=null,sh=null,pill=null,foto=null;
 function hashDe(h){return (!h||h==='#'||h==='#/')?'#/home':h}
 function leFoto(h){try{var f=JSON.parse(LS.getItem(PK+h)||'null');if(f&&f.html&&f.quem&&f.quem===quem&&Date.now()-f.quando<14*864e5)return f}catch(e){}return null}
-function poe(f){/* escreve a foto na sombra (nenhuma camada do sistema a enxerga) */
+function poe(f,hf){try{window.__fotoMostrada={h:hf||hashDe(location.hash),html:f.html,quando:f.quando}}catch(e){}/* escreve a foto na sombra (nenhuma camada do sistema a enxerga) */
   (f.attrs||[]).forEach(function(a){try{if(a[0]==='class')String(a[1]).split(/\s+/).filter(Boolean).forEach(function(c){host.classList.add(c)});else host.setAttribute(a[0],a[1])}catch(e){}});
   sh.innerHTML=(cssG.links||[]).map(function(h){return '<link rel="stylesheet" href="'+String(h).replace(/"/g,'&quot;')+'">'}).join('')+
     '<style>:host{display:block;position:absolute;inset:0;overflow:hidden;background:#f5f5f7}.sb{margin:0;min-height:100%}</style><style>'+cssG.css+'</style>'+
@@ -46,7 +46,7 @@ if(foto){
       ev.preventDefault();ev.stopPropagation();var t=pill&&pill.querySelector('span');
       if(!alvo){if(t)t.textContent='Um instante — o sistema está quase pronto…';return}
       irPara=alvo;try{if(hashDe(location.hash)!==alvo)location.hash=alvo}catch(e){}
-      var f2=leFoto(alvo);if(f2){poe(f2);if(t)t.textContent='Atualizando os números…'}else if(t)t.textContent='Abrindo essa tela…'},true);
+      var f2=leFoto(alvo);if(f2){poe(f2,alvo);if(t)t.textContent='Atualizando os números…'}else if(t)t.textContent='Abrindo essa tela…'},true);
     el.style.background='transparent';
     [].slice.call(el.children).forEach(function(c){if(c!==st&&c!==barraTopo)c.style.display='none'});
     el.appendChild(host);
