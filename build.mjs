@@ -119,20 +119,25 @@ for(const f of readdirSync('.')){
       const porta='<script>(function(){window.__BOOT=1;var P=window.__bootP={render:0,save:0};function porta(n){var cur;function tr(f){if(typeof f!=="function"||f.__b208)return f;var t=function(){if(window.__BOOT){P[n]++;return}return f.apply(this,arguments)};t.__b208=1;return t}/* não configurável: a v153 tenta pôr o acessor dela em save e, como hoje (declaração de função), cai no embrulho simples */Object.defineProperty(window,n,{configurable:false,enumerable:true,get:function(){return cur},set:function(f){cur=tr(f)}})}porta("render");porta("save")})();</script>';
       s=s.slice(0,i0)+porta+s.slice(i0);console.log('boot2: render e save viram portas durante a montagem')}
     else console.warn('boot2: marcas não encontradas — publicado sem a v208')}
-  /* v211 — descompactar a base fora do fio principal: o trabalhador (lzw.js) leva a mesma LZString do sistema; a leitura oficial usa o
-     resultado dele só se for da mesma gravação (z idêntico) */
-  let LZW_COD=null;
-  if(!process.env.SEM_LZW){
-    const mC="const j=LZString.decompressFromUTF16(z);if(j){const db=JSON.parse(j);if(db&&db.obras){S.db=db}}";
-    const iLZ=s.indexOf('var LZString=function(){'),fLZ=iLZ<0?-1:s.indexOf('\n',iLZ);const lz=iLZ<0?'':s.slice(iLZ,fLZ);
-    if(s.split(mC).length===2&&lz&&lz.indexOf('</script')<0){
-      s=s.replace(mC,"const LP=window.__LZP;window.__LZP=null;const j=(LP&&LP.j&&LP.z===z)?(window.__LZusou=1,LP.j):LZString.decompressFromUTF16(z);try{performance.mark('A:base')}catch(e){}if(j){const db=JSON.parse(j);if(db&&db.obras){S.db=db}}");
-      LZW_COD=lz+';onmessage=function(e){var j=null;try{j=LZString.decompressFromUTF16(e.data)}catch(x){}postMessage(j)};';console.log('lzw: descompactação num trabalhador')}
-    else console.warn('lzw: marcas não encontradas — publicado sem a v211')}
+  /* v212a — IMPORTAÇÕES DE FÁBRICA NÃO SE REPETEM QUANDO HÁ BASE GRAVADA (22/11/2026). Medido no Mac do Bruno: a cada abertura ~0,2 s iam para
+     importar os kits e casar produtos sobre a base de fábrica — trabalho jogado fora logo depois, quando a base gravada entra (linha ~7790).
+     Com base gravada, essas duas importações são puladas. Se a gravada não puder ser lida, a página recarrega uma vez sem o atalho. */
+  if(!process.env.SEM_BOOT1&&!process.env.SEM_BOOT2&&!process.env.SEM_BOOT3){
+    const m1='if(S.db.kits55_done)return;',m2="(S.db.kits||[]).forEach(k=>{k.itens=(k.itens||[]).map(it=>{if(it.produto_id&&get('produtos',it.produto_id))return it;const p=findProd(it.nome);",m3="if(db&&db.obras){S.db=db}}}}catch(e){console.error('COP load',e)}";
+    const iP=s.indexOf('<script>(function(){window.__BOOT=1;');
+    if(s.split(m1).length===2&&s.split(m2).length===2&&s.split(m3).length===2&&iP>0){
+      s=s.replace(m1,'if(S.db.kits55_done||window.__gravada)return;');
+      s=s.replace(m2,"(window.__gravada?[]:S.db.kits||[]).forEach(k=>{k.itens=(k.itens||[]).map(it=>{if(it.produto_id&&get('produtos',it.produto_id))return it;const p=findProd(it.nome);");
+      s=s.replace(m3,"if(db&&db.obras){S.db=db;window.__gravadaOk=1}}}}catch(e){console.error('COP load',e)}try{performance.mark('A:base')}catch(e){}if(window.__gravada&&!window.__gravadaOk){let ok=false;try{sessionStorage.setItem('__semAtalho','1');ok=sessionStorage.getItem('__semAtalho')==='1'}catch(e){}if(ok){location.reload();return}}");
+      s=s.slice(0,iP)+"<script>try{var __z=localStorage.getItem('systaag_erp1z');window.__gravada=!!(__z&&__z.length>50000)&&!sessionStorage.getItem('__semAtalho');__z=null}catch(e){window.__gravada=false}</script>"+s.slice(iP);
+      console.log('boot3: importações de fábrica puladas quando há base gravada')}
+    else console.warn('boot3: marcas não encontradas — publicado sem a v212a',s.split(m1).length,s.split(m2).length,s.split(m3).length)}
+  /* v212b — A GRAVAÇÃO DO FIM DA MONTAGEM VAI PARA DEPOIS DE A TELA APARECER (22/11/2026): desenha, o navegador pinta, e só então grava. */
+  const SAVE_DEPOIS=!process.env.SEM_BOOT1&&!process.env.SEM_BOOT2&&!process.env.SEM_BOOT4;
   if(!process.env.SEM_BOOT1){
     const marca=/render=function\(\)\{renderNav\(\);renderMain\(\)\};/.test(s)?'render=function(){renderNav();renderMain()};':'function render(){renderNav();renderMain()}';const i=s.indexOf(marca);const j=i<0?-1:s.indexOf('</script>',i);
     if(j>0){s=s.slice(0,j+9)+'<script>(function(){var rm=renderMain;window.__BOOT=1;window.__bootN=0;window.__E=[];window.addEventListener("error",function(e){__E.push(String(e.message)+" @"+String(e.filename).split("/").pop().split("?")[0]+":"+e.lineno)});renderMain=function(){if(window.__BOOT){window.__bootN++;return}return rm.apply(this,arguments)}})();</script>'+s.slice(j+9);
-      const k=s.lastIndexOf('</body>');s=s.slice(0,k)+'<script>window.__BOOT=0;window.__tFim=performance.now();try{if(window.__bootP&&__bootP.save)save()}catch(e){__E.push("save final: "+e.message)}try{var __d=Object.getOwnPropertyDescriptor(window,"render"),__d2=Object.getOwnPropertyDescriptor(window,"save");if(window.__bootP&&(!__d.get||!__d2.get))__E.push("v208: porta perdida")}catch(e){}try{render()}catch(e){__E.push("render final: "+e.message)}window.__tRender=performance.now();/* o sistema já está desenhado: a tela de abertura sai agora (não espera mais o evento load + 300 ms) */try{document.documentElement.classList.add("pronto127")}catch(e){}</script>'+s.slice(k);console.log('boot1: redesenho suspenso durante a montagem')}
+      const k=s.lastIndexOf('</body>');s=s.slice(0,k)+'<script>window.__BOOT=0;window.__tFim=performance.now();'+(SAVE_DEPOIS?'':'try{if(window.__bootP&&__bootP.save)save()}catch(e){__E.push("save final: "+e.message)}')+'try{var __d=Object.getOwnPropertyDescriptor(window,"render"),__d2=Object.getOwnPropertyDescriptor(window,"save");if(window.__bootP&&(!__d.get||!__d2.get))__E.push("v208: porta perdida")}catch(e){}try{render()}catch(e){__E.push("render final: "+e.message)}window.__tRender=performance.now();'+(SAVE_DEPOIS?'if(window.__bootP&&__bootP.save){(function(){var f=0,g=function(){if(f)return;f=1;try{save()}catch(e){__E.push("save final: "+e.message)}window.__tSave=performance.now()};try{requestAnimationFrame(function(){setTimeout(g,0)})}catch(e){}setTimeout(g,400)})()}':'')+'/* o sistema já está desenhado: a tela de abertura sai agora (não espera mais o evento load + 300 ms) */try{document.documentElement.classList.add("pronto127")}catch(e){}</script>'+s.slice(k);console.log('boot1: redesenho suspenso durante a montagem')}
     else console.warn('boot1: marca não encontrada')}
   let o=await html(s);
   /* cada <script src> local leva a impressão digital do arquivo publicado (antes: o commit — tudo era baixado de novo a cada publicação) */
@@ -145,7 +150,7 @@ for(const f of readdirSync('.')){
   const anc="var APP='app.html'+(location.search?location.search:'');";
   if(!L.includes(anc))throw new Error('loader.html: âncora APP não encontrada');
   L=L.replace(anc,"var APP='"+app+"';");
-  if(LZW_COD){const m='var LZW=null;/*LZW*/';if(L.includes(m))L=L.replace(m,"var LZW='"+publica('lzw.js',LZW_COD)+"';");else console.warn('lzw: âncora não encontrada no loader')}
+
   /* a porta de entrada manda baixar já, em paralelo, tudo o que o app.html vai pedir (na ordem da página) */
   const vistos=new Set();const links=pre.filter(([h])=>!vistos.has(h)&&vistos.add(h)).map(([h,t])=>'<link rel="preload" as="'+t+'" href="'+h+'">').join('');
   /* v195 (21/11/2026): a lista do "Quem é você?" publicada junto com o site — o computador novo vê-a na hora.

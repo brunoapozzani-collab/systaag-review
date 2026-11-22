@@ -38,7 +38,6 @@
 'use strict';
 var RE=/^(treino:)?systaag_/, FB='fb:', TS='fb:__ts', DBN='systaag_base', ST='kv';
 var MK=function(n){try{performance.mark(n)}catch(e){}};MK('L:inicio');
-var LZW=null;/*LZW*/
 var sp=Storage.prototype, g0=sp.getItem, s0=sp.setItem, r0=sp.removeItem, k0=sp.key, c0=sp.clear, ld=Object.getOwnPropertyDescriptor(sp,'length'), l0=ld&&ld.get;
 var LS=window.localStorage;
 function realKeys(){var o=[],n=l0.call(LS);for(var i=0;i<n;i++)o.push(k0.call(LS,i));return o}
@@ -58,7 +57,7 @@ function abreApp(){return appP.then(function(h){try{if(window.__V195)window.__V1
   document.write(h.slice(0,corte));
   return new Promise(function(ok){var feito=false,fim=function(){if(feito)return;feito=true;ok()};
     try{requestAnimationFrame(function(){requestAnimationFrame(function(){window.__abrindoPintada=Date.now();fim()})})}catch(e){fim()}
-    setTimeout(fim,700)}).then(function(){var P=window.__LZP;if(P&&!P.j&&P.p)return Promise.race([P.p,new Promise(function(ok){setTimeout(ok,160)})])}).then(function(){MK('L:escreve2');document.write(h.slice(corte));document.close()})})}
+    setTimeout(fim,700)}).then(function(){MK('L:escreve2');document.write(h.slice(corte));document.close()})})}
 
 /* ───── v195 — ABRIR JÁ (21/11/2026): a primeira tela aparece na hora ─────
    · ninguém escolhido neste computador → o "Quem é você?" (lista guardada / publicada) — a pessoa escolhe enquanto baixa;
@@ -178,10 +177,6 @@ try{
     await grava(put,rm);put.forEach(function(v,k){M.set(k,v)});rm.forEach(function(k){M.delete(k)});fbs.concat([TS]).forEach(function(k){try{r0.call(LS,k)}catch(e){}});
     console.log('v169: reserva de '+fbs.length+' chave(s) reaplicada')}
   instala();
-  /* v211 (22/11/2026): a base gravada começa a ser descompactada JÁ, num trabalhador à parte, enquanto a página escreve a
-     primeira tela; o sistema usa o resultado se ele for da MESMA gravação (comparação exata), senão descompacta como sempre. */
-  try{var z0=M.get('systaag_erp1z');if(LZW&&window.Worker&&typeof z0==='string'&&z0.length>50000){var LP=window.__LZP={z:z0,j:null,p:null};
-    LP.p=new Promise(function(ok){try{var w=new Worker(LZW);w.onmessage=function(e){if(typeof e.data==='string'&&e.data)LP.j=e.data;MK('L:lz');try{w.terminate()}catch(x){}ok()};w.onerror=function(){ok()};w.postMessage(z0)}catch(e){ok()}})}}catch(e){}
   try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist()}catch(e){}
 }catch(e){
   /* sem IndexedDB (modo privado antigo, bloqueio): o sistema abre como sempre, direto no localStorage */
