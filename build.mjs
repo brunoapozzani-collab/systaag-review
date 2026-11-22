@@ -116,6 +116,34 @@ for(const f of readdirSync('.')){
   const V=String(process.env.VERCEL_GIT_COMMIT_SHA||Date.now()).slice(0,10);
   o=o.replace(/(<script\b[^>]*\bsrc=")([A-Za-z0-9_.-]+\.js)(?:\?[^"]*)?"/g,(m,a,b)=>{if(!selo[b])return a+b+'?v='+V+'"';pre.push([b+'?v='+selo[b],'script']);return a+b+'?v='+selo[b]+'"'});
   /* 08/11/2026 (v169): o sistema é publicado como app.html; index.html é a porta de entrada (loader.html) */
+  /* v204 — MENOS ARQUIVOS (21/11/2026): o navegador abria 213 arquivos de código, um a um. Aqui as camadas vizinhas
+     (sem nada entre elas na página) viram um arquivo só, na MESMA ordem. Regras para o comportamento não mudar:
+       · só entra num pacote a camada que não declara nada no nível de cima (função, classe, let, const) — as que declaram
+         continuam em arquivo próprio, porque juntar mudaria o momento em que essas declarações passam a valer;
+       · cada camada vai dentro do seu próprio try/catch: se uma falhar, as seguintes continuam (como hoje, com arquivos
+         separados) e o erro aparece do mesmo jeito (relançado logo a seguir);
+       · qualquer coisa que não der para analisar fica como está. Desliga com SEM_PACOTE=1. */
+  if(!process.env.SEM_PACOTE){try{
+    const acorn=await import('acorn');const lido={};
+    const tipo=(f)=>{if(lido[f])return lido[f];let r='solo';try{const code=readFileSync(join(OUT,f),'utf8');const ast=acorn.parse(code,{ecmaVersion:'latest',sourceType:'script'});
+        const decl=ast.body.some(n=>n.type==='FunctionDeclaration'||n.type==='ClassDeclaration'||(n.type==='VariableDeclaration'&&n.kind!=='var')||(n.directive));
+        if(!decl&&!/<\/script/i.test(code))r={code}}catch(e){r='solo'}return (lido[f]=r)};
+    const parts=o.split(/(<script\b[^>]*>[\s\S]*?<\/script>)/);const out=[];let run=[];let pacotes=0,dentro=0;
+    const fecha=()=>{/* run = [{tag, f, t}] camadas vizinhas; junta as sequências de 'ok' */
+      let grupo=[];const solta=()=>{if(grupo.length>=2){const corpo=grupo.map(g=>'try{'+g.t.code+'\n}catch(e){__pacoteErro(e)}').join('\n');const href=publica('app/p-'+dig(corpo)+'.js',corpo);out.push('<script src="'+href+'"></script>');pacotes++;dentro+=grupo.length}else grupo.forEach(g=>out.push(g.tag));grupo=[]};
+      for(const it of run){if(it.vazio){if(!grupo.length)out.push(it.tag);continue}if(it.t==='solo'){solta();out.push(it.tag)}else grupo.push(it)}solta();run=[]};
+    for(const p of parts){const m=p.match(/^<script\b([^>]*)><\/script>$/);const src=m&&(m[1].match(/^\s*src="([^"]+)"\s*$/)||[])[1];
+      if(src&&!/^(https?:)?\/\//.test(src)){const f=src.split('?')[0];run.push({tag:p,f,t:tipo(f)});continue}
+      if(run.length&&!p.replace(/<!--[\s\S]*?-->/g,'').trim()){run.push({tag:p,f:null,t:'solo',vazio:true});continue}
+      fecha();out.push(p)}
+    fecha();
+    let novo=out.join('');
+    novo=novo.replace(/<head[^>]*>/i,(h)=>h+'<script>window.__pacoteErro=function(e){setTimeout(function(){throw e},0)}</script>');
+    o=novo;
+    /* a porta de entrada manda baixar o que a página pede AGORA (pacotes no lugar das camadas soltas) */
+    pre.length=0;const re=/<link rel="stylesheet" href="([^"]+)">|<script\b[^>]*\bsrc="([^"]+)"[^>]*><\/script>/g;let mm;while((mm=re.exec(o))){const h=mm[1]||mm[2];if(/^(https?:)?\/\//.test(h))continue;pre.push([h,mm[1]?'style':'script'])}
+    console.log('pacotes:',dentro,'camadas em',pacotes,'arquivos ·',pre.length,'arquivos pedidos ao abrir');
+  }catch(e){console.warn('pacotes: falhou — publicado com os arquivos separados (',String(e&&e.message||e).slice(0,200),')')}}
   const app=publica('app.html',o);
   const foto=await fotoDaNuvem();
   let L=readFileSync('loader.html','utf8');
