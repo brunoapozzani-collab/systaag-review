@@ -98,3 +98,14 @@ factory data and proves nothing about a real computer.
   right before clicking.
 - Next candidates: cost of save() itself (sync@a375, repair@c69ff — every action pays it); v171/v172 apply on open when
   nothing changed; decompress; index.html revalidation; Clientes / Base › Clientes draw (6–7 s).
+
+## 22 Nov 2026 (fourth block) — v216 live: Clientes · Obras · Propostas
+- Profile (Mac): 4,9 of 5,9 s were `S.db.clientes.find(...)` evaluated inside an obras filter, for every proposal
+  (1.374 × 486 × 1.065). v216 hoists it (build-time text patch) + per-draw memo of the client sigla. Output identical
+  (SHA of the 5.985.779-char screen equal before/after on the real link). Now ≈ 4,3 s (was 5,7–14 s depending on load).
+- What is left there: the screen is 6 MB of HTML (every client expanded, every proposal carries a "mover para outra obra"
+  list); sondar@521ab ≈ 700 ms, v123-partners hideMerged ≈ 650, v138 portas ≈ 740. A real fix = show clients collapsed
+  (or paged) by default — a visible change → Bruno's call.
+- One save on real data ≈ 115 ms with immediate flush (sync@a375 35, c69ff 42, stringify 28) — spread, no single sweep.
+- Self-profiler recipe: branch with only the vercel.json `Document-Policy: js-profiling` header (no loader change) →
+  in the page `new Profiler({sampleInterval:1,maxBufferSize:300000})` around the action (see this session's __perfil2).
