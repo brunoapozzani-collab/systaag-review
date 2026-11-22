@@ -1,0 +1,6 @@
+import {chromium} from 'playwright';
+const ctx=await chromium.launchPersistentContext('/tmp/h/PR224',{executablePath:'/usr/bin/google-chrome',args:['--no-sandbox'],viewport:{width:1440,height:900}});
+const p=ctx.pages()[0]||await ctx.newPage();
+const le=async()=>p.evaluate(async()=>{const d=await new Promise(ok=>{const r=indexedDB.open('systaag_cache',1);r.onupgradeneeded=()=>r.result.createObjectStore('kv');r.onsuccess=()=>ok(r.result)});const c=await new Promise(ok=>{const g=d.transaction('kv').objectStore('kv').get('erp1j');g.onsuccess=()=>ok(g.result)});d.close();const z=localStorage.getItem('systaag_erp1z');return {v224:window.__v224,tR:Math.round(__tRender),mk:performance.getEntriesByType('mark').map(m=>m.name+':'+Math.round(m.startTime)).join(' '),par:!!c,zIgual:!!c&&c.z===z,jIgual:!!c&&LZString.decompressFromUTF16(c.z)===c.j,jLen:c&&c.j.length,E:(window.__E||[]).length,chaves:Object.keys(localStorage).filter(k=>/cache|erp1j/.test(k)),big:window.__BIGSTORE.chaves().length}});
+for(let i=0;i<3;i++){await p.goto('http://localhost:4103/');await p.waitForFunction(()=>!!window.__tRender&&document.documentElement.classList.contains('pronto127'),null,{timeout:120000});await p.waitForTimeout(i==0?12000:9000);console.log(i,JSON.stringify(await le()))}
+await ctx.close();

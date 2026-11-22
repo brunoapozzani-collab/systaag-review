@@ -1,0 +1,6 @@
+import {readFileSync} from 'node:fs';
+const [,,fa,fb]=process.argv;const A=JSON.parse(readFileSync(fa,'utf8')),B=JSON.parse(readFileSync(fb,'utf8'));
+const N=s=>String(typeof s==='string'?s:JSON.stringify(s)).replace(/V157\.\w+\('r\d+'\)/g,'V157.x(r)').replace(/V138_delg\('t\d+'/g,"V138_delg('t'").replace(/data-v138t="t\d+"/g,'data-v138t').replace(/Atualizado às \d\d:\d\d/g,'').replace(/[\d.,]+ ?MB/g,'MB').replace(/Bom dia|Boa tarde|Boa noite/g,'').replace(/min-height: ?\d+px/g,'');
+let dif=0;const rep=(k,a,b)=>{if(N(a)===N(b))return;dif++;const x=N(a),y=N(b);let i=0;while(i<x.length&&x[i]===y[i])i++;console.log('DIF',k,x.length,y.length,'|',x.slice(Math.max(0,i-60),i+80).replace(/\n/g,' '),'|||',y.slice(Math.max(0,i-60),i+80).replace(/\n/g,' '))};
+if(A.telas){rep('db',A.db,B.db);rep('crm',A.crm,B.crm);rep('home',A.home,B.home);for(const k of Object.keys(A.telas))rep('tela:'+k,A.telas[k],B.telas[k]);for(const k of new Set([...Object.keys(A.ls),...Object.keys(B.ls)])){if(/qv0:tempos|v195_t:|fotoConf/.test(k))continue;rep('ls:'+k,A.ls[k],B.ls[k])}console.log('telas',Object.keys(A.telas).length,'diferenças',dif)}
+else{for(const h of Object.keys(A)){for(const k of ['hash','body','main','db','erp','crm'])rep(h+':'+k,A[h][k],B[h][k]);console.log(h,'E',A[h].E.length,B[h].E.length,'tR',A[h].tR,B[h].tR)}console.log('diferenças',dif)}

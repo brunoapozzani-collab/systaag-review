@@ -132,6 +132,14 @@ function instala(){
   sp.clear=function(){if(this===LS){Array.from(M.keys()).forEach(function(k){sp.removeItem.call(LS,k)});lista(LS).forEach(function(k){r0.call(LS,k)});return}return c0.call(this)};
   window.__BIGSTORE={tamanho:function(){var t=0;M.forEach(function(v){t+=v.length*2});return t},chaves:function(){return Array.from(M.keys())},pendentes:function(){return pend.size+pendRm.size},db:DBN}}
 
+/* ───── v224 (22/11/2026): a base já desembrulhada, guardada à parte ─────
+   Banco próprio ("systaag_cache"): nunca entra na memória da base nem na lista de chaves que o sistema vê. Vale só se a base
+   embrulhada guardada nele for exatamente igual à base gravada (ver build.mjs, v224). */
+var CDB='systaag_cache';
+function cAbre(){return new Promise(function(ok){try{var r=indexedDB.open(CDB,1);r.onupgradeneeded=function(){try{r.result.createObjectStore('kv')}catch(e){}};r.onsuccess=function(){ok(r.result)};r.onerror=function(){ok(null)};r.onblocked=function(){ok(null)}}catch(e){ok(null)}})}
+var cacheP=cAbre().then(function(d){if(!d)return null;return new Promise(function(ok){try{var g=d.transaction('kv').objectStore('kv').get('erp1j');g.onsuccess=function(){var v=g.result||null;try{d.close()}catch(e){}ok(v)};g.onerror=function(){try{d.close()}catch(e){}ok(null)}}catch(e){ok(null)}})});
+window.__cacheBase=function(z,j){try{if(typeof z!=='string'||typeof j!=='string'||!z||!j)return;cAbre().then(function(d){if(!d)return;try{var t=d.transaction('kv','readwrite');t.objectStore('kv').put({z:z,j:j},'erp1j');t.oncomplete=t.onerror=t.onabort=function(){try{d.close()}catch(e){}}}catch(e){}})}catch(e){}};
+
 /* ───── arranque ───── */
 var pega1=function(k){return new Promise(function(ok){try{var r=db.transaction(ST).objectStore(ST).get(k);r.onsuccess=function(){ok(r.result==null?null:String(r.result))};r.onerror=function(){ok(null)}}catch(e){ok(null)}})};
 var escolha=null;
@@ -160,6 +168,7 @@ try{
         await new Promise(function(ok){var t=db.transaction(ST,'readwrite');t.objectStore(ST).clear();t.oncomplete=ok;t.onerror=ok});
         if(quemG)await grava(new Map([['systaag_quem',quemG]]));
         realKeys().forEach(function(k){if(k.indexOf(FB)===0||RE.test(k))try{r0.call(LS,k)}catch(e){}});
+        await new Promise(function(ok){try{var q=indexedDB.deleteDatabase('systaag_cache');q.onsuccess=ok;q.onerror=ok;q.onblocked=ok}catch(e){ok()}});
         await new Promise(function(ok){try{var q=indexedDB.deleteDatabase('systaag_espelho');q.onsuccess=ok;q.onerror=ok;q.onblocked=ok}catch(e){ok()}});
         console.warn('v198: cópia local de uma geração anterior da base — descartada; abre a partir da nuvem ('+ger+')')}
       s0.call(LS,'qv0:geracao',String(ger))}}}catch(e){console.warn('v198 geração',e)}
@@ -179,6 +188,8 @@ try{
     await grava(put,rm);put.forEach(function(v,k){M.set(k,v)});rm.forEach(function(k){M.delete(k)});fbs.concat([TS]).forEach(function(k){try{r0.call(LS,k)}catch(e){}});
     console.log('v169: reserva de '+fbs.length+' chave(s) reaplicada')}
   instala();
+  /* v224: o par guardado só é entregue ao sistema se a base embrulhada dele for igual, letra a letra, à gravada */
+  try{var zz=M.get('systaag_erp1z');if(zz){var cj=await Promise.race([cacheP,new Promise(function(ok){setTimeout(function(){ok(null)},120)})]);if(cj&&cj.z===zz&&typeof cj.j==='string')window.__baseJ={z:zz,j:cj.j};MK('L:cache')}}catch(e){}
   try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist()}catch(e){}
 }catch(e){
   /* sem IndexedDB (modo privado antigo, bloqueio): o sistema abre como sempre, direto no localStorage */

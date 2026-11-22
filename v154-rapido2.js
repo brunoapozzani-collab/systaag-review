@@ -17,7 +17,9 @@ const LZSRC="var LZString=function(){var r=String.fromCharCode,o=\"ABCDEFGHIJKLM
 let worker=null,ocupado=false,fila=null,ultimo=null;
 const podeWorker=typeof Worker==='function'&&typeof Blob==='function'&&typeof URL!=='undefined'&&URL.createObjectURL;
 function getWorker(){if(worker)return worker;
-  const code=LZSRC+';self.onmessage=function(e){var d=e.data;try{self.postMessage({id:d.id,out:LZString.compressToUTF16(d.s)})}catch(x){self.postMessage({id:d.id,err:String(x)})}}';
+  /* v224 (22/11/2026): depois de embrulhar, o próprio worker guarda o par {embrulhada, desembrulhada} no banco "systaag_cache"
+     (fora da thread da tela) — é o que deixa a próxima abertura pular o desembrulho. O par só vale se conferir com a base gravada. */
+  const code=LZSRC+';self.onmessage=function(e){var d=e.data;try{var out=LZString.compressToUTF16(d.s);self.postMessage({id:d.id,out:out});if(d.c){try{var r=indexedDB.open("systaag_cache",1);r.onupgradeneeded=function(){try{r.result.createObjectStore("kv")}catch(x){}};r.onsuccess=function(){var b=r.result;try{var t=b.transaction("kv","readwrite");t.objectStore("kv").put({z:out,j:d.s},"erp1j");t.oncomplete=t.onerror=t.onabort=function(){try{b.close()}catch(x){}}}catch(x){}}}catch(x){}}}catch(x){self.postMessage({id:d.id,err:String(x)})}}';
   worker=new Worker(URL.createObjectURL(new Blob([code],{type:'application/javascript'})));
   worker.onmessage=function(e){const d=e.data;ocupado=false;
     if(d.err){console.error('v154 worker',d.err);setSync(d.id)}
@@ -25,7 +27,7 @@ function getWorker(){if(worker)return worker;
     if(fila){const f=fila;fila=null;mandar(f.id,f.s)}};
   worker.onerror=function(e){console.error('v154 worker erro',e&&e.message);worker=null;ocupado=false};
   return worker}
-function mandar(id,s){if(ocupado){fila={id,s};return}ocupado=true;getWorker().postMessage({id,s})}
+function mandar(id,s){if(ocupado){fila={id,s};return}ocupado=true;getWorker().postMessage({id,s,c:(id===KEY&&!window.__TREINO)?1:0})}
 function setSync(id){/* caminho de sempre, síncrono */try{localStorage.setItem(id,LZString.compressToUTF16(JSON.stringify(S.db)))}catch(e){console.error('v154 sync',e)}}
 let saindo=false;
 /* ao sair (ou a aba ficar oculta): se há um trabalho no worker ainda em curso, ele é descartado e a base ATUAL é gravada
