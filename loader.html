@@ -103,6 +103,9 @@ function emFatias(resto){
      bloco anterior terminou de carregar e de executar */
   var partes=resto.split(/(<\/script>)/i),pedacos=[],buf='';
   for(var i=0;i<partes.length;i++){buf+=partes[i];if(/^<\/script>$/i.test(partes[i])){pedacos.push(buf);buf=''}}
+  /* enquanto se monta, o sistema fica fora do desenho da página (só a tela de abertura é desenhada): sem isto, cada
+     pausa fazia o navegador recalcular o desenho da página inteira e a montagem levava 7× mais (medido: 22 s) */
+  if(pedacos.length)pedacos[0]='<style id="v207s">html:not(.pronto127) body>*:not(#abrindo-sistema):not(script):not(style):not(link){display:none!important}</style>'+pedacos[0];
   var cauda=buf,n=0,canal=new MessageChannel(),vez=null;canal.port1.onmessage=function(){var f=vez;vez=null;if(f)f()};
   var passa=function(){return new Promise(function(ok){vez=ok;canal.port2.postMessage(0)})};
   return new Promise(function(fim){var ultima=agora(),pronto=false,esperando=false;W.__fatias={n:pedacos.length,vezes:0};
