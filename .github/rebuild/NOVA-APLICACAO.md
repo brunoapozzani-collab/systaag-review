@@ -65,3 +65,19 @@ Test tools kept here: `prova-igual.mjs` (same stored state, two builds, compares
 `perfil.mjs` + `perfil-le.mjs` (function-level profile of the start-up).
 Lesson kept: comparisons must start from the SAME stored state on the SAME origin (port); a fresh origin boots from
 factory data and proves nothing about a real computer.
+
+## 22 Nov 2026 (second block) — v212 live: 1.430–1.590 ms
+- v212a: with a stored base, the factory kits import + product matching are skipped (their result was discarded at ~7790).
+- v212b: the single end-of-start-up save runs after the screen is painted.
+- Proof: real link before/after — 180 Base tables, 13 CRM tables, local storage/queues, Início identical; local loop 206 screens
+  identical except session counters (Reconciliações) and one animated number (rcom, unstable in ref too).
+  Local-loop only: OBR-AT040 `_auto.propostasPlanilha` gains a proposal one save earlier than before (convergent); real data: no diff.
+- CORRECTION: the earlier "not equal" verdicts for kits-skip came from a capture-timing bug in the harness (fixed: wait for
+  hashchange). Only the "stored base to early blocks" attempt is truly broken.
+- v211 worker decompress: no measured gain (worker start + transfer ≈ the parallel window) — removed. Loader marks kept
+  (`performance.getEntriesByType('mark')`: L:inicio, L:idb0/1, L:escreve1/2, A:base).
+- Timeline now (Mac, warm): loader starts 25–190 (index.html revalidation varies) · IDB read +110 · first write +45 ·
+  factory phase +210 (→ A:base ≈ 410) · layers on real data +615 (→ tFim ≈ 1.030) · draw ≈ 400 (→ 1.430).
+  After opening: long tasks 284 / 340 / 259 / 418 ms (re-draws), save ≈ at 2.500.
+- Next candidates: layers-on-real-data phase (profile with js-profiling branch), Início draw (400), remaining factory phase,
+  index.html revalidation (service worker / stale-while-revalidate), post-open re-draws.
