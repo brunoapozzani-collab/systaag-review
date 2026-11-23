@@ -10,6 +10,18 @@ window.NUVEM_CONFIG={url:'https://qptluvvsfhtkbbjaphad.supabase.co',key:'sb_publ
 (function(){try{
   var OFICIAL=['systaag-review-tau.vercel.app'];
   if(OFICIAL.indexOf(location.hostname)>=0)return;
+  /* v227 (23/11/2026) — NINGUÉM CAI NUMA CÓPIA DE TESTE SEM QUERER
+     O Bruno abriu o sistema no telefone e viu "CÓPIA DE TESTE": o navegador dele sugeriu o endereço de prova, que o Claude
+     tinha aberto dezenas de vezes no Chrome dele durante os testes (o histórico é partilhado com o telefone).
+     Agora qualquer endereço de teste do Vercel leva direto ao endereço oficial, na mesma tela. Só fica na cópia de teste
+     quem a abriu de propósito com ?teste=1 (fica lembrado nesse navegador; ?teste=0 desfaz). A trava de só leitura abaixo
+     continua a valer até a página trocar. */
+  try{var hn=location.hostname;
+    if(/\.vercel\.app$/.test(hn)){var tst=false;
+      try{if(/[?&]teste=1(&|$)/.test(location.search))localStorage.setItem('qv0:teste','1');
+          if(/[?&]teste=0(&|$)/.test(location.search))localStorage.removeItem('qv0:teste');
+          tst=localStorage.getItem('qv0:teste')==='1'}catch(e){}
+      if(!tst){window.__paraOficial=1;location.replace('https://'+OFICIAL[0]+'/'+(location.hash||''))}}}catch(e){}
   var base=window.NUVEM_CONFIG&&window.NUVEM_CONFIG.url;if(!base||!window.fetch)return;
   window.NUVEM_CONFIG.somenteLeitura=true;
   /* aviso visível: quem abrir uma cópia de teste sabe que nada do que fizer fica guardado */
