@@ -256,3 +256,11 @@ real pace gives the time left; build = this computer's last build times (qv0:mon
 before the cloud files. Proof: fresh profile at 30 Mbps shows 8% · 8 s → 51% · 5 s → "Montando as telas… 56% · 4 s"
 (`prova-primeira-abertura.mjs`); 12 screens equal (only new key qv0:monta); prova and real link: tables/Início equal, 0 errors,
 warm 690–763 ms. Not seen with his eyes on a new computer; default 4 s build estimate is a guess until a computer has history.
+
+## 23 Nov 2026, 14:35 São Paulo — v227 on `prova` (48c386a), NOT yet on main (local main is ahead by it)
+Bruno opened the system on his phone and got "CÓPIA DE TESTE": the phone was on the prova alias (history shared from the Mac
+Chrome, where I opened prova dozens of times). Fix in nuvem-config.js: any *.vercel.app host other than the official one
+forwards to the official link (same hash) unless localStorage qv0:teste === '1' (set by ?teste=1, cleared by ?teste=0);
+read-only lock unchanged. Verified: 6 host cases in node vm; deployed file on prova contains it. Not verified on his phone
+(Chrome offline). FROM NOW ON: open prova in his Chrome with ?teste=1 the first time, and leave no tab/history habit there.
+Goes to main with the next publish (inert on the official host).
