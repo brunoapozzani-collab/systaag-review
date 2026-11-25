@@ -84,3 +84,13 @@ Nada foi gravado na Base compartilhada; a carga das categorias não foi feita.
   da carga; 31 exceções com nome (modelo que é palavra genérica, nome do cliente/obra da loja Focal, 1 rascunho sem número) →
   `cliente-nome-generico-base-real-25-11-2026.xlsx`. Telas internas e totais iguais ao main.
 - A lista ".csv" da tela nova passou a se chamar "Lista interna" (tem marca e modelo).
+
+## 25/11/2026 (noite, 3) — vista do cliente: sem "0×" e com ponte no rodapé (v235b)
+- Carga de categorias gravada pelo Bruno na Base real às 17:07 (2.128/2.128).
+- Linha com quantidade 0 não aparece ao cliente (49 "Miscelânea — linha do Excel sem produto": o valor continua em Equipamentos).
+  4 linhas de cabo/bobina com valor e quantidade 0 (a metragem não veio do Excel; só a linha do arquivo ficou) aparecem como
+  "metragem conforme projeto" e estão na lista para conferir.
+- Rodapé: Equipamentos + Serviços + Desconto/Acréscimo (ajuste) + Atendimento de pós-venda / Valor fechado da venda = Total, com o
+  resto do arredondamento na maior parte; o .pptx mostra a mesma ponte e o mesmo total (agora lê as linhas da proposta, sem as ocultas).
+- Base real: 1.374 propostas, 0 linhas "0×", 0 rodapés que não fecham, total da vista = total de hoje em 1.374,
+  .pptx = vista, 0 vazamentos de marca/modelo → `cliente-rodape-e-linhas-base-real-25-11-2026.xlsx`.
