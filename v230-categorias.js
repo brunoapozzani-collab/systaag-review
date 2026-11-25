@@ -18,8 +18,11 @@
 'use strict';
 if(window.__v230c)return;window.__v230c=true;
 if(typeof S==='undefined'||!S.db)return;
-const D=window.V230_CAT;if(!D||!Array.isArray(D.itens)){console.error('v230: v230-categorias-data.js não carregou');return}
+/* o arquivo de categorias (312 KB) só é baixado quando o Bruno clica em Simular — não pesa na abertura do sistema */
+let D=window.V230_CAT||{total:2128,itens:[]};
 const V=window.V230CAT={};
+V.carrega=function(){if(window.V230_CAT&&window.V230_CAT.itens&&window.V230_CAT.itens.length){D=window.V230_CAT;return Promise.resolve(D)}
+ return new Promise((res,rej)=>{const s=document.createElement('script');s.src='v230-categorias-data.js?v=1';s.onload=()=>{D=window.V230_CAT;D&&D.itens?res(D):rej(new Error('arquivo de categorias vazio'))};s.onerror=()=>rej(new Error('arquivo de categorias não carregou'));document.head.appendChild(s)})};
 const T=(f,d)=>{try{const v=f();return v==null?d:v}catch(e){return d}};
 const E=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const N0=v=>(+v||0).toLocaleString('pt-BR');
@@ -66,6 +69,7 @@ function fotografa(){
 }
 /* simular: aplica em memória, mede, volta tudo — devolve o que mudaria e o que fica de fora */
 V.simular=function(){
+  if(!D.itens.length)throw new Error('Carregue o arquivo antes: V230CAT.carrega()');
   const P=plano();const antes=fotografa();const bak=new Map();
   const vai=P.linhas.filter(L=>!(L.mudaEst&&!temEtapa(L.est)));
   vai.forEach(L=>{bak.set(L.id,[L.p.categoria,L.p.categoria_comercial,L.p.conta_como]);L.p.categoria=L.est;L.p.categoria_comercial=L.com;L.p.conta_como=L.calc});
@@ -164,7 +168,7 @@ function painel(){
   const carga=!ehBruno()?'':`<div class="mt-2 p-2" style="border:1px dashed #94a3b8;border-radius:10px;font-size:12px">
     <b>Carga do arquivo de categorias (${N0(D.total)} produtos)</b> — ${P.em?'gravada em '+E(new Date(P.em).toLocaleString('pt-BR'))+' por '+E(P.por)+' ('+N0(P.gravados)+' produtos)':P.desfeito?'desfeita em '+E(new Date(P.desfeito).toLocaleString('pt-BR')):'ainda não gravada'}
     <div class="d-flex gap-2 flex-wrap mt-1">
-      <button class="btn-soft" onclick="V230CAT.simular();V230CAT.ver(1)">1 · Simular</button>
+      <button class="btn-soft" onclick="V230CAT.carrega().then(()=>{V230CAT.simular();V230CAT.ver(1)}).catch(e=>toast(e.message,true))">1 · Simular</button>
       <button class="btn-soft" ${sim?'':'disabled'} onclick="V230CAT.arquivoDesfazer();V230CAT.ver(1)">2 · Salvar arquivo de desfazer${V._desfazerOk?' ✓':''}</button>
       <button class="btn-apple" ${sim&&V._desfazerOk?'':'disabled'} onclick="if(confirm('Gravar as categorias em '+(V230CAT._grava||[]).length+' produtos, em lotes de 150?'))V230CAT.gravar().then(r=>{toast('Categorias gravadas: '+r.gravados+' · conferência '+(r.conferencia.fecha?'fecha ✓':'NÃO fecha'))}).catch(e=>toast(e.message,true))">3 · Gravar em lotes</button>
       ${P.em?`<button class="btn-soft" onclick="if(confirm('Voltar as categorias de todos os produtos ao que eram antes da carga?'))toast('Desfeito em '+V230CAT.desfazer()+' produtos')">Desfazer a carga</button>`:''}
