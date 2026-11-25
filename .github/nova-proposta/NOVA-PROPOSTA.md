@@ -68,3 +68,19 @@ Nada foi gravado na Base compartilhada; a carga das categorias não foi feita.
 - Simulação na Base real: 2.128 a gravar, 0 de fora, 525 mudam de etapa, 0 totais mudam, demanda de estoque 949 → 949.
 - Ensaio da gravação numa cópia local (trava de só leitura + rede bloqueada para escrita): 2.128 gravados, conferência 2.128/2.128,
   0 totais mudam; Desfazer devolve os 2.128 e tira a etapa e as 2 categorias. 0 pedidos de escrita chegaram à rede.
+
+## 25/11/2026 (noite, 2) — o cliente só vê o nome genérico (v235)
+- Regra do Bruno: tudo o que o cliente vê (modo cliente no editor de hoje e na tela nova, o link do cliente e o PDF — a mesma vista,
+  impressa — e a apresentação .pptx) mostra só o nome genérico e a quantidade; nunca marca nem modelo; fotos ficam; telas internas
+  com o nome real.
+- `nomeCliente(produto)`: nome genérico → tipo (`tipo_generico`, gravado pela carga de categorias) → categoria comercial →
+  "Equipamento". Rede de segurança: nome genérico que contém a marca/modelo do próprio produto não é usado.
+- Nome do ambiente na vista do cliente: sistema montado de kit mostra o ambiente digitado ou o grupo do kit (nunca o nome do kit);
+  marcas do catálogo e modelos da proposta saem do nome. O que está gravado na proposta não muda.
+- Corrigido junto: a vista do cliente quebrava em 1.259 propostas sem `versoes` (já era assim).
+- Carga de categorias agora grava também `tipo_generico` (coluna "tipo" do arquivo, sem marca; "(pelo padrão da marca)"/"(sem
+  regra)" ficam vazios → categoria comercial). HD SkyHawk: estoque Rede, comercial Câmeras.
+- Prova (Base real, só leitura): 1.374 propostas × 4 saídas, marca e modelo de cada produto procurados: 0 vazamentos hoje e depois
+  da carga; 31 exceções com nome (modelo que é palavra genérica, nome do cliente/obra da loja Focal, 1 rascunho sem número) →
+  `cliente-nome-generico-base-real-25-11-2026.xlsx`. Telas internas e totais iguais ao main.
+- A lista ".csv" da tela nova passou a se chamar "Lista interna" (tem marca e modelo).

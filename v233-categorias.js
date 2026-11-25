@@ -52,7 +52,7 @@ const temEtapa=nome=>!!catBase(nome)||!!(typeof FASE_PRODUTO==='object'&&FASE_PR
 const SUB_ACU={etapa:'Acústica',nome:'Acústica'};
 const NOVAS_CATS=[{nome:'Acústica',subetapa:'Acústica',insumo:false},{nome:'Serviços',subetapa:'',servico:true,insumo:false}];
 /* o arquivo põe um HD de vigilância (2 unidades no estoque) em "Serviços": não é serviço — fica com a categoria de estoque de hoje */
-const AJUSTES={p_7mcp7c:{est:null,com:'Câmeras',motivo:'HD de vigilância com unidades no estoque — não é serviço; categoria de estoque mantida, comercial Câmeras (corrigir na Base se preferir outra)'}};
+const AJUSTES={p_7mcp7c:{est:'Rede',com:'Câmeras',motivo:'HD de vigilância (2 unidades no estoque) — não é serviço: estoque Rede, comercial Câmeras (Bruno, 25/11)'}};
 V.AJUSTES=AJUSTES;
 const temEtapaPlan=nome=>temEtapa(nome)||NOVAS_CATS.some(c=>c.nome===nome);
 const ehServico=p=>!!p&&!!(catBase(p.categoria)||{}).servico;
@@ -82,9 +82,10 @@ function plano(){
   const idx=new Map(prods().map(p=>[p.id,p]));const fora=[],nomeDif=[],semEtapa=[],linhas=[];
   D.itens.forEach(r=>{const [id,est0,com,calc,conf,nomeArq]=r;const p=idx.get(id);if(!p){fora.push(r);return}
     const aj=AJUSTES[id];let est=limpaEst(est0),comF=com;if(aj){if(aj.est===null)est=p.categoria||est;else if(aj.est)est=aj.est;if(aj.com)comF=aj.com}
-    const mudaEst=(p.categoria||'')!==est,mudaCom=(p.categoria_comercial||'')!==comF,mudaCalc=(p.conta_como||'')!==(calc||'');
+    const tipoG=r[7]||'';
+    const mudaEst=(p.categoria||'')!==est,mudaCom=(p.categoria_comercial||'')!==comF,mudaCalc=(p.conta_como||'')!==(calc||''),mudaTipo=(p.tipo_generico||'')!==tipoG;
     if(String(p.nome||'').trim()!==String(nomeArq||'').trim())nomeDif.push({id,base:p.nome,arquivo:nomeArq});
-    const L={id,p,est,com:comF,calc:calc||'',conf,mudaEst,mudaCom,mudaCalc,ajuste:aj?aj.motivo:''};
+    const L={id,p,est,com:comF,calc:calc||'',conf,tipoG,mudaEst,mudaCom,mudaCalc,mudaTipo,ajuste:aj?aj.motivo:''};
     if(mudaEst&&!temEtapaPlan(est))semEtapa.push(L);
     linhas.push(L)});
   const noArq=new Set(D.itens.map(r=>r[0]));
@@ -109,18 +110,18 @@ V.simular=function(){
   const P=plano();const antes=fotografa();const bak=new Map();
   const vai=P.linhas.filter(L=>!(L.mudaEst&&!temEtapaPlan(L.est)));
   const criados=estrutura(false);
-  vai.forEach(L=>{bak.set(L.id,[L.p.categoria,L.p.categoria_comercial,L.p.conta_como]);L.p.categoria=L.est;L.p.categoria_comercial=L.com;L.p.conta_como=L.calc});
-  let depois;try{depois=fotografa()}finally{bak.forEach((v,id)=>{const p=get('produtos',id);p.categoria=v[0];if(v[1]===undefined)delete p.categoria_comercial;else p.categoria_comercial=v[1];if(v[2]===undefined)delete p.conta_como;else p.conta_como=v[2]});desfazEstrutura(criados)}
+  vai.forEach(L=>{bak.set(L.id,[L.p.categoria,L.p.categoria_comercial,L.p.conta_como,L.p.tipo_generico]);L.p.categoria=L.est;L.p.categoria_comercial=L.com;L.p.conta_como=L.calc;L.p.tipo_generico=L.tipoG});
+  let depois;try{depois=fotografa()}finally{bak.forEach((v,id)=>{const p=get('produtos',id);p.categoria=v[0];if(v[1]===undefined)delete p.categoria_comercial;else p.categoria_comercial=v[1];if(v[2]===undefined)delete p.conta_como;else p.conta_como=v[2];if(v[3]===undefined)delete p.tipo_generico;else p.tipo_generico=v[3]});desfazEstrutura(criados)}
   const totDif=Object.keys(antes.tot).filter(id=>antes.tot[id]!==depois.tot[id]).map(id=>({id,numero:T(()=>get('propostas',id).numero,''),antes:antes.tot[id],depois:depois.tot[id]}));
   const faseDif=Object.keys(antes.fase).filter(id=>antes.fase[id]!==depois.fase[id]).map(id=>({id,nome:T(()=>get('produtos',id).nome,''),antes:antes.fase[id],depois:depois.fase[id]}));
   /* produtos cuja troca de etapa mexe num total ficam de fora */
   const prodTot=new Set();totDif.forEach(t=>{const p=get('propostas',t.id);T(()=>blocosDe(p),[]).forEach(b=>(b.itens||[]).forEach(l=>{if(faseDif.some(f=>f.id===l.produto_id))prodTot.add(l.produto_id)}))});
-  const grava=vai.filter(L=>(L.mudaEst||L.mudaCom||L.mudaCalc)&&!prodTot.has(L.id));
+  const grava=vai.filter(L=>(L.mudaEst||L.mudaCom||L.mudaCalc||L.mudaTipo)&&!prodTot.has(L.id));
   const porCom={};P.linhas.forEach(L=>porCom[L.com]=(porCom[L.com]||0)+1);
   const R={em:new Date().toISOString(),por:login(),arquivo:D.total,naBase:P.linhas.length,foraDaBase:P.fora.map(r=>({id:r[0],nome:r[5]})),
     semLinhaNoArquivo:P.semLinha.map(p=>({id:p.id,nome:p.nome})),nomeDiferente:P.nomeDif,
     semEtapa:P.semEtapa.map(L=>({id:L.id,nome:L.p.nome,categoria:L.est})),
-    gravar:grava.length,mudaEstoque:grava.filter(L=>L.mudaEst).length,mudaComercial:grava.filter(L=>L.mudaCom).length,mudaContaComo:grava.filter(L=>L.mudaCalc).length,
+    gravar:grava.length,mudaEstoque:grava.filter(L=>L.mudaEst).length,mudaComercial:grava.filter(L=>L.mudaCom).length,mudaContaComo:grava.filter(L=>L.mudaCalc).length,recebemTipo:grava.filter(L=>L.mudaTipo&&L.tipoG).length,
     totaisQueMudariam:totDif,produtosQueMudamDeEtapa:faseDif.length,produtosBarradosPorTotal:[...prodTot],
     porComercial:porCom,somaComercial:Object.values(porCom).reduce((a,b)=>a+b,0),
     estruturaNova:criados.map(x=>x[0]+': '+x[2]),ajustes:P.linhas.filter(L=>L.ajuste).map(L=>({id:L.id,nome:L.p.nome,motivo:L.ajuste})),
@@ -132,7 +133,7 @@ V.simular=function(){
 
 /* arquivo de desfazer: os três campos de todos os produtos, como estão agora */
 V.arquivoDesfazer=function(){
-  const dados={gerado:new Date().toISOString(),por:login(),fonte:'Base › Produtos antes da carga v233',produtos:prods().map(p=>({id:p.id,nome:p.nome,categoria:p.categoria??null,categoria_comercial:p.categoria_comercial??null,conta_como:p.conta_como??null}))};
+  const dados={gerado:new Date().toISOString(),por:login(),fonte:'Base › Produtos antes da carga v233',produtos:prods().map(p=>({id:p.id,nome:p.nome,categoria:p.categoria??null,categoria_comercial:p.categoria_comercial??null,conta_como:p.conta_como??null,tipo_generico:p.tipo_generico??null,apelido:p.apelido??null}))};
   const txt=JSON.stringify(dados);
   try{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([txt],{type:'application/json'}));a.download='SYSTAAG-desfazer-categorias-'+new Date().toISOString().slice(0,16).replace(/[:T]/g,'-')+'.json';document.body.appendChild(a);a.click();a.remove()}catch(e){}
   try{localStorage.setItem('v233:desfazer',txt)}catch(e){}
@@ -155,8 +156,8 @@ V.gravar=async function(){
   for(let i=0;i<ids.length;i+=LOTE){
     const lote=ids.slice(i,i+LOTE);
     lote.forEach(id=>{const p=get('produtos',id);const r=D.itens.find(x=>x[0]===id);if(!p||!r)return;
-      if(p._cat_antes===undefined)p._cat_antes={categoria:p.categoria??null,categoria_comercial:p.categoria_comercial??null,conta_como:p.conta_como??null};
-      const aj=AJUSTES[id];p.categoria=aj&&aj.est===null?(p.categoria||limpaEst(r[1])):limpaEst(r[1]);p.categoria_comercial=aj&&aj.com?aj.com:r[2];p.conta_como=r[3]||'';p.categoria_confianca=r[4]||'';p.categoria_fonte=FONTE;p.atualizado_em=T(()=>today(),'');feitos++});
+      if(p._cat_antes===undefined)p._cat_antes={categoria:p.categoria??null,categoria_comercial:p.categoria_comercial??null,conta_como:p.conta_como??null,tipo_generico:p.tipo_generico??null};
+      const aj=AJUSTES[id];p.categoria=aj&&aj.est===null?(p.categoria||limpaEst(r[1])):(aj&&aj.est?aj.est:limpaEst(r[1]));p.categoria_comercial=aj&&aj.com?aj.com:r[2];p.conta_como=r[3]||'';p.tipo_generico=r[7]||'';p.categoria_confianca=r[4]||'';p.categoria_fonte=FONTE;p.atualizado_em=T(()=>today(),'');feitos++});
     try{log('produtos','v233','Categorias: lote '+(i/LOTE+1)+' — '+lote.length+' produto(s)')}catch(e){}
     try{save()}catch(e){console.error('v233 save',e)}
     V._progresso={feitos,total};rerender();
@@ -175,7 +176,7 @@ V.conferir=function(){
 };
 V.desfazer=function(){
   if(!ehBruno())throw new Error('Só o Bruno desfaz a carga.');let n=0;
-  prods().forEach(p=>{if(p&&p._cat_antes){const a=p._cat_antes;p.categoria=a.categoria;if(a.categoria_comercial==null)delete p.categoria_comercial;else p.categoria_comercial=a.categoria_comercial;if(a.conta_como==null)delete p.conta_como;else p.conta_como=a.conta_como;delete p._cat_antes;delete p.categoria_fonte;delete p.categoria_confianca;n++}});
+  prods().forEach(p=>{if(p&&p._cat_antes){const a=p._cat_antes;p.categoria=a.categoria;if(a.categoria_comercial==null)delete p.categoria_comercial;else p.categoria_comercial=a.categoria_comercial;if(a.conta_como==null)delete p.conta_como;else p.conta_como=a.conta_como;if(a.tipo_generico==null)delete p.tipo_generico;else p.tipo_generico=a.tipo_generico;delete p._cat_antes;delete p.categoria_fonte;delete p.categoria_confianca;n++}});
   const cr=T(()=>S.db.params.v233_cat.criados,null)||T(()=>S.db.params.v233_estrutura.criados,[]);
   cr.forEach(([t,id])=>{if(t==='categorias-flag'){const c=(S.db.categorias||[]).find(x=>x.id===id);if(c){delete c.servico;try{put('categorias',c,'categoria Serviços: marca de serviço retirada (desfazer)')}catch(e){}}return}S.db[t]=(S.db[t]||[]).filter(x=>x.id!==id);try{log(t,id,'desfeito: criado pela carga de categorias')}catch(e){}});
   if(S.db.params)S.db.params.v233_cat={desfeito:new Date().toISOString(),por:login()};try{save()}catch(e){}rerender();return n
