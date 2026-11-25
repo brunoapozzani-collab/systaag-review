@@ -1,14 +1,15 @@
 # Nova proposta dentro do SYSTAAG — registro (25/11/2026)
 
 Pedido do Bruno (BRIEF de 25/11): trocar a tela de proposta pelo rascunho aprovado (claude.ai/artifact/DNf65pDSGqXM8aydKVTuuD),
-sem perder dado, com todo número igual ao Excel. Ramo: `claude/wizardly-euler-gdpndc`. Não publicado (main é do Bruno).
+sem perder dado, com todo número igual ao Excel. Ramo: `claude/wizardly-euler-gdpndc`, rebaseado sobre o main `9d756d6` (v232). Não publicado (main é do Bruno).
+Numeração: as camadas desta entrega são **v233** (categorias) e **v234** (tela nova) — o número v230 já era da camada Focal de outra sessão.
 
 ## O que entrou
 | Arquivo | O que faz |
 |---|---|
-| `v230-categorias.js` | Categoria de estoque (`categoria`) + Categoria comercial (`categoria_comercial`) + `conta_como` por ID. Base › Produtos › **Categorias (estoque e comercial)**: contagem que fecha (produtos = soma das categorias), filtro, edição produto a produto. Carga do arquivo **só pelo Bruno**: 1 Simular → 2 Salvar arquivo de desfazer → 3 Gravar em lotes de 150 (fila da nuvem vazia entre lotes) → conferência; Desfazer usa `_cat_antes`. |
-| `v230-categorias-data.js` | O arquivo `categorias-por-produto.json` (2.128 produtos). Baixado só quando se clica Simular. |
-| `v231-nova-proposta.js` | A tela nova: `#/np` e `#/np/<id>`, só o Bruno vê. Botão "✨ Abrir na tela nova (teste)" no editor de hoje e na lista de Propostas (só para o Bruno). |
+| `v233-categorias.js` (`V233CAT`) | Categoria de estoque (`categoria`) + Categoria comercial (`categoria_comercial`) + `conta_como` por ID. Base › Produtos › **Categorias (estoque e comercial)**: contagem que fecha (produtos = soma das categorias), filtro, edição produto a produto. Carga do arquivo **só pelo Bruno**: 1 Simular → 2 Salvar arquivo de desfazer → 3 Gravar em lotes de 150 (fila da nuvem vazia entre lotes) → conferência; Desfazer usa `_cat_antes`. |
+| `v233-categorias-data.js` | O arquivo `categorias-por-produto.json` (2.128 produtos). Baixado só quando se clica Simular. |
+| `v234-nova-proposta.js` (`NP`) | A tela nova: `#/np` e `#/np/<id>`, só o Bruno vê. Botão "✨ Abrir na tela nova (teste)" no editor de hoje e na lista de Propostas (só para o Bruno). |
 
 ## Como a tela nova garante os mesmos números
 - Nenhum motor novo: todo número vem de `M.resumo/M.equip/M.serv/M.dias/calcXlHtml` (o mesmo do editor de hoje).
@@ -44,3 +45,10 @@ sem perder dado, com todo número igual ao Excel. Ramo: `claude/wizardly-euler-g
    remover e atualizar "Aprender fazendo".
 4. Em aberto (não decidido aqui): duração das etapas P/G (×0,7/×1,4 do rascunho não foi usada — vale o calendário de hoje);
    "conta como" guardado como referência — trocar a receita de um produto muda diárias e totais, fica para a Base.
+
+## Reconferência depois do rebase (25/11/2026, main 9d756d6)
+Base real, cópia local só leitura: 1.374 de 1.374 propostas com o mesmo total (motor e tela), 0 diferenças; 277 vendidas/em obra
+abrem; todo passo abre; 0 escritas ao abrir; o único registro que muda na memória ao abrir (rascunho 344034: `fechamento`) muda igual
+no editor de hoje. Excel: pr_xl R$ 316.880 nas duas telas, editor de hoje 6 ✓ 0 ✗, calculadora 36,68 / 34,37, 84 de 84 linhas.
+Outra pessoa (Renata): Início, Propostas, editor, Base › Produtos, Pipeline, Estoque, Gestão, Obras iguais ao main.
+Nada foi gravado na Base compartilhada; a carga das categorias não foi feita.

@@ -1,5 +1,5 @@
 /* =====================================================================================================
-   v231 · NOVA PROPOSTA — a tela nova de proposta dentro do SYSTAAG (Bruno, 25/11/2026)
+   v234 · NOVA PROPOSTA — a tela nova de proposta dentro do SYSTAAG (Bruno, 25/11/2026)
    Rascunho aprovado: claude.ai/artifact/DNf65pDSGqXM8aydKVTuuD (fluxo e desenho). Regras do Bruno no BRIEF de 25/11.
    Como foi feita (para os números serem os de hoje e baterem com o Excel):
      · NENHUM motor novo: todo número vem de M.resumo / M.equip / M.serv / M.dias / calcXlHtml (o mesmo do editor de hoje,
@@ -8,7 +8,7 @@
        mesma fila para a nuvem). As poucas ações novas (A.npUsarKit, A.npTrocarLinha, A.npOpcao) montam o mesmo formato que
        A.addBloco + A.addLinha montam;
      · kits = os 52 kits da Base (S.db.kits), pelo ID do produto — preço e custo de cada linha vêm do catálogo (Base › Produtos);
-     · produtos filtrados pela Categoria comercial (v230); Focal vende qualquer produto do catálogo;
+     · produtos filtrados pela Categoria comercial (v233); Focal vende qualquer produto do catálogo;
      · diárias: a Contagem da obra só sugere; o que a pessoa digita em cada sistema é o que vale;
      · proposta vendida abre e edita: troca de produto = substituição com preço mantido (A.rtSubst, regra de 12/11: o cliente
        paga o contratado, a diferença de custo vai para a margem, a linha original fica à vista como trocada); item a mais = Ret/Troc;
@@ -17,7 +17,7 @@
    ===================================================================================================== */
 (function(){
 'use strict';
-if(window.__v231)return;window.__v231=true;
+if(window.__v234)return;window.__v234=true;
 if(typeof S==='undefined'||!S.db||typeof SCREENS!=='object')return;
 const NP=window.NP={};
 const T=(f,d)=>{try{const v=f();return v==null?d:v}catch(e){return d}};
@@ -299,7 +299,7 @@ function linhasTab(p,b,vd){const L=b.itens||[];if(!L.length)return '<div class="
   <td class="r">${vd?RS(l.misc||0):`<input class="in" style="width:86px" value="${E(N2(l.misc||0))}" onchange="run(()=>A.setLinha(${J(p.id)},${J(l.id)},'misc',+String(this.value).replace(/\\./g,'').replace(',','.')||0),'Miscelânea da linha')">`}</td>
   <td class="r mono">${RS(linhaTot(l))}</td>
   <td class="r" style="white-space:nowrap">${vd?(sub?'':`<button class="lnk" onclick="rtSubstDialog(${J(p.id)},${J(l.id)})">trocar (preço mantido)</button>`):`<button class="lnk" onclick="NP.trocar(${J(p.id)},${J(l.id)})">trocar</button>`}</td></tr>`}).join('')}</tbody></table>`}
-function addProduto(p,b,modo){const k=b.id;const q=UI.busca[k]||{q:'',c:''};const cats=T(()=>V230CAT.comerciais(),[]);
+function addProduto(p,b,modo){const k=b.id;const q=UI.busca[k]||{q:'',c:''};const cats=T(()=>V233CAT.comerciais(),[]);
  const pre=modo==='cab'?'Cabos e infraestrutura':'';const cc=q.c||(q.q?'':pre);
  const rs=q.q||cc?catalogo(q.q,cc).slice(0,40):[];
  return `<div style="margin-top:10px"><div class="cats">${cats.map(c=>`<button class="${cc===c?'on':''}" onclick="NP.busca(${J(k)},'c',${J(cc===c?'':c)})">${E(c)}</button>`).join('')}</div>
@@ -431,7 +431,7 @@ SCREENS.np=function(arg){css();
  if(!p)return `<div class="np">${arg?'<div class="ccard">Proposta não encontrada.</div>':''}<section class="np-hero" style="padding-bottom:18px"><div class="np-eb">Comercial · Nova proposta</div><h1>Propostas na tela nova</h1><div class="np-pills"><span>Mesmos registros e mesmo motor da tela de hoje · em teste, só o Bruno vê</span></div></section>${lista()}</div>`;
  const s=passoAtual(p);const t=tipoDe(p);
  const corpo={cad:()=>cadastro(p),sis:()=>sistemas(p,'sis'),cab:()=>sistemas(p,'cab'),foc:()=>sistemas(p,'foc'),acu:()=>sistemas(p,'acu'),esc:()=>escopo(p),pv:()=>posvenda(p),plan:()=>plantas(p),val:()=>valores(p),pag:()=>pagamento(p),arq:()=>arquivos(p)}[s];
- let c='';try{c=corpo()}catch(e){console.error('v231',e);c=`<div class="ccard">Este passo não abriu: ${E(e.message)}. A proposta continua na <a href="#/editor/${E(p.id)}">tela de hoje</a>.</div>`}
+ let c='';try{c=corpo()}catch(e){console.error('v234',e);c=`<div class="ccard">Este passo não abriu: ${E(e.message)}. A proposta continua na <a href="#/editor/${E(p.id)}">tela de hoje</a>.</div>`}
  const lado=['cad','pag','arq'].includes(s)?'':meter(p);
  return `<div class="np">${hero(p)}${steps(p)}<div class="${lado?'np-grid':''}"><div>${c}${navbar(p)}</div>${lado}</div></div>`};
 
