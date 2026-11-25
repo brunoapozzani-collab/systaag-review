@@ -86,8 +86,9 @@ if(!foto){
   if(mao){
     var p0=Math.min(.96,Math.max(0,mao.p)),EB=mao.EB,dec=Math.max(0,performance.now()-mao.t);
     if(nn&&mao.nome)nn.textContent=mao.nome;
-    var st2=document.createElement('style');st2.textContent='@keyframes v226b{from{transform:scaleX('+p0.toFixed(4)+')}to{transform:scaleX(.97)}}';el.appendChild(st2);
-    if(b)b.style.cssText='display:block;height:100%;width:100%;background:#0071e3;border-radius:999px;transform-origin:0 50%;transform:scaleX('+p0.toFixed(4)+');animation:v226b '+EB+'ms cubic-bezier(.3,.6,.4,1) -'+Math.round(dec)+'ms forwards';
+    /* v229: se a porta de entrada já deixou a barra a andar no quadro pintado, não se mexe nela */
+    if(!mao.pintada){var st2=document.createElement('style');st2.textContent='@keyframes v226b{from{transform:scaleX('+p0.toFixed(4)+')}to{transform:scaleX(.97)}}';el.appendChild(st2)}
+    if(b&&!mao.pintada)b.style.cssText='display:block;height:100%;width:100%;background:#0071e3;border-radius:999px;transform-origin:0 50%;transform:scaleX('+p0.toFixed(4)+');animation:v226b '+EB+'ms cubic-bezier(.3,.6,.4,1) -'+Math.round(dec)+'ms forwards';
     var diz=function(){if(!el||!tx)return;var t=performance.now()-mao.t,rest=EB-t,q=Math.min(.97,p0+(.97-p0)*Math.min(1,t/EB));
       tx.textContent=Math.round(q*100)+'% · '+(rest<=600?'quase lá…':'faltam cerca de '+Math.ceil(rest/1000)+' s')};
     diz();var tmd=setInterval(function(){if(!el){clearInterval(tmd);return}diz()},200)}

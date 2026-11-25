@@ -109,6 +109,13 @@ function abreApp(){return appP.then(function(h){try{if(window.__V195)window.__V1
   var corte=h.indexOf('<!--ABRINDO-->');
   if(corte<0){document.write(h);document.close();return}
   document.write(h.slice(0,corte));
+  /* v229 (25/11/2026): a barra da tela "Montando as telas" tem de estar no quadro que o navegador pinta AGORA — enquanto o sistema
+     se monta a página não é repintada (medido num computador novo, com o Bruno: 4,4 s de barra vazia e sem tempo). A animação
+     da barra corre fora da thread principal; o texto fica com o tempo que falta neste instante. */
+  try{var mo=window.__CARGA&&window.__CARGA.mao;if(mo){var bi=document.querySelector('#abrindo-sistema i'),tt=document.getElementById('v226t'),nn=document.getElementById('v226n'),p0=Math.min(.96,Math.max(0,mo.p));
+    if(bi){var sx=document.createElement('style');sx.textContent='@keyframes v226b{from{transform:scaleX('+p0.toFixed(4)+')}to{transform:scaleX(.97)}}';bi.parentNode.parentNode.appendChild(sx);
+      bi.style.cssText='display:block;height:100%;width:100%;background:#0071e3;border-radius:999px;transform-origin:0 50%;transform:scaleX('+p0.toFixed(4)+');will-change:transform;animation:v226b '+mo.EB+'ms cubic-bezier(.3,.6,.4,1) forwards';mo.pintada=1}
+    if(tt)tt.textContent=Math.round(p0*100)+'% · '+window.__CARGA.frase(mo.EB);if(nn&&mo.nome)nn.textContent=mo.nome}}catch(e){}
   return new Promise(function(ok){var feito=false,fim=function(){if(feito)return;feito=true;ok()};
     try{requestAnimationFrame(function(){requestAnimationFrame(function(){window.__abrindoPintada=Date.now();fim()})})}catch(e){fim()}
     setTimeout(fim,700)}).then(function(){MK('L:escreve2');document.write(h.slice(corte));document.close()})})}
