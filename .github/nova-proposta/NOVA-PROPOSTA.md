@@ -52,3 +52,19 @@ abrem; todo passo abre; 0 escritas ao abrir; o único registro que muda na memó
 no editor de hoje. Excel: pr_xl R$ 316.880 nas duas telas, editor de hoje 6 ✓ 0 ✗, calculadora 36,68 / 34,37, 84 de 84 linhas.
 Outra pessoa (Renata): Início, Propostas, editor, Base › Produtos, Pipeline, Estoque, Gestão, Obras iguais ao main.
 Nada foi gravado na Base compartilhada; a carga das categorias não foi feita.
+
+## 25/11/2026 (noite) — regras do Bruno para os 49 que ficavam de fora (v233c)
+- Produção conferida: `main` d460617 (merge do PR #5) no ar no Vercel, serve v233/v234; numa cópia do mesmo código com a Base
+  real, a tela nova abre para o Bruno e mostra "só o Bruno vê" para a Renata (sem botão no editor).
+- **Acústica**: a carga cria a etapa de obra "Acústica" (grupo próprio) e a categoria de estoque "Acústica" apontando para ela;
+  `__faseDaSub` devolve "acústica" para esse grupo → Operação mostra o grupo Acústica na proposta. Data de necessidade: etapa
+  Acústica da obra; em obra antiga, a etapa onde a acústica já era feita (caixas acústicas, depois equipamentos) — 7 de 7 linhas
+  acústicas vendidas ficam com a mesma data.
+- **Serviços**: a carga cria a categoria "Serviços" marcada `servico:true`, sem etapa; produto de categoria de serviço fica sem
+  etapa (`__faseDe` → "serviço (sem etapa)") e fora da demanda de estoque (`Q.demanda`). Os 11 serviços (diárias, visita, programação).
+- **Ajuste ao arquivo**: p_7mcp7c (HD SkyHawk, 2 unidades no estoque) estava como Serviços no arquivo — fica com a categoria de
+  estoque de hoje (Outros) e comercial Câmeras.
+- Nada disso age antes da carga (a etapa e as categorias só nascem no Gravar do Bruno). Desfazer apaga os 3 registros criados.
+- Simulação na Base real: 2.128 a gravar, 0 de fora, 525 mudam de etapa, 0 totais mudam, demanda de estoque 949 → 949.
+- Ensaio da gravação numa cópia local (trava de só leitura + rede bloqueada para escrita): 2.128 gravados, conferência 2.128/2.128,
+  0 totais mudam; Desfazer devolve os 2.128 e tira a etapa e as 2 categorias. 0 pedidos de escrita chegaram à rede.

@@ -42,15 +42,50 @@ V.estoques=()=>{const s=new Set((S.db.categorias||[]).map(c=>c.nome));prods().fo
 const catBase=nome=>(S.db.categorias||[]).find(c=>c.nome===nome)||null;
 const temEtapa=nome=>!!catBase(nome)||!!(typeof FASE_PRODUTO==='object'&&FASE_PRODUTO&&FASE_PRODUTO[nome]);
 
+/* ───── Regras do Bruno (25/11, tarde) para os produtos que ficavam de fora ─────
+   1) Acústica: etapa de obra nova "Acústica" (grupo próprio em Operação) e categoria de estoque "Acústica" apontando para ela —
+      os produtos acústicos aparecem na etapa deles em Operação e Estoque. Proposta de acústica continua precificada e importada do Acoustaag.
+   2) Serviços: diárias e visitas ficam na lista de produtos, categoria "Serviços" marcada como serviço: sem estoque (não entram na
+      demanda de separação/compra) e sem etapa de instalação — propostas antigas que usam esses itens continuam funcionando. Diárias de
+      proposta nova continuam vindo da calculadora.
+   A etapa e as duas categorias só nascem na carga (botão Gravar do Bruno); até lá as regras abaixo não mudam nada. */
+const SUB_ACU={etapa:'Acústica',nome:'Acústica'};
+const NOVAS_CATS=[{nome:'Acústica',subetapa:'Acústica',insumo:false},{nome:'Serviços',subetapa:'',servico:true,insumo:false}];
+/* o arquivo põe um HD de vigilância (2 unidades no estoque) em "Serviços": não é serviço — fica com a categoria de estoque de hoje */
+const AJUSTES={p_7mcp7c:{est:null,com:'Câmeras',motivo:'HD de vigilância com unidades no estoque — não é serviço; categoria de estoque mantida, comercial Câmeras (corrigir na Base se preferir outra)'}};
+V.AJUSTES=AJUSTES;
+const temEtapaPlan=nome=>temEtapa(nome)||NOVAS_CATS.some(c=>c.nome===nome);
+const ehServico=p=>!!p&&!!(catBase(p.categoria)||{}).servico;
+V.ehServico=ehServico;
+/* motor: etapa do grupo "Acústica" → fase "acústica"; categoria de serviço → sem etapa e fora da demanda de estoque */
+if(typeof window.__faseDaSub==='function'&&!window.__faseDaSub.__v233){const f=window.__faseDaSub;window.__faseDaSub=function(sub){const x=(S.db.subetapas||[]).find(s=>s&&s.nome===sub&&!s._apagado);if(x&&x.etapa===SUB_ACU.etapa)return 'acústica';return f.apply(this,arguments)};window.__faseDaSub.__v233=1}
+if(typeof window.__faseDe==='function'&&!window.__faseDe.__v233){const f=window.__faseDe;window.__faseDe=function(pid){const p=T(()=>get('produtos',pid),null);if(ehServico(p))return 'serviço (sem etapa)';return f.apply(this,arguments)};window.__faseDe.__v233=1}
+if(typeof Q==='object'&&Q){
+ if(typeof Q.demanda==='function'&&!Q.demanda.__v233){const f=Q.demanda;Q.demanda=function(){const r=f.apply(Q,arguments);if(!(S.db.categorias||[]).some(c=>c&&c.servico))return r;return r.filter(d=>!ehServico(T(()=>get('produtos',d.pid),null)))};Q.demanda.__v233=1}
+ if(typeof Q.needDate==='function'&&!Q.needDate.__v233){const f=Q.needDate;Q.needDate=function(pr,pid){const r=f.apply(Q,arguments);if(r)return r;
+   try{if(__faseDe(pid)!=='acústica')return r;const p=get('propostas',pr);const o=p.obra_id?get('obras',p.obra_id):null;/* obra que já tem a etapa Acústica usa a data dela; obra antiga (sem essa etapa) usa a data da etapa onde a acústica já era feita */
+     for(const nm of [SUB_ACU.nome,'Instalações de caixas acústicas','Instalação de equipamentos']){const et=o&&(o.etapas||[]).find(e=>e.subetapa===nm);if(et&&et.ini)return et.ini}
+     const cal=(o&&o.previsao)||(p.inicio?M.calendario(p):null);return cal?((cal.find(x=>x.k==='instalacao')||{}).ini||''):''}catch(e){return r}};Q.needDate.__v233=1}
+}
+/* cria (ou só lista, se já existem) a etapa e as categorias novas; devolve o que criou para poder desfazer */
+function estrutura(gravar){const criados=[];
+ S.db.subetapas=S.db.subetapas||[];S.db.categorias=S.db.categorias||[];
+ if(!S.db.subetapas.some(x=>x&&x.nome===SUB_ACU.nome&&!x._apagado)){const r={id:uid('sub'),etapa:SUB_ACU.etapa,nome:SUB_ACU.nome};if(gravar)put('subetapas',r,'etapa de obra nova: Acústica');else S.db.subetapas.push(r);criados.push(['subetapas',r.id,r.nome])}
+ NOVAS_CATS.forEach(c=>{const ex=catBase(c.nome);if(ex){if(c.servico&&!ex.servico){if(gravar){ex.servico=true;put('categorias',ex,'categoria Serviços marcada como serviço')}else{ex.servico=true;criados.push(['categorias-flag',ex.id,ex.nome])}}return}
+  const r=Object.assign({id:uid('cat'),inativo:false},c);if(gravar)put('categorias',r,'categoria de estoque nova: '+c.nome);else S.db.categorias.push(r);criados.push(['categorias',r.id,r.nome])});
+ return criados}
+function desfazEstrutura(criados){criados.forEach(([t,id])=>{if(t==='categorias-flag'){const c=(S.db.categorias||[]).find(x=>x.id===id);if(c)delete c.servico;return}S.db[t]=(S.db[t]||[]).filter(x=>x.id!==id)})}
+V.estruturaPlanejada=()=>({etapa:SUB_ACU,categorias:NOVAS_CATS});
+
 /* ───── o plano: o que o arquivo pede, contra a Base de agora ───── */
 function plano(){
   const idx=new Map(prods().map(p=>[p.id,p]));const fora=[],nomeDif=[],semEtapa=[],linhas=[];
   D.itens.forEach(r=>{const [id,est0,com,calc,conf,nomeArq]=r;const p=idx.get(id);if(!p){fora.push(r);return}
-    const est=limpaEst(est0);
-    const mudaEst=(p.categoria||'')!==est,mudaCom=(p.categoria_comercial||'')!==com,mudaCalc=(p.conta_como||'')!==(calc||'');
+    const aj=AJUSTES[id];let est=limpaEst(est0),comF=com;if(aj){if(aj.est===null)est=p.categoria||est;else if(aj.est)est=aj.est;if(aj.com)comF=aj.com}
+    const mudaEst=(p.categoria||'')!==est,mudaCom=(p.categoria_comercial||'')!==comF,mudaCalc=(p.conta_como||'')!==(calc||'');
     if(String(p.nome||'').trim()!==String(nomeArq||'').trim())nomeDif.push({id,base:p.nome,arquivo:nomeArq});
-    const L={id,p,est,com,calc:calc||'',conf,mudaEst,mudaCom,mudaCalc};
-    if(mudaEst&&!temEtapa(est))semEtapa.push(L);
+    const L={id,p,est,com:comF,calc:calc||'',conf,mudaEst,mudaCom,mudaCalc,ajuste:aj?aj.motivo:''};
+    if(mudaEst&&!temEtapaPlan(est))semEtapa.push(L);
     linhas.push(L)});
   const noArq=new Set(D.itens.map(r=>r[0]));
   const semLinha=prods().filter(p=>p&&!noArq.has(p.id));
@@ -65,15 +100,17 @@ function fotografa(){
   try{copia.forEach(p=>{if(p._apagado)return;tot[p.id]=T(()=>Math.round(M.resumo(p).tot*100)/100,null)})}
   finally{S.db.propostas=real}
   const fase={};prods().forEach(p=>{fase[p.id]=T(()=>__faseDe(p.id),'')});
-  return {tot,fase}
+  const dem=T(()=>Q.demanda().length,null);
+  return {tot,fase,dem}
 }
 /* simular: aplica em memória, mede, volta tudo — devolve o que mudaria e o que fica de fora */
 V.simular=function(){
   if(!D.itens.length)throw new Error('Carregue o arquivo antes: V233CAT.carrega()');
   const P=plano();const antes=fotografa();const bak=new Map();
-  const vai=P.linhas.filter(L=>!(L.mudaEst&&!temEtapa(L.est)));
+  const vai=P.linhas.filter(L=>!(L.mudaEst&&!temEtapaPlan(L.est)));
+  const criados=estrutura(false);
   vai.forEach(L=>{bak.set(L.id,[L.p.categoria,L.p.categoria_comercial,L.p.conta_como]);L.p.categoria=L.est;L.p.categoria_comercial=L.com;L.p.conta_como=L.calc});
-  let depois;try{depois=fotografa()}finally{bak.forEach((v,id)=>{const p=get('produtos',id);p.categoria=v[0];if(v[1]===undefined)delete p.categoria_comercial;else p.categoria_comercial=v[1];if(v[2]===undefined)delete p.conta_como;else p.conta_como=v[2]})}
+  let depois;try{depois=fotografa()}finally{bak.forEach((v,id)=>{const p=get('produtos',id);p.categoria=v[0];if(v[1]===undefined)delete p.categoria_comercial;else p.categoria_comercial=v[1];if(v[2]===undefined)delete p.conta_como;else p.conta_como=v[2]});desfazEstrutura(criados)}
   const totDif=Object.keys(antes.tot).filter(id=>antes.tot[id]!==depois.tot[id]).map(id=>({id,numero:T(()=>get('propostas',id).numero,''),antes:antes.tot[id],depois:depois.tot[id]}));
   const faseDif=Object.keys(antes.fase).filter(id=>antes.fase[id]!==depois.fase[id]).map(id=>({id,nome:T(()=>get('produtos',id).nome,''),antes:antes.fase[id],depois:depois.fase[id]}));
   /* produtos cuja troca de etapa mexe num total ficam de fora */
@@ -85,7 +122,11 @@ V.simular=function(){
     semEtapa:P.semEtapa.map(L=>({id:L.id,nome:L.p.nome,categoria:L.est})),
     gravar:grava.length,mudaEstoque:grava.filter(L=>L.mudaEst).length,mudaComercial:grava.filter(L=>L.mudaCom).length,mudaContaComo:grava.filter(L=>L.mudaCalc).length,
     totaisQueMudariam:totDif,produtosQueMudamDeEtapa:faseDif.length,produtosBarradosPorTotal:[...prodTot],
-    porComercial:porCom,somaComercial:Object.values(porCom).reduce((a,b)=>a+b,0)};
+    porComercial:porCom,somaComercial:Object.values(porCom).reduce((a,b)=>a+b,0),
+    estruturaNova:criados.map(x=>x[0]+': '+x[2]),ajustes:P.linhas.filter(L=>L.ajuste).map(L=>({id:L.id,nome:L.p.nome,motivo:L.ajuste})),
+    servicos:vai.filter(L=>L.est==='Serviços').map(L=>({id:L.id,nome:L.p.nome})),acustica:vai.filter(L=>L.est==='Acústica').length,
+    etapas:(()=>{const c={};faseDif.forEach(f=>{const k=(f.antes||'—')+' → '+(f.depois||'—');c[k]=(c[k]||0)+1});return c})(),
+    demandaEstoque:{antes:antes.dem,depois:depois.dem}};
   V._sim=R;V._grava=grava.map(L=>L.id);return R
 };
 
@@ -108,17 +149,20 @@ V.gravar=async function(){
   if(!V._sim||!V._grava)throw new Error('Simule antes de gravar.');
   if(!V._desfazerOk)throw new Error('Salve o arquivo de desfazer antes de gravar.');
   const ids=V._grava.slice();const total=ids.length;let feitos=0;
+  const criados=estrutura(true);try{save()}catch(e){}
+  S.db.params=S.db.params||{};S.db.params.v233_estrutura={em:new Date().toISOString(),por:login(),criados};
+  for(let k=0;k<60&&fila()>0;k++)await espera(1000);
   for(let i=0;i<ids.length;i+=LOTE){
     const lote=ids.slice(i,i+LOTE);
     lote.forEach(id=>{const p=get('produtos',id);const r=D.itens.find(x=>x[0]===id);if(!p||!r)return;
       if(p._cat_antes===undefined)p._cat_antes={categoria:p.categoria??null,categoria_comercial:p.categoria_comercial??null,conta_como:p.conta_como??null};
-      p.categoria=limpaEst(r[1]);p.categoria_comercial=r[2];p.conta_como=r[3]||'';p.categoria_confianca=r[4]||'';p.categoria_fonte=FONTE;p.atualizado_em=T(()=>today(),'');feitos++});
+      const aj=AJUSTES[id];p.categoria=aj&&aj.est===null?(p.categoria||limpaEst(r[1])):limpaEst(r[1]);p.categoria_comercial=aj&&aj.com?aj.com:r[2];p.conta_como=r[3]||'';p.categoria_confianca=r[4]||'';p.categoria_fonte=FONTE;p.atualizado_em=T(()=>today(),'');feitos++});
     try{log('produtos','v233','Categorias: lote '+(i/LOTE+1)+' — '+lote.length+' produto(s)')}catch(e){}
     try{save()}catch(e){console.error('v233 save',e)}
     V._progresso={feitos,total};rerender();
     for(let k=0;k<120&&fila()>0;k++)await espera(1000);
     await espera(400)}
-  S.db.params=S.db.params||{};S.db.params.v233_cat={em:new Date().toISOString(),por:login(),gravados:feitos,fonte:FONTE};
+  S.db.params.v233_cat={em:new Date().toISOString(),por:login(),gravados:feitos,fonte:FONTE,criados};
   try{save()}catch(e){}
   const C=V.conferir();rerender();return {gravados:feitos,conferencia:C}
 };
@@ -132,6 +176,8 @@ V.conferir=function(){
 V.desfazer=function(){
   if(!ehBruno())throw new Error('Só o Bruno desfaz a carga.');let n=0;
   prods().forEach(p=>{if(p&&p._cat_antes){const a=p._cat_antes;p.categoria=a.categoria;if(a.categoria_comercial==null)delete p.categoria_comercial;else p.categoria_comercial=a.categoria_comercial;if(a.conta_como==null)delete p.conta_como;else p.conta_como=a.conta_como;delete p._cat_antes;delete p.categoria_fonte;delete p.categoria_confianca;n++}});
+  const cr=T(()=>S.db.params.v233_cat.criados,null)||T(()=>S.db.params.v233_estrutura.criados,[]);
+  cr.forEach(([t,id])=>{if(t==='categorias-flag'){const c=(S.db.categorias||[]).find(x=>x.id===id);if(c){delete c.servico;try{put('categorias',c,'categoria Serviços: marca de serviço retirada (desfazer)')}catch(e){}}return}S.db[t]=(S.db[t]||[]).filter(x=>x.id!==id);try{log(t,id,'desfeito: criado pela carga de categorias')}catch(e){}});
   if(S.db.params)S.db.params.v233_cat={desfeito:new Date().toISOString(),por:login()};try{save()}catch(e){}rerender();return n
 };
 /* edição produto a produto (qualquer pessoa com acesso à Base) */
@@ -180,7 +226,10 @@ function painel(){
       <br>Fora da carga — categoria de estoque sem etapa em Base › Categorias: <b>${N0(sim.semEtapa.length)}</b>${sim.semEtapa.length?' ('+[...new Set(sim.semEtapa.map(x=>x.categoria))].map(E).join(', ')+')':''}
       · no arquivo e não na Base: ${N0(sim.foraDaBase.length)}${sim.foraDaBase.length?' ('+sim.foraDaBase.slice(0,8).map(x=>E(x.id)).join(', ')+')':''}
       · na Base e não no arquivo: ${N0(sim.semLinhaNoArquivo.length)}${sim.semLinhaNoArquivo.length?' ('+sim.semLinhaNoArquivo.slice(0,8).map(x=>E(x.id)+' '+E(x.nome)).join(', ')+')':''}
-      · nome diferente do arquivo: ${N0(sim.nomeDiferente.length)}</div>`:''}
+      · nome diferente do arquivo: ${N0(sim.nomeDiferente.length)}
+      ${(sim.estruturaNova||[]).length?`<br>A carga cria antes dos produtos: <b>${sim.estruturaNova.map(E).join(' · ')}</b> (etapa de obra "Acústica" e categorias de estoque "Acústica" e "Serviços" — esta marcada como serviço: sem estoque, sem etapa)`:''}
+      ${sim.servicos?`<br>Serviços (sem estoque, sem etapa): ${N0(sim.servicos.length)} · Acústica: ${N0(sim.acustica)} · linhas de demanda de estoque: ${N0(sim.demandaEstoque&&sim.demandaEstoque.antes)} → ${N0(sim.demandaEstoque&&sim.demandaEstoque.depois)}`:''}
+      ${(sim.ajustes||[]).length?`<br>Ajuste ao arquivo: ${sim.ajustes.map(a=>E(a.nome)+' — '+E(a.motivo)).join(' · ')}`:''}</div>`:''}
   </div>`;
   return `<div class="card p-3 mb-3" id="v233-cat" style="border-left:4px solid #2563EB">
    <div class="d-flex justify-content-between align-items-start flex-wrap gap-2"><div><b><i class="bi bi-tags me-1"></i>Categorias dos produtos</b>
