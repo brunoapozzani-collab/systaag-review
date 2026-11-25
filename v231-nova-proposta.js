@@ -322,7 +322,9 @@ function diasTab(p,b,ef){const adj=b.servicos_adj||{};const av=(b.serv_linhas||[
  ${vd?'':`<div style="margin-top:6px;display:flex;gap:6px;align-items:center;flex-wrap:wrap"><span style="font-size:12px;color:#64748b">Miscelânea de mão de obra deste sistema:</span><input class="in wide" style="max-width:220px" id="np-av-n-${E(b.id)}" placeholder="descrição"><input class="in" id="np-av-v-${E(b.id)}" placeholder="R$"><button class="btn2" onclick="run(()=>A.addAvulso(${J(p.id)},${J(b.id)},document.getElementById('np-av-n-${E(b.id)}').value,+String(document.getElementById('np-av-v-${E(b.id)}').value).replace(/\\./g,'').replace(',','.')),'Miscelânea lançada')">lançar</button>
  <button class="btn2" onclick="run(()=>A.completarMiscBloco(${J(p.id)},${J(b.id)}),'Mão de obra completada até o alvo')">completar até ${E(T(()=>S.db.params.serv_alvo_pct,20))}% dos equip.</button></div>`}</div>`}
 /* Contagem da obra: a calculadora SERVIÇOS do Excel (a mesma do editor de hoje) — só sugere */
-function contagemCard(p){const C=T(()=>calcXlHtml(p),null);if(!C)return '';const k='cont:'+p.id;const ab=!!UI.aberto[k];
+/* abrir não grava: se a proposta ainda não tinha a calculadora, a calculadora vazia criada só para desenhar sai de novo */
+const semCalc=c=>!c||(!Object.keys(c.cont||{}).length&&!Object.keys(c.forced||{}).length);
+function contagemCard(p){const tinha=Object.prototype.hasOwnProperty.call(p,'calc_xl');const C=T(()=>calcXlHtml(p),null);if(!tinha&&semCalc(p.calc_xl))delete p.calc_xl;if(!C)return '';const k='cont:'+p.id;const ab=!!UI.aberto[k];
  const d=T(()=>M.dias(p),{});const tot=C.tot||{};
  return `<div class="ccard" style="border-left:4px solid #16a34a"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><div><b>🧮 Contagem da obra</b> <span style="font-size:12px;color:#64748b">— calculadora SERVIÇOS do Excel; só sugere, o que vale é o digitado em cada sistema</span></div><button class="btn2" onclick="NP.toggle('${k}')">${ab?'fechar':'abrir a calculadora'}</button></div>
  <table class="t" style="margin-top:8px"><thead><tr><th></th>${DISC.map(x=>`<th class="r">${E(RATE[x].lb)}</th>`).join('')}<th class="r">Total</th></tr></thead><tbody>
@@ -361,11 +363,11 @@ function posvenda(p){const R=numeros(p).R;return intro('Atendimento','Proposta d
 
 /* ───── 3. PLANTAS ───── */
 function planta(p){const o=p.obra_id?T(()=>get('obras',p.obra_id),null):null;return ((o&&o.prj_files)||[]).filter(f=>f&&!f._apagado)}
-function plantas(p){const o=p.obra_id?T(()=>get('obras',p.obra_id),null):null;const fs=planta(p);const d=T(()=>diagDe(p),null);
+function plantas(p){const o=p.obra_id?T(()=>get('obras',p.obra_id),null):null;const fs=planta(p);const d=(S.db.prevendas_diag||[]).find(x=>x.proposta_id===p.id)||{status:'A fazer',rev:'',arquivos:[],_novo:true};
  return intro('Plantas','Onde cada coisa fica. Os arquivos sobem para a obra (os mesmos que o Projetos vê em Projetos › Arquivos).')+
  `<div class="ccard">${o?`<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><button class="btn2 pri" onclick="upload97('obra',${J(o.id)},{ent:'Planta de forro'})">⬆ Subir planta</button><button class="btn2" onclick="upload97('obra',${J(o.id)},{ent:'Estudo de pontos'})">⬆ Subir estudo de pontos</button><span style="font-size:12px;color:#64748b">Obra ${E(o.numero||'')} · ${E(o.nome)}</span></div>
  <table class="t" style="margin-top:10px"><thead><tr><th>Arquivo</th><th>Entregável</th><th>Rev.</th><th>Data</th><th>Quem</th></tr></thead><tbody>${fs.map(f=>`<tr><td>${E(f.nome)}</td><td>${E(f.entregavel||'')}</td><td>${E(f.rev||'')}</td><td>${E(f.data||'')}</td><td>${E(f.por||'')}</td></tr>`).join('')||'<tr><td colspan="5" style="color:#64748b">nenhum arquivo ainda</td></tr>'}</tbody></table>`:'<div>Sem obra: escolha a obra no Cadastro para subir plantas.</div>'}</div>`+
- (d?`<div class="ccard"><b>Diagrama de equipamentos (pré-vendas)</b> · status <span class="chipc">${E(d.status||'A fazer')}</span> ${d.rev?'· '+E(d.rev):''} <button class="btn2" style="margin-left:8px" onclick="upload97('diag',${J(p.id)})">⬆ subir diagrama</button>
+ (d?`<div class="ccard"><b>Diagrama de equipamentos (pré-vendas)</b> · status <span class="chipc">${E(d.status||'A fazer')}</span> ${d.rev?'· '+E(d.rev):''} <button class="btn2" style="margin-left:8px" onclick="diagDe(get('propostas',${J(p.id)}));upload97('diag',${J(p.id)})">⬆ subir diagrama</button>
  <div style="font-size:12px;color:#64748b;margin-top:4px">${(d.arquivos||[]).map(f=>E(f.nome)).join(' · ')||'sem arquivo'}</div></div>`:'')}
 
 /* ───── 4. VALORES E MARGEM ───── */
