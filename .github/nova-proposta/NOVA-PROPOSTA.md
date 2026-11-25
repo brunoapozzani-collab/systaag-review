@@ -52,3 +52,35 @@ abrem; todo passo abre; 0 escritas ao abrir; o único registro que muda na memó
 no editor de hoje. Excel: pr_xl R$ 316.880 nas duas telas, editor de hoje 6 ✓ 0 ✗, calculadora 36,68 / 34,37, 84 de 84 linhas.
 Outra pessoa (Renata): Início, Propostas, editor, Base › Produtos, Pipeline, Estoque, Gestão, Obras iguais ao main.
 Nada foi gravado na Base compartilhada; a carga das categorias não foi feita.
+
+## 25/11/2026 (noite) — regras do Bruno para os 49 que ficavam de fora (v233c)
+- Produção conferida: `main` d460617 (merge do PR #5) no ar no Vercel, serve v233/v234; numa cópia do mesmo código com a Base
+  real, a tela nova abre para o Bruno e mostra "só o Bruno vê" para a Renata (sem botão no editor).
+- **Acústica**: a carga cria a etapa de obra "Acústica" (grupo próprio) e a categoria de estoque "Acústica" apontando para ela;
+  `__faseDaSub` devolve "acústica" para esse grupo → Operação mostra o grupo Acústica na proposta. Data de necessidade: etapa
+  Acústica da obra; em obra antiga, a etapa onde a acústica já era feita (caixas acústicas, depois equipamentos) — 7 de 7 linhas
+  acústicas vendidas ficam com a mesma data.
+- **Serviços**: a carga cria a categoria "Serviços" marcada `servico:true`, sem etapa; produto de categoria de serviço fica sem
+  etapa (`__faseDe` → "serviço (sem etapa)") e fora da demanda de estoque (`Q.demanda`). Os 11 serviços (diárias, visita, programação).
+- **Ajuste ao arquivo**: p_7mcp7c (HD SkyHawk, 2 unidades no estoque) estava como Serviços no arquivo — fica com a categoria de
+  estoque de hoje (Outros) e comercial Câmeras.
+- Nada disso age antes da carga (a etapa e as categorias só nascem no Gravar do Bruno). Desfazer apaga os 3 registros criados.
+- Simulação na Base real: 2.128 a gravar, 0 de fora, 525 mudam de etapa, 0 totais mudam, demanda de estoque 949 → 949.
+- Ensaio da gravação numa cópia local (trava de só leitura + rede bloqueada para escrita): 2.128 gravados, conferência 2.128/2.128,
+  0 totais mudam; Desfazer devolve os 2.128 e tira a etapa e as 2 categorias. 0 pedidos de escrita chegaram à rede.
+
+## 25/11/2026 (noite, 2) — o cliente só vê o nome genérico (v235)
+- Regra do Bruno: tudo o que o cliente vê (modo cliente no editor de hoje e na tela nova, o link do cliente e o PDF — a mesma vista,
+  impressa — e a apresentação .pptx) mostra só o nome genérico e a quantidade; nunca marca nem modelo; fotos ficam; telas internas
+  com o nome real.
+- `nomeCliente(produto)`: nome genérico → tipo (`tipo_generico`, gravado pela carga de categorias) → categoria comercial →
+  "Equipamento". Rede de segurança: nome genérico que contém a marca/modelo do próprio produto não é usado.
+- Nome do ambiente na vista do cliente: sistema montado de kit mostra o ambiente digitado ou o grupo do kit (nunca o nome do kit);
+  marcas do catálogo e modelos da proposta saem do nome. O que está gravado na proposta não muda.
+- Corrigido junto: a vista do cliente quebrava em 1.259 propostas sem `versoes` (já era assim).
+- Carga de categorias agora grava também `tipo_generico` (coluna "tipo" do arquivo, sem marca; "(pelo padrão da marca)"/"(sem
+  regra)" ficam vazios → categoria comercial). HD SkyHawk: estoque Rede, comercial Câmeras.
+- Prova (Base real, só leitura): 1.374 propostas × 4 saídas, marca e modelo de cada produto procurados: 0 vazamentos hoje e depois
+  da carga; 31 exceções com nome (modelo que é palavra genérica, nome do cliente/obra da loja Focal, 1 rascunho sem número) →
+  `cliente-nome-generico-base-real-25-11-2026.xlsx`. Telas internas e totais iguais ao main.
+- A lista ".csv" da tela nova passou a se chamar "Lista interna" (tem marca e modelo).
