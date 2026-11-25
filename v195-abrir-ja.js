@@ -61,8 +61,22 @@ function leIdx(){try{var a=JSON.parse(LS.getItem(IDX)||'[]');return Array.isArra
    última cópia. Medido no Mac do Bruno: refazer custava 60–73 ms (o desenho de fundo convertido em imagem) a CADA recarga,
    antes de a página nova poder começar. */
 var _sigF='';
+/* v228 (25/11/2026): O DIA VIROU COM A ABA ABERTA
+   Achado no placar (2ª "diferente"): a aba ficou aberta de 23 para 25/11 com o Mac a dormir. Ao acordar, a tela ainda mostrava
+   os números do dia 23 (3 ações nos 7 dias, 31 atrasadas), mas a conferência de 20 s viu "o dia mudou" e refez a cópia dessa
+   tela velha com a marca de hoje — a abertura seguinte mostrou-a como exata, e os números pularam para 1 e 33.
+   Agora: (1) a cópia nunca é tirada de uma tela desenhada noutro dia; (2) quando o dia vira com a aba aberta, a tela é
+   redesenhada (se ninguém estiver a escrever nem com uma janela aberta) — e só então copiada. */
+function diaHoje(){var d=new Date();return d.getFullYear()+'-'+d.getMonth()+'-'+d.getDate()}
+var _diaTela=diaHoje();
+function viraDia(){try{if(window.__BOOT||!window.__v172pronto||document.hidden||diaHoje()===_diaTela)return;
+  var a=document.activeElement;if(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName))return;if(a&&a.isContentEditable)return;
+  var mr=document.getElementById('modalRoot');if(mr&&mr.children.length)return;
+  if(typeof window.render!=='function')return;
+  _diaTela=diaHoje();window.__v228=(window.__v228||0)+1;window.render()}catch(e){}}
 function sigTela(){try{var s='',k=document.body.children;for(var i=0;i<k.length;i++){var e=k[i];if(/^(SCRIPT|STYLE|DATALIST|TEMPLATE|NOSCRIPT)$/.test(e.tagName)||e.id==='toasts'||e.id==='nuvemBaseChip'||e.id==='nuvemChip')continue;s+=e.innerHTML}var h=2166136261;for(var j=0;j<s.length;j++){h^=s.charCodeAt(j);h=Math.imul(h,16777619)}return (h>>>0)+'|'+s.length+'|'+hashAtual()+'|'+H.className+'|'+(H.getAttribute('data-theme')||'')+'|'+fpBase()}catch(e){return ''}}
 function fotoDaTela(){try{
+  if(diaHoje()!==_diaTela)return;   /* v228: tela desenhada noutro dia não vira cópia */
   if(window.__TREINO||document.hidden||window.__BOOT)return;
   if(document.getElementById('abrindo-sistema')||document.querySelector('.modal.show,dialog[open],#qv'))return;
   var quem=LS.getItem(KEY);if(!quem)return;var h=hashAtual();
@@ -98,8 +112,8 @@ setInterval(function(){if(window.__v172pronto&&!document.hidden)fotoDepois(0)},3
    o placar fica em qv0:fotoConf (iguais / diferentes / última) — é com ele que se sabe se a tela instantânea é a verdadeira. */
 try{var _mo=new MutationObserver(function(){if(window.__BOOT||!window.__v172pronto)return;fotoDepois(3000)}),_mm=document.getElementById('main');if(_mm)_mo.observe(_mm,{childList:true,subtree:true,characterData:true})}catch(e){}
 /* v219: se a base gravada mudou sem a tela mudar (uma gravação), a cópia é refeita para levar a impressão digital nova */
-setInterval(function(){try{if(window.__BOOT||!window.__v172pronto||document.hidden)return;var f=JSON.parse(LS.getItem(PK+hashAtual())||'null');if(f&&f.fp!==fpBase())fotoDepois(0)}catch(e){}},20000);
-document.addEventListener('visibilitychange',function(){if(document.hidden&&window.__v172pronto&&!window.__BOOT){try{var sg=sigTela();if(sg&&sg===_sigF){window.__v223pulou=(window.__v223pulou||0)+1;return}clearTimeout(_tf);var d=Object.getOwnPropertyDescriptor(Document.prototype,'hidden');/* fotoDaTela recusa aba oculta; aqui é de propósito */Object.defineProperty(document,'hidden',{configurable:true,get:function(){return false}});try{fotoDaTela()}finally{delete document.hidden}}catch(e){}}});
+setInterval(function(){try{viraDia();if(window.__BOOT||!window.__v172pronto||document.hidden)return;var f=JSON.parse(LS.getItem(PK+hashAtual())||'null');if(f&&f.fp!==fpBase())fotoDepois(0)}catch(e){}},20000);
+document.addEventListener('visibilitychange',function(){if(!document.hidden){setTimeout(viraDia,300);return}if(document.hidden&&window.__v172pronto&&!window.__BOOT){try{var sg=sigTela();if(sg&&sg===_sigF){window.__v223pulou=(window.__v223pulou||0)+1;return}clearTimeout(_tf);var d=Object.getOwnPropertyDescriptor(Document.prototype,'hidden');/* fotoDaTela recusa aba oculta; aqui é de propósito */Object.defineProperty(document,'hidden',{configurable:true,get:function(){return false}});try{fotoDaTela()}finally{delete document.hidden}}catch(e){}}});
 function textoDe(el){return String(el&&el.textContent||'').replace(/Atualizado às \d\d:\d\d/g,'').replace(/Bom dia|Boa tarde|Boa noite/g,'').replace(/\s+/g,' ').trim()}
 function confere(){try{var h=hashAtual(),bruta=window.__fotoMostrada;if(!bruta||bruta.h!==h)return;var doc=new DOMParser().parseFromString('<div>'+bruta.html+'</div>','text/html');var a=textoDe(doc.getElementById('main')),b=textoDe(document.getElementById('main'));if(!a||!b)return;
   var c={};try{c=JSON.parse(localStorage.getItem('qv0:fotoConf')||'{}')||{}}catch(e){}var ig=a===b,i=0;if(!ig){while(i<a.length&&a[i]===b[i])i++}
