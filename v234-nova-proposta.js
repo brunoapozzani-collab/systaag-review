@@ -13,7 +13,8 @@
      · proposta vendida abre e edita: troca de produto = substituição com preço mantido (A.rtSubst, regra de 12/11: o cliente
        paga o contratado, a diferença de custo vai para a margem, a linha original fica à vista como trocada); item a mais = Ret/Troc;
      · propostas salvas são lidas como estão — sem migração.
-   Tela: #/np (escolher ou começar) e #/np/<id>. Por enquanto só o Bruno vê (BRIEF: construir ao lado da atual).
+   Tela: #/editor/<id> (desde 26/11/2026 a tela nova É o editor de proposta, para todos — Bruno). #/np/<id> leva para lá.
+   O editor antigo fica no código, sem caminho na interface, em window.__editorClassico (volta: SCREENS.editor=__editorClassico).
    ===================================================================================================== */
 (function(){
 'use strict';
@@ -29,7 +30,9 @@ const N2=v=>(Math.round((+v||0)*100)/100).toLocaleString('pt-BR',{minimumFractio
 const PC=v=>(Math.round((+v||0)*1000)/10).toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})+'%';
 const nz=s=>String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
 const login=()=>T(()=>me().login,'')||'';
-NP.pode=()=>login()==='bruno.pozzani';
+NP.pode=()=>true;
+const veTudo=()=>T(()=>window.V182.veTudo(),true);   /* v182: quadro financeiro completo, Raio-X e Fechamento só Gestão/Diretoria/TI/Financeiro */
+NP.veTudo=veTudo;
 const prod=id=>T(()=>get('produtos',id),null);
 const prop=id=>T(()=>get('propostas',id),null);
 const vendida=p=>!!p&&(['vendida','em_obra','concluida'].includes(p.estado)||!!p.vendida_em);
@@ -40,17 +43,17 @@ const UI=S.np=S.np||{passo:{},aberto:{},busca:{},fam:null,cmp:null};
 /* ───── tipos (os 7 do SYSTAAG + Focal + Pós-venda) e os passos de cada um — rascunho aprovado ───── */
 const FRENTES={TAAG:'#2563EB','Acústica':'#f27d26',Focal:'#0f172a','Pós-venda':'#16a34a'};
 const TIPOS={
- sistema:{frente:'TAAG',ic:'🏠',nome:'Sistema completo',s:'Projeto incluso (2 por 1) + cabeamento + equipamentos + serviços',passos:['cad','sis','plan','val','pag','arq']},
- projeto:{frente:'TAAG',ic:'📐',nome:'Proposta de projeto',s:'Só o projeto: análise técnica e desenho — preço do Projetos',passos:['cad','esc','plan','val','pag','arq']},
- projeto_cabeamento:{frente:'TAAG',ic:'🧵',nome:'Projeto + cabeamento',s:'Projeto e a infraestrutura de cabos, sem equipamentos',passos:['cad','cab','plan','val','pag','arq']},
- cabeamento:{frente:'TAAG',ic:'🔌',nome:'Cabeamento',s:'Projeto incluso + cabos + diárias de infraestrutura',passos:['cad','cab','plan','val','pag','arq']},
- upgrade:{frente:'TAAG',ic:'⬆️',nome:'Upgrade',s:'Troca ou melhora de sistema em obra já entregue',passos:['cad','sis','plan','val','pag','arq']},
- adicional:{frente:'TAAG',ic:'➕',nome:'Proposta adicional',s:'Algo a mais numa obra em andamento',passos:['cad','sis','plan','val','pag','arq']},
- acustica:{frente:'Acústica',ic:'🎚️',nome:'Acústica',s:'Tratamento acústico orçado no Acoustaag',passos:['cad','acu','plan','val','pag','arq']},
- focal:{frente:'Focal',ic:'🛍️',nome:'Venda Focal (loja)',s:'Qualquer produto do catálogo, sem instalação: entrega ou retirada',passos:['cad','foc','val','pag','arq']},
- posvenda:{frente:'Pós-venda',ic:'🛠️',nome:'Atendimento / Pós-venda',s:'Visita técnica, manutenção ou peça para obra entregue',passos:['cad','pv','val','pag','arq']},
+ sistema:{frente:'TAAG',ic:'🏠',nome:'Sistema completo',s:'Projeto incluso (2 por 1) + cabeamento + equipamentos + serviços',passos:['cad','sis','plan','val','pag','arq','mais']},
+ projeto:{frente:'TAAG',ic:'📐',nome:'Proposta de projeto',s:'Só o projeto: análise técnica e desenho — preço do Projetos',passos:['cad','esc','plan','val','pag','arq','mais']},
+ projeto_cabeamento:{frente:'TAAG',ic:'🧵',nome:'Projeto + cabeamento',s:'Projeto e a infraestrutura de cabos, sem equipamentos',passos:['cad','cab','plan','val','pag','arq','mais']},
+ cabeamento:{frente:'TAAG',ic:'🔌',nome:'Cabeamento',s:'Projeto incluso + cabos + diárias de infraestrutura',passos:['cad','cab','plan','val','pag','arq','mais']},
+ upgrade:{frente:'TAAG',ic:'⬆️',nome:'Upgrade',s:'Troca ou melhora de sistema em obra já entregue',passos:['cad','sis','plan','val','pag','arq','mais']},
+ adicional:{frente:'TAAG',ic:'➕',nome:'Proposta adicional',s:'Algo a mais numa obra em andamento',passos:['cad','sis','plan','val','pag','arq','mais']},
+ acustica:{frente:'Acústica',ic:'🎚️',nome:'Acústica',s:'Tratamento acústico orçado no Acoustaag',passos:['cad','acu','plan','val','pag','arq','mais']},
+ focal:{frente:'Focal',ic:'🛍️',nome:'Venda Focal (loja)',s:'Qualquer produto do catálogo, sem instalação: entrega ou retirada',passos:['cad','foc','val','pag','arq','mais']},
+ posvenda:{frente:'Pós-venda',ic:'🛠️',nome:'Atendimento / Pós-venda',s:'Visita técnica, manutenção ou peça para obra entregue',passos:['cad','pv','val','pag','arq','mais']},
 };
-const PASSOS={cad:{t:'Cadastro',s:'Tipo, cliente, obra e parceiro'},sis:{t:'Sistemas',s:'Kits, produtos e diárias'},esc:{t:'Escopo do projeto',s:'O que o Projetos vai desenhar'},
+const PASSOS={mais:{t:'Mais',s:'Detalhes, documentos, Raio-X'},cad:{t:'Cadastro',s:'Tipo, cliente, obra e parceiro'},sis:{t:'Sistemas',s:'Kits, produtos e diárias'},esc:{t:'Escopo do projeto',s:'O que o Projetos vai desenhar'},
  cab:{t:'Cabeamento',s:'Cabos, pontos e diárias de infra'},acu:{t:'Ambiente acústico',s:'Orçamento do Acoustaag'},foc:{t:'Produtos',s:'Itens, quantidades e entrega'},
  pv:{t:'Atendimento',s:'Visitas, peças e garantia'},plan:{t:'Plantas',s:'Onde cada coisa fica'},val:{t:'Valores e margem',s:'Preço final e o que sobra'},
  pag:{t:'Pagamento e NF',s:'Como paga e quem fatura'},arq:{t:'Arquivos gerados',s:'Conferir e gerar documentos'}};
@@ -189,7 +192,7 @@ function abreModal(html){NP.fecha();const d=document.createElement('div');d.id='
 
 /* ───── navegação ───── */
 NP.go=(pid,passo)=>{UI.passo[pid]=passo;rer();T(()=>window.scrollTo({top:0,behavior:'smooth'}))};
-NP.abrir=id=>{location.hash='#/np/'+id};
+NP.abrir=id=>{location.hash='#/editor/'+id};
 NP.toggle=k=>{UI.aberto[k]=!UI.aberto[k];rer()};
 const passos=p=>TIPOS[tipoDe(p)].passos;
 function passoAtual(p){const ps=passos(p);let s=UI.passo[p.id];if(!ps.includes(s))s=vendida(p)?(ps.includes('sis')?'sis':ps[1]||'cad'):'cad';return s}
@@ -207,7 +210,7 @@ function passoOk(p,s){const bl=T(()=>blocosDe(p),[]);const R=numeros(p).R;
 function hero(p){const t=TIPOS[tipoDe(p)];const g=grupoDe(p);const o=p.obra_id?T(()=>get('obras',p.obra_id),null):null;
  const cli=T(()=>cliente(p.id),p.sigla||'');const est=vendida(p)?'<span class="pill sold">Vendida</span>':`<span class="pill draft">${E(T(()=>({rascunho:'Rascunho',enviada:'Enviada',alternativa:'Alternativa',em_prevendas:'Pré-vendas',revisao:'Revisão',aprovada_cliente:'Aprovada pelo cliente',perdida:'Perdida'})[p.estado],p.estado)||p.estado)}</span>`;
  const tabs=g.map((q,i)=>{const R=numeros(q).R;return `<button class="opt ${q.id===p.id?'on':''}" onclick="NP.abrir(${J(q.id)})"><b>Opção ${E(letraDe(q,i))} · #${E(q.numero)}</b><span>${RS(R.tot)}${q.estado==='alternativa'?' · alternativa':''}</span></button>`}).join('');
- return `<div class="np-crumbs"><span>Unidade: <b style="color:${FRENTES[t.frente]}">${E(t.frente)}</b></span><span>Obra: ${o?'<b>'+E(o.numero?'Obra '+o.numero:o.nome)+'</b>':'—'}</span><span style="background:#FEF6E7">Tela nova em teste · mesmos registros, mesmo motor da tela de hoje</span><span><a href="#/editor/${E(p.id)}">abrir na tela de hoje</a></span></div>
+ return `<div class="np-crumbs"><span>Unidade: <b style="color:${FRENTES[t.frente]}">${E(t.frente)}</b></span><span>Obra: ${o?'<b>'+E(o.numero?'Obra '+o.numero:o.nome)+'</b>':'—'}</span><span><a href="#/propostas">← Propostas</a></span></div>
  <section class="np-hero"><div class="np-eb">Comercial · Proposta</div><h1>${E(cli)}${o?' — '+E(String(o.nome||'').split('—')[0].trim()):''} <small>#${E(p.numero)}</small></h1>
  <div class="np-pills"><span class="pill" style="background:${FRENTES[t.frente]};color:#fff">${E(t.frente)}</span><span class="pill">${t.ic} ${E(t.nome)}</span>${p.categoria?`<span class="pill">${E(p.categoria)}</span>`:''}${est}<span>${E((p.consultores||[]).join(', ')||'sem consultor')} · ${E(rtTexto(p))}</span></div>
  <div class="np-opts">${tabs}${vendida(p)?'':`<button class="opt add" onclick="const id=run(()=>A.npOpcao(${J(p.id)}),'Nova opção criada (mesmo cadastro)');if(id)NP.abrir(id)">+ Nova opção</button>`}<span class="sp"></span>
@@ -266,7 +269,8 @@ function cadastro(p){const o=p.obra_id?T(()=>get('obras',p.obra_id),null):null;c
  <div><label>Cliente</label><select ${vd?'disabled':''} onchange="run(()=>A.npSetCad(${J(p.id)},'cliente_id',this.value),'Cliente')"><option value=""></option>${opcoesClientes(cid)}</select></div>
  <div><label>Obra</label><select ${vd?'disabled':''} onchange="run(()=>A.npSetCad(${J(p.id)},'obra_id',this.value),'Obra')"><option value=""></option>${opcoesObras(cid,p.obra_id)}</select></div>
  <div><label>Distância da obra (diárias ÷ (1 − %), como no Excel)</label><select onchange="run(()=>A.npSetCad(${J(p.id)},'distancia',this.value),'Distância')">${dist}</select></div>
- <div><label>Consultor(es)</label><input value="${E((p.consultores||[]).join(', '))}" disabled title="muda na tela de hoje (cartões de consultor)"></div>
+ <div><label>Consultor(es) — até 2</label><div class="cats">${consultoresLista().map(c=>`<button class="${(p.consultores||[]).includes(c)?'on':''}" onclick="run(()=>A.toggleConsultor(${J(p.id)},${J(c)}),'Consultores')">${E(c)}</button>`).join('')}</div></div>
+ ${o?`<div><label>Endereço da obra</label><input value="${E(o.endereco||'')}" placeholder="endereço da instalação" onchange="run(()=>A.setObra(${J(o.id)},'endereco',this.value),'Endereço da obra')"></div>`:''}
  <div><label>Parceiro e RT (do cadastro do parceiro)</label><input value="${E(rtTexto(p))}" disabled></div>
  </div></div>`}
 
@@ -275,8 +279,8 @@ const catCom=pr=>pr&&pr.categoria_comercial||'';
 const linhaTot=l=>(+l.qtd||0)*(+l.preco_unit||0)+(+l.misc||0);
 function sistemas(p,modo){const bl=T(()=>blocosDe(p),[]);const vd=vendida(p);const fam=UI.fam;
  const titulo=modo==='cab'?'Cabeamento':modo==='foc'?'Produtos':modo==='acu'?'Ambiente acústico':'Sistemas';
- const famHtml=modo==='sis'&&!vd?`<div class="fams">${FAMILIAS.map(f=>{const n=kits().filter(k=>famDoKit(k)===f.id).length;return `<button class="fam" onclick="NP.familia(${J(p.id)},'${f.id}')"><div class="ic">${f.ic}</div><b>${E(f.nome)}</b><span>${n} kit${n===1?'':'s'} na Base</span></button>`}).join('')}<button class="fam" onclick="NP.blocoNovo(${J(p.id)})"><div class="ic">🧩</div><b>Produto por produto</b><span>sem kit: monta do catálogo</span></button></div>`:
-  (!vd?`<div style="margin-bottom:12px"><button class="btn2" onclick="NP.blocoNovo(${J(p.id)})">+ ${modo==='foc'?'Novo grupo de produtos':modo==='cab'?'Novo trecho de cabeamento':'Novo ambiente'}</button></div>`:'');
+ const famHtml=modo==='sis'&&!vd?`<div class="fams">${FAMILIAS.map(f=>{const n=kits().filter(k=>famDoKit(k)===f.id).length;return `<button class="fam" onclick="NP.familia(${J(p.id)},'${f.id}')"><div class="ic">${f.ic}</div><b>${E(f.nome)}</b><span>${n} kit${n===1?'':'s'} na Base</span></button>`}).join('')}<button class="fam" onclick="document.getElementById('np-nb').focus()"><div class="ic">🧩</div><b>Produto por produto</b><span>sem kit: monta do catálogo</span></button></div>${novoAmbiente(p)}`:
+  (!vd?novoAmbiente(p,modo==='foc'?'Novo grupo de produtos':modo==='cab'?'Novo trecho de cabeamento':'Novo ambiente'):'');
  const acu=modo==='acu'?acusticaCard(p):'';
  return intro(titulo,vd?'Proposta vendida: o preço do cliente fica. Trocar um produto = substituição (o cliente paga o contratado, a diferença de custo vai para a margem e a linha original fica à vista como trocada). Item a mais = Ret/Troc.':
    modo==='foc'?'Venda Focal: qualquer produto do catálogo. Sem instalação.':'Escolha o sistema, depois o kit. Troque modelos ou acrescente qualquer produto. Miscelânea por linha à vista. As diárias de cada sistema são digitadas; a Contagem da obra sugere.')
@@ -337,6 +341,7 @@ NP.familia=function(pid,fid){const p=prop(pid);const fam=FAMILIAS.find(f=>f.id==
  <div class="frm" style="grid-template-columns:1fr 1fr;margin-bottom:10px"><div><label>Ambiente (nome do sistema na proposta)</label><input id="np-kit-nome" placeholder="ex.: Living"></div></div>
  ${ks.map(k=>{const v=kitValor(k);return `<div class="ccard" style="padding:12px"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center"><div><b>${E(k.nome)}</b><div style="font-size:12px;color:#64748b">${E(k.grupo)} · ${(k.itens||[]).length} produtos${v.falta.length?` · <span class="chipc bad">${v.falta.length} fora da Base</span>`:''}</div></div><div style="text-align:right"><b class="mono">${RS(v.v)}</b><div><button class="btn2 pri" ${v.falta.length?'disabled':''} onclick="const n=document.getElementById('np-kit-nome').value;const id=run(()=>A.npUsarKit(${J(pid)},${J(k.id)},n||${J(k.grupo)}),'Kit acrescentado');if(id){NP.fecha()}">usar</button></div></div></div>
  <div style="font-size:11.5px;color:#475569;margin-top:6px">${(k.itens||[]).map(i=>{const x=prod(i.produto_id);return `${E(i.qtd)}× ${E(x?x.nome:(i.nome||i.produto_id))}`}).join(' · ')}</div></div>`}).join('')||'<p>Nenhum kit nesta família.</p>'}`)};
+function novoAmbiente(p,rot){return `<div class="ccard" style="padding:10px 14px;display:flex;gap:8px;align-items:center;flex-wrap:wrap"><b style="font-size:13px">${E(rot||'Novo ambiente')}</b><input id="np-nb" class="in wide" style="max-width:280px" placeholder="ex.: Sala de estar"><button class="btn2 pri" onclick="run(()=>A.addBloco(${J(p.id)},document.getElementById('np-nb').value),'Bloco criado')">Criar</button></div>`}
 NP.blocoNovo=function(pid){const n=prompt('Nome do ambiente / sistema:','');if(n==null)return;run(()=>A.addBloco(pid,String(n).trim()),'Acrescentado')};
 NP.trocar=function(pid,lid){const p=prop(pid);let l=null;T(()=>blocosDe(p),[]).forEach(b=>(b.itens||[]).forEach(x=>{if(x.id===lid)l=x}));const pr=l&&prod(l.produto_id);const c=catCom(pr);
  abreModal(`<div style="display:flex;justify-content:space-between;align-items:center"><h2>Trocar ${E(pr?pr.nome:'')}</h2><button class="btn2" onclick="NP.fecha()">fechar</button></div><p style="color:#64748b;font-size:13px">Entra o produto escolhido com o preço e o custo do catálogo. Mesma quantidade (${E(l?l.qtd:'')}).</p>
@@ -359,7 +364,7 @@ function acusticaCard(p){const recs=(S.db.acoustaag||[]).filter(r=>r&&!r._apagad
 
 /* ───── Pós-venda: atendimento (valor do atendimento é do Pós-venda) ───── */
 function posvenda(p){const R=numeros(p).R;return intro('Atendimento','Proposta de pós-venda: visitas, peças e garantia vêm do atendimento no Pós-venda. Peças entram como produtos abaixo.')+
- `<div class="ccard"><div style="display:flex;justify-content:space-between"><span>Valor do atendimento (Pós-venda)</span><b class="mono">${RS(R.tot)}</b></div>${p.at?`<div style="font-size:12px;color:#64748b;margin-top:4px">Atendimento ${E(typeof p.at==='object'?(p.at.numero||p.at.id||''):p.at)} · <a href="#/posatend">abrir no Pós-venda</a></div>`:''}</div>`+sistemas(p,'foc').replace(/^<div class="intro">[\s\S]*?<\/div>/,'')}
+ `<div class="ccard"><div style="display:flex;justify-content:space-between"><span>Valor do atendimento (Pós-venda)</span><b class="mono">${RS(R.tot)}</b></div>${p.at?`<div style="font-size:12px;color:#64748b;margin-top:4px">Atendimento ${E(typeof p.at==='object'?(p.at.numero||p.at.id||''):p.at)} · <a href="#/posatend">abrir no Pós-venda</a></div>`:''}</div>`+sistemas(p,'pv').replace(/^<div class="intro">[\s\S]*?<\/div>/,'')}
 
 /* ───── 3. PLANTAS ───── */
 function planta(p){const o=p.obra_id?T(()=>get('obras',p.obra_id),null):null;return ((o&&o.prj_files)||[]).filter(f=>f&&!f._apagado)}
@@ -371,7 +376,11 @@ function plantas(p){const o=p.obra_id?T(()=>get('obras',p.obra_id),null):null;co
  <div style="font-size:12px;color:#64748b;margin-top:4px">${(d.arquivos||[]).map(f=>E(f.nome)).join(' · ')||'sem arquivo'}</div></div>`:'')}
 
 /* ───── 4. VALORES E MARGEM ───── */
-function valores(p){const {R,F,alvo}=numeros(p);const vd=vendida(p);const bon=T(()=>podeEditarBonificacao(),false);
+function valoresSimples(p){const {R,alvo}=numeros(p);const mg=R.mg;const cls=mg==null?'':mg>=alvo-1e-9?'ok':mg>=alvo-0.05?'warn':'bad';const txt=mg==null?'—':cls==='ok'?'dentro do alvo':cls==='warn'?'perto do alvo':'abaixo do alvo';
+ return intro('Valores e margem','Indicador simples de margem — os custos e o quadro completo ficam com a Gestão e o Financeiro.')+
+ `<div class="ccard"><table class="t"><tbody><tr><td>Equipamentos</td><td class="r mono">${RS(R.e.venda)}</td></tr><tr><td>Mão de obra (${N2(R.s.total||0)} diárias)</td><td class="r mono">${RS(R.s.venda)}</td></tr>${+p.ajuste?`<tr><td>${+p.ajuste<0?'Desconto':'Acréscimo'}</td><td class="r mono">${RS(p.ajuste)}</td></tr>`:''}<tr><td><b>Total da proposta</b></td><td class="r mono"><b>${RS(R.tot)}</b></td></tr>
+ <tr><td><b>Margem da proposta</b></td><td class="r mono ${cls}"><b>${mg==null?'—':PC(mg)}</b> · ${txt} · alvo ${PC(alvo)}</td></tr></tbody></table></div>`}
+function valores(p){if(!veTudo())return valoresSimples(p);const {R,F,alvo}=numeros(p);const vd=vendida(p);const bon=T(()=>podeEditarBonificacao(),false);
  const L=(l,v,cls)=>`<tr><td>${l}</td><td class="r mono ${cls||''}">${v}</td></tr>`;
  return intro('Valores e margem','O Resumo do Excel: as mesmas contas do editor de hoje.')+
  `<div class="ccard"><table class="t"><tbody>
@@ -392,7 +401,8 @@ function valores(p){const {R,F,alvo}=numeros(p);const vd=vendida(p);const bon=T(
 /* proposta sem fechamento (as lidas do Excel): começa com o mesmo padrão que o editor de hoje cria (blocosDe) — só com o clique */
 A.npIniciarFech=function(pr){const p=get('propostas',pr);if(!p)throw new RuleError('Proposta não encontrada.');if(p.fechamento)return;
  p.fechamento={forma:'Parcelado',metodo:'PIX',parcelas:3,sinal_pct:5,primeiro:dplus(10),arquiteto_comissao:10};put('propostas',p,'fechamento iniciado')};
-function pagamento(p){const R=T(()=>M.resumo(p),null);let h='';
+function pagamento(p){if(!veTudo())return intro('Pagamento e NF','O Fechamento (condições de pagamento, dados da nota e RT) é da Gestão e do Financeiro.')+`<div class="ccard">Peça à Gestão ou ao Financeiro para preencher o fechamento desta proposta.</div>`;
+ const R=T(()=>M.resumo(p),null);let h='';
  if(!p.fechamento)return intro('Pagamento e NF','Como o cliente paga e quem fatura.')+`<div class="ccard">Esta proposta ainda não tem as condições de pagamento (veio do arquivo Excel). <button class="btn2 pri" onclick="run(()=>A.npIniciarFech(${J(p.id)}),'Fechamento iniciado')">Começar o fechamento</button><div style="font-size:12px;color:#64748b;margin-top:6px">Começa com o padrão do editor de hoje: parcelado em 3, PIX, sinal 5%, 1º vencimento em 10 dias — depois ajuste.</div></div>`;
  try{h=typeof paneFechamento==='function'?paneFechamento(p,R):''}catch(e){h='<div class="ccard">O painel de fechamento não abriu para esta proposta ('+E(e.message)+'). Use a tela de hoje.</div>'}
  return intro('Pagamento e NF','Como o cliente paga e quem fatura — o mesmo painel de Fechamento da tela de hoje (o Financeiro lê daqui).')+`<div class="legacy">${h}</div>`}
@@ -425,19 +435,72 @@ function lista(){const ps=(S.db.propostas||[]).filter(p=>p&&!p._apagado);const a
  return `<div class="ccard"><b>Começar uma proposta nova</b><div style="margin-top:8px">${cadastroNovo()}</div></div>
  <div class="ccard"><b>Em andamento (vendidas, editáveis)</b> · ${and.length}<table class="t" style="margin-top:6px"><tbody>${li(and)}</tbody></table></div>
  <div class="ccard"><b>Abertas</b> · ${ab.length}<table class="t" style="margin-top:6px"><tbody>${li(ab)}</tbody></table></div>`}
-SCREENS.np=function(arg){css();
- if(!NP.pode())return head('Nova proposta','Tela em teste — por enquanto só o Bruno vê. A proposta continua na tela de hoje.');
- const p=arg?prop(arg):null;
- if(!p)return `<div class="np">${arg?'<div class="ccard">Proposta não encontrada.</div>':''}<section class="np-hero" style="padding-bottom:18px"><div class="np-eb">Comercial · Nova proposta</div><h1>Propostas na tela nova</h1><div class="np-pills"><span>Mesmos registros e mesmo motor da tela de hoje · em teste, só o Bruno vê</span></div></section>${lista()}</div>`;
- const s=passoAtual(p);const t=tipoDe(p);
- const corpo={cad:()=>cadastro(p),sis:()=>sistemas(p,'sis'),cab:()=>sistemas(p,'cab'),foc:()=>sistemas(p,'foc'),acu:()=>sistemas(p,'acu'),esc:()=>escopo(p),pv:()=>posvenda(p),plan:()=>plantas(p),val:()=>valores(p),pag:()=>pagamento(p),arq:()=>arquivos(p)}[s];
- let c='';try{c=corpo()}catch(e){console.error('v234',e);c=`<div class="ccard">Este passo não abriu: ${E(e.message)}. A proposta continua na <a href="#/editor/${E(p.id)}">tela de hoje</a>.</div>`}
- const lado=['cad','pag','arq'].includes(s)?'':meter(p);
- return `<div class="np">${hero(p)}${steps(p)}<div class="${lado?'np-grid':''}"><div>${c}${navbar(p)}</div>${lado}</div></div>`};
+/* ───── o editor antigo, dentro da tela nova (26/11/2026, troca para todos) ─────
+   O editor antigo NÃO aparece mais como tela: as partes que a tela nova não refaz entram aqui pelo próprio código antigo
+   (mesmas ações, mesmos campos, mesmas camadas), sem o cabeçalho dele:
+     · no topo de todo passo: os cartões "Fluxo" e "Status interno" (enviar para proposta, assinaturas, pré-vendas, cliente aceitou,
+       vendido, cancelar, histórico, PowerPoint, Consolidado/PDF);
+     · no passo "Mais": Detalhes (informações gerais, composição, ambientes com receitas e ocultar, duplicar, trocar produto em toda
+       a proposta, conferências, garantia, especificação, comissão…), Documentos, Raio-X e Fechamento (estes dois só Gestão/Financeiro),
+       Modo cliente. */
+const LEG={};
+function legado(id,pane){const ant=(typeof edPane!=='undefined')?edPane:'proposta';let h='';
+ try{edPane=pane}catch(e){}
+ try{h=String(window.__editorClassico(id)||'')}catch(e){h='<div class="ccard">Esta parte não abriu: '+E(e.message)+'</div>'}
+ finally{try{edPane=ant}catch(e){}}
+ const d=document.createElement('div');d.innerHTML=h;
+ const kids=[...d.children];const dk=kids.findIndex(x=>x.classList&&x.classList.contains('dk'));if(dk>=0)kids.slice(0,dk+1).forEach(x=>x.remove());   /* cabeçalho antigo e o que vinha antes dele */
+ const proc=[];[...d.querySelectorAll('.card')].forEach(c=>{if(proc.some(x=>x.contains(c)))return;const b=c.querySelector('b');const t=(c.innerText||c.textContent||'');
+   if((b&&/^Fluxo/.test(b.textContent.trim()))||/Status interno:/.test(t)){if(![...c.querySelectorAll('.card')].length)proc.push(c)}});
+ return {d,proc}}
+function processo(p){if(!window.__editorClassico)return '';const {proc}=legado(p.id,'proposta');return proc.length?`<div class="np-proc">${proc.map(c=>c.outerHTML).join('')}</div>`:''}
+const PANES=[['proposta','Detalhes'],['docs','Documentos'],['raiox','Raio-X',1],['fechamento','Fechamento',1],['cliente','Modo cliente']];
+NP.pane=k=>{try{edPane=k}catch(e){}UI.lastEd=k;rer()};
+function mais(p){let cur=(typeof edPane!=='undefined'&&edPane)||'proposta';const vt=veTudo();if(!vt&&(cur==='raiox'||cur==='fechamento'))cur='proposta';
+ const tabs=PANES.filter(x=>!x[2]||vt).map(([k,l])=>`<button class="btn2 ${cur===k?'pri':''}" onclick="NP.pane('${k}')">${l}</button>`).join(' ');
+ let corpo='';try{const {d,proc}=legado(p.id,cur);proc.forEach(c=>c.remove());corpo=d.innerHTML}catch(e){corpo='<div class="ccard">Não abriu: '+E(e.message)+'</div>'}
+ return intro('Mais','Tudo o que a proposta tem além dos passos: informações gerais, composição, receitas por ambiente, duplicar, trocar um produto em toda a proposta, documentos'+(vt?', Raio-X e fechamento completo':'')+'.')+`<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">${tabs}</div><div class="np-leg">${corpo}</div>`}
+const CSS2=`.np .np-proc{margin-bottom:12px}.np .np-proc .card{border-radius:14px}.np .np-leg .card{border-radius:14px}`;
 
-/* ponte: no editor de hoje e na lista, o Bruno vê o botão para a tela nova */
-const _ed=SCREENS.editor;if(typeof _ed==='function')SCREENS.editor=function(id){const h=_ed.apply(this,arguments);if(typeof h!=='string'||!NP.pode()||!prop(id))return h;
- return `<div style="margin-bottom:8px"><a class="btn-soft" style="font-size:12px;background:#0b0f19;color:#fff;border-radius:10px;padding:5px 12px;text-decoration:none" href="#/np/${E(id)}">✨ Abrir na tela nova (teste)</a></div>`+h};
-const _pr=SCREENS.propostas;if(typeof _pr==='function')SCREENS.propostas=function(){const h=_pr.apply(this,arguments);if(typeof h!=='string'||!NP.pode())return h;
- return `<div style="margin-bottom:8px"><a class="btn-soft" style="font-size:12px;background:#0b0f19;color:#fff;border-radius:10px;padding:5px 12px;text-decoration:none" href="#/np">✨ Propostas na tela nova (teste)</a></div>`+h};
+function telaNova(arg){css();if(!document.getElementById('np-css2')){const st=document.createElement('style');st.id='np-css2';st.textContent=CSS2;document.head.appendChild(st)}
+ const p=arg?prop(arg):null;
+ if(!p)return `<div class="np"><div class="ccard">Proposta não encontrada (pode ter sido apagada ou estornada). <a href="#/propostas">Voltar às Propostas</a></div></div>`;
+ /* um botão antigo que troca de aba (edPane=...;render()) leva ao passo Mais */
+ const ep=(typeof edPane!=='undefined'&&edPane)||'proposta';if(UI.lastEd===undefined)UI.lastEd=ep;if(ep!==UI.lastEd){UI.lastEd=ep;if(ep!=='proposta')UI.passo[p.id]='mais'}
+ const s=passoAtual(p);
+ const corpo={cad:()=>cadastro(p),sis:()=>sistemas(p,'sis'),cab:()=>sistemas(p,'cab'),foc:()=>sistemas(p,'foc'),acu:()=>sistemas(p,'acu'),esc:()=>escopo(p),pv:()=>posvenda(p),plan:()=>plantas(p),val:()=>valores(p),pag:()=>pagamento(p),arq:()=>arquivos(p),mais:()=>mais(p)}[s];
+ let c='';try{c=corpo()}catch(e){console.error('v234',e);c=`<div class="ccard">Este passo não abriu: ${E(e.message)}.</div>`}
+ let pr='';try{pr=processo(p)}catch(e){console.error('v234 processo',e)}
+ const lado=['cad','pag','arq','mais'].includes(s)?'':meter(p);
+ return `<div class="np">${hero(p)}${pr}${steps(p)}<div class="${lado?'np-grid':''}"><div>${c}${navbar(p)}</div>${lado}</div></div>`}
+NP.tela=telaNova;
+
+/* ───── a troca: o editor de proposta (#/editor/<id>) passa a ser a tela nova, para todos ───── */
+/* Uma marca só: com window.__npLegado ligada, toda camada da troca deixa passar para baixo — a cadeia antiga inteira (inclusive camadas
+   que embrulham SCREENS.editor depois desta) responde. Sem a marca, quem chega ao topo vê a tela nova.
+   Voltar ao editor antigo para todos (rollback): window.__npLegado=true (ou NP.voltarClassico()). */
+function topo(abaixo){const f=function(id){if(window.__npLegado||NP.classico)return abaixo.apply(this,arguments);
+  if(!id){setTimeout(()=>{location.hash='#/nova'},0);return ''}return telaNova(id)};f.__v234top=1;return f}
+function assume(){const cur=SCREENS.editor;if(typeof cur!=='function'||cur.__v234top)return;SCREENS.editor=topo(cur)}
+window.__editorClassico=function(){const a=window.__npLegado;window.__npLegado=true;try{return SCREENS.editor.apply(this,arguments)}finally{window.__npLegado=a}};
+NP.voltarClassico=()=>{NP.classico=true;try{render()}catch(e){}};
+assume();window.addEventListener('load',()=>setTimeout(assume,0));setTimeout(assume,4000);setTimeout(assume,15000);
+/* #/np/<id> (endereço da fase de teste) vira #/editor/<id> ANTES da checagem de acesso: quem pode abrir proposta hoje abre a tela nova */
+const _rmNP=window.renderMain;if(typeof _rmNP==='function')window.renderMain=function(){try{const h=location.hash||'';if(/^#\/np(\/|$)/.test(h)){const id=h.split('/')[2]||'';history.replaceState(null,'',id?'#/editor/'+id:'#/nova')}}catch(e){}return _rmNP.apply(this,arguments)};
+SCREENS.np=function(arg){if(arg){try{history.replaceState(null,'','#/editor/'+arg)}catch(e){}return telaNova(arg)}setTimeout(()=>{location.hash='#/nova'},0);return ''};
+
+/* ───── Nova proposta: o quadro da tela nova (tipos) por cima do formulário de criação de sempre (cliente novo, obra nova com
+   endereço e inventário, linha, consultores, quem indicou) — ao criar, abre a tela nova ───── */
+const _nova=SCREENS.nova;
+if(typeof _nova==='function')SCREENS.nova=function(arg){css();let h='';try{h=String(_nova.apply(this,arguments)||'')}catch(e){h='<div class="ccard">'+E(e.message)+'</div>'}
+ const pre=TIPOS[arg]?arg:'';
+ const cards=Object.entries(TIPOS).map(([k,x])=>`<button class="tipo ${pre===k?'on':''}" onclick="NP.tipoNova('${k}')"><span style="font-size:20px">${x.ic}</span><b>${E(x.nome)}</b><span>${E(x.s)}</span></button>`).join('');
+ return `<div class="np"><section class="np-hero" style="padding-bottom:18px"><div class="np-eb">Comercial · Nova proposta</div><h1>Nova proposta</h1><div class="np-pills"><span>Escolha o tipo e preencha o cadastro. O número é dado pelo sistema.</span></div></section>
+ <div class="ccard"><div class="tipos">${cards}</div><div id="np-nova-aviso" style="font-size:12.5px;color:#64748b;margin-top:8px"></div></div><div class="np-leg">${h}</div></div>`};
+NP.tipoNova=function(k){document.querySelectorAll('.np .tipo').forEach(b=>b.classList.toggle('on',b.getAttribute('onclick')===`NP.tipoNova('${k}')`));
+ const av=document.getElementById('np-nova-aviso');const t=document.getElementById('n_tipo'),l=document.getElementById('n_linha');
+ const set=(el,v)=>{if(el&&[...el.options].some(o=>o.value===v)){el.value=v;el.dispatchEvent(new Event('change',{bubbles:true}))}};
+ if(k==='posvenda'){if(av)av.innerHTML='Proposta de pós-venda nasce do atendimento: <a href="#/posobras">Pós-venda › Obras finalizadas › Orçamento</a>.';return}
+ if(av)av.textContent='';
+ if(k==='focal'){set(l,'focal');set(t,'sistema')}else{set(t,k);if(k==='acustica')set(l,'acustica');else if(l&&(l.value==='acustica'||l.value==='focal'))set(l,'taag')}};
 })();

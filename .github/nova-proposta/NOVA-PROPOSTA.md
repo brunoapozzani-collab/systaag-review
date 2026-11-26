@@ -94,3 +94,22 @@ Nada foi gravado na Base compartilhada; a carga das categorias não foi feita.
   resto do arredondamento na maior parte; o .pptx mostra a mesma ponte e o mesmo total (agora lê as linhas da proposta, sem as ocultas).
 - Base real: 1.374 propostas, 0 linhas "0×", 0 rodapés que não fecham, total da vista = total de hoje em 1.374,
   .pptx = vista, 0 vazamentos de marca/modelo → `cliente-rodape-e-linhas-base-real-25-11-2026.xlsx`.
+
+## 26/11/2026 — a troca: a tela nova é o editor de proposta, para todos (v234b)
+- `#/editor/<id>` mostra a tela nova para todo mundo que já podia abrir proposta (mesma rota → mesmas permissões, mesma Lixeira,
+  mesmos links de Início, Pipeline, Gestão, busca, Operação, Pré-vendas, Obras). `#/np/<id>` vira `#/editor/<id>` antes da
+  checagem de acesso. `#/nova`: o quadro da tela nova (tipos) por cima do formulário de criação de sempre; ao criar, abre a tela nova.
+- Sem rótulos de teste nem botões "Abrir na tela nova".
+- O editor antigo continua no código, sem caminho na interface: `window.__editorClassico(id)`. Volta para todos (rollback):
+  `NP.voltarClassico()` (ou `window.__npLegado=true`). Uma marca só (`__npLegado`) decide; não há troca de funções.
+- O que a tela nova não refaz entra pelo próprio código antigo, sem o cabeçalho antigo:
+  · topo de todo passo: cartões "Fluxo" e "Status interno" (enviar para proposta, pré-vendas, validar, nova versão, cliente
+    aceitou/recusou, VENDIDO, cancelar, histórico de aprovação, PowerPoint, Consolidado/PDF);
+  · passo "Mais": Detalhes (informações gerais, composição projeto/cabeamento/sistema, ambientes com receitas, ocultar e fase,
+    duplicar, trocar produto em toda a proposta, Ret/Troc, conferências, garantia, especificação técnica, comissão…), Documentos
+    (consolidado, link do cliente, versões, briefing, contrato, Excel interno, PDF sem preço, PowerPoint), Raio-X e Fechamento
+    (só Gestão/Diretoria/TI/Financeiro — v182), Modo cliente.
+- Permissões como no editor antigo (v182): fora de Gestão/Diretoria/TI/Financeiro, Valores mostra a margem simples (sem custos,
+  impostos, RT, bonificação), Pagamento e NF fica com a Gestão e o Financeiro, Raio-X e Fechamento não aparecem.
+- Nativo novo: endereço da obra e consultores no Cadastro; "Novo ambiente … Criar" em Sistemas; diárias também no pós-venda.
+- "Aprender fazendo": 21 passos do capítulo Comercial e 3 do Pós-venda reescritos para a tela nova (alvos e "pronto" conferidos).
