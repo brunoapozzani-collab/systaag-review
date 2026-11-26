@@ -35,8 +35,8 @@ const Err=m=>{try{return new RuleError(m)}catch(e){return new Error(m)}};
 /* ───────────── 1 · tipos e regras (Base) ───────────── */
 const TIPOS=[
   ['exclusivo','Só trabalha com a TAAG','Vende, indica e só oferece a TAAG'],
-  ['indica','Indica a TAAG e outros','Indica a TAAG, mas também indica outros e não trabalha ativamente para fechar com a TAAG'],
-  ['cotacao','Só pediu proposta (3 orçamentos)','Pediu a proposta só para apresentar 3 orçamentos — o cliente costuma fechar com outra empresa'],['especial','Acordo especial','RT combinada com o parceiro fora das três faixas (ex.: Studio Arthur Casas, 12%)']];
+  ['especial','Acordo especial','RT combinada com o parceiro fora das três faixas (ex.: Studio Arthur Casas, 12%)'],['indica','Indica a TAAG e outros','Indica a TAAG, mas também indica outros e não trabalha ativamente para fechar com a TAAG'],
+  ['cotacao','Só pediu proposta (3 orçamentos)','Pediu a proposta só para apresentar 3 orçamentos — o cliente costuma fechar com outra empresa']];
 const DEF_PCT={exclusivo:15,indica:10,cotacao:5,especial:12};
 const DEF_FX={platinum:75,ouro:50,prata:25};
 function regras(){const r=S.db.regras=S.db.regras&&typeof S.db.regras==='object'?S.db.regras:{};
