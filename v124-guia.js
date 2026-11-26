@@ -26,7 +26,10 @@ function evalPronto(p){if(!p||!p.pronto)return false;try{return !!(new Function(
 /* ───────── encontrar o alvo (na página ou dentro do CRM) ───────── */
 function docs(alvo){const out=[];if(alvo&&alvo.frame){const f=document.getElementById(alvo.frame);try{if(f&&f.contentDocument)out.push({d:f.contentDocument,f})}catch(e){}}else out.push({d:document,f:null});return out}
 function visivel(el){if(!el)return false;const r=el.getBoundingClientRect();if(r.width<2||r.height<2)return false;const cs=(el.ownerDocument.defaultView||window).getComputedStyle(el);return cs.visibility!=='hidden'&&cs.display!=='none'}
-function acha(alvo){if(!alvo)return null;
+/* v236: alvo mais alto que a tela (um quadro inteiro) — o contorno vai no título dele, que cabe na tela */
+function encolhe(h){try{if(!h||!h.el)return h;const W=(h.el.ownerDocument.defaultView||window);let e=h.el;for(let i=0;i<4&&e.getBoundingClientRect().height>W.innerHeight*0.7;i++){const c=[...e.children].find(visivel);if(!c)break;e=c}return e===h.el?h:{el:e,f:h.f}}catch(e){return h}}
+function acha(alvo){if(alvo&&alvo.el)return alvo.el.isConnected?{el:alvo.el,f:alvo.f||null}:null;const h=acha0(alvo);return h?encolhe(h):h}
+function acha0(alvo){if(!alvo)return null;
   for(const {d,f} of docs(alvo)){
     if(alvo.css){try{const els=[...d.querySelectorAll(alvo.css)].filter(visivel);if(els.length){const t=alvo.texto?els.find(e=>(e.innerText||e.value||'').trim().toLowerCase().includes(String(alvo.texto).toLowerCase())):null;return {el:t||els[0],f}}}catch(e){}}
     if(alvo.texto){const tx=String(alvo.texto).toLowerCase();const cand=[...d.querySelectorAll('button,a,[role=button],[onclick],label,.card,tr,option,summary,input[type=submit]')].filter(visivel).filter(e=>((e.innerText||e.value||'').trim().toLowerCase().includes(tx)));
@@ -229,6 +232,11 @@ let LATCH={},FOCO=null,REVER=null,NOPASSO='',ULTIMO=null;const SNAP=new Map();co
 const valorDe=x=>{try{return new Function('return ('+x+')')()}catch(e){return null}};
 const roda=x=>{try{new Function(x)()}catch(e){console.warn('guia prepara',e)}};
 const dorme=ms=>new Promise(r=>setTimeout(r,ms));
+/* telas de um registro (ex.: #/cotacao/<id>): o guia lembra o último aberto de cada uma */
+const VISTO=(()=>{try{return JSON.parse(localStorage.getItem('systaag_guia_telas')||'{}')||{}}catch(e){return {}}})();
+window.addEventListener('hashchange',()=>{try{const h=hashNow();const m=h.match(/^(#\/[^\/?]+\/)(.+)$/);if(m){VISTO[m[1]]=h;localStorage.setItem('systaag_guia_telas',JSON.stringify(VISTO))}}catch(e){}});
+function destino(q){if(q.ir){const v=valorDe(q.ir);if(v&&!/undefined|null$/.test(v))return v}const t=q.tela;if(!t)return null;if(/\/$/.test(t))return VISTO[t]||null;return /^#\/[^?\s]+$/.test(t)?t:null}
+async function vai(q){if(!q.tela||sameScreen(q.tela))return true;const d=destino(q);if(!d)return false;location.hash=d;await espera(()=>sameScreen(q.tela)&&document.getElementById('main'),3000);await dorme(300);return sameScreen(q.tela)}
 async function espera(f,ms){const t=Date.now()+(ms||2500);for(;;){let v=null;try{v=f()}catch(e){}if(v)return v;if(Date.now()>t)return null;await dorme(80)}}
 function naTela(h){if(!h||!h.el||!h.el.isConnected)return false;const r=rectDe(h);return r.width>1&&r.height>1&&r.top>=-2&&r.left>=-2&&r.top+Math.min(r.height,40)<=innerHeight+2&&r.left+Math.min(r.width,40)<=innerWidth+2}
 function zera236(){LATCH={};FOCO=null;REVER=null;NOPASSO='';SNAP.clear();Object.keys(VI).forEach(k=>delete VI[k])}
@@ -246,8 +254,7 @@ async function rola(h,alvo){let x=h;for(let i=0;i<5;i++){if(alvo){const n=acha(a
   return naTela(x)}
 /* leva até o alvo q.alvo: abre a tela, prepara (painel, filtro, aba), procura, rola */
 async function chega(q){if(!q||!q.alvo)return null;
-  if(q.tela&&!sameScreen(q.tela)){const d=(q.ir&&valorDe(q.ir))||(/^#\/[a-z0-9_-]+$/i.test(q.tela)?q.tela:null);if(d&&!/undefined|null$/.test(d)){location.hash=d;await espera(()=>sameScreen(q.tela)&&document.getElementById('main'),3000);await dorme(250)}}
-  if(q.tela&&!sameScreen(q.tela))return null;
+  if(!(await vai(q)))return null;
   if(q.prepara){roda(q.prepara);await dorme(150)}
   let h=await espera(()=>acha(q.alvo),q.prepara?2000:900);
   if(!h&&/^#\/pipeline/.test(hashNow())&&limpaFiltros())h=await espera(()=>acha(q.alvo),1500);
@@ -261,19 +268,46 @@ async function mostra236(){mostrar=true;let p=passo();if(!p){ULTIMO={ok:false,co
   /* passo já feito (voltou a ele): diz e mostra onde ficou */
   if(evalPronto(p)||LATCH[p.id]){const f=p.feito||{};let h=null;
     if(f.alvo)h=await chega({tela:f.tela||p.tela,ir:f.ir||p.ir,alvo:f.alvo,prepara:f.prepara});
-    if(!h){h=acha(p.alvo);if(h)await rola(h)}
-    if(!h&&p.tela){h=await chega(p);}
-    const diz=f.diz?valorDe(f.diz):'';try{toast('Este passo já está feito ✓'+(diz?' — '+diz:'')+'.')}catch(e){}
-    aponta(p.id,h?(f.alvo&&acha(f.alvo)?f.alvo:p.alvo):null);ULTIMO={passo:p.id,ok:!!h&&naTela(h),como:'feito',texto:h?txt(h.el):'',diz};return ULTIMO}
+    let alvo=h?f.alvo:null;
+    if(!h){h=await chega(Object.assign({},p,{prepara:null}));if(h)alvo=p.alvo}
+    /* o botão do passo já não existe (ex.: o formulário fechou ao salvar): mostra o que foi gravado (o nome digitado) ou o que abre */
+    if(!h){const r=await ondeFicou(p);if(r){h=r.h;alvo=r.alvo}}
+    if(!h){const r=marcaTela();if(r){h=r.h;alvo=r.alvo}}
+    const diz=f.diz?valorDe(f.diz):(alvo&&alvo.diz)||'';try{toast('Este passo já está feito ✓'+(diz?' — '+diz:'')+'.')}catch(e){}
+    aponta(p.id,alvo);ULTIMO={passo:p.id,ok:!!h&&naTela(h),como:'feito',texto:h?txt(h.el):'',diz};return ULTIMO}
   let h=await chega(p);
   if(h){aponta(p.id,p.alvo);if(p.tela&&location.hash!==NOPASSO){}h=acha(p.alvo)||h;ULTIMO={passo:p.id,ok:naTela(h),como:'alvo',texto:txt(h.el)};return ULTIMO}
   /* o alvo ainda não existe: o que o abre está num passo anterior (ex.: o botão que abre o formulário) */
   const c=cap();for(let k=ST.passo-1;k>=Math.max(0,ST.passo-4);k--){const q=c.passos[k];if(!q||!q.alvo||(q.tela&&!sameScreen(q.tela)))continue;const ho=acha(q.alvo);if(ho&&await rola(ho)){
     aponta(p.id,q.alvo);try{toast('Antes, clique em “'+(txt(ho.el).slice(0,40)||'o botão contornado')+'” — é ele que abre o que este passo pede.')}catch(e){}ULTIMO={passo:p.id,ok:naTela(ho),como:'abre',texto:txt(ho.el)};return ULTIMO}}
+  /* outro alvo do mesmo passo (ex.: a aba da Opção B, quando o painel dela não abre) */
+  if(p.alt){const ha=await chega(Object.assign({tela:p.tela,ir:p.ir},p.alt));if(ha){aponta(p.id,p.alt.alvo);if(p.alt.diz)try{toast(p.alt.diz)}catch(e){}ULTIMO={passo:p.id,ok:naTela(ha),como:'alt',texto:txt(ha.el)};return ULTIMO}}
+  {const r=await abrePor(p);if(r){aponta(p.id,r.alvo);try{toast('Abra a tela do passo por aqui: “'+txt(r.h.el).slice(0,40)+'”.')}catch(e){}ULTIMO={passo:p.id,ok:naTela(r.h),como:'abre',texto:txt(r.h.el)};return ULTIMO}}
+  /* falta um passo anterior (ex.: a proposta ainda não existe): leva até ele */
+  for(let k=0;k<ST.passo;k++){const q=c.passos[k];if(!q||evalPronto(q)||LATCH[q.id])continue;const hq=await chega(q);if(hq){aponta(p.id,q.alvo);try{toast('Antes falta o passo '+(k+1)+': '+q.faca)}catch(e){}ULTIMO={passo:p.id,ok:naTela(hq),como:'falta',texto:txt(hq.el)};return ULTIMO}break}
   /* outra tela que o guia não sabe abrir sozinho: o caminho no menu */
   if(p.tela&&!sameScreen(p.tela)){const m=caminho(p.tela);if(m){aponta(p.id,null);setTimeout(anel,50);try{toast('Vá para: '+(p.menu||p.tela)+' — o contorno azul mostra por onde.')}catch(e){}ULTIMO={passo:p.id,ok:naTela(m),como:'menu',texto:txt(m.el)};return ULTIMO}}
+  {const r=marcaTela();if(r){aponta(p.id,r.alvo);try{toast('Este passo ainda não pode ser feito aqui: '+(p.menu||p.tela||'')+'. Siga os passos anteriores do guia.')}catch(e){}ULTIMO={passo:p.id,ok:naTela(r.h),como:'tela',texto:txt(r.h.el)};return ULTIMO}}
   try{toast('Não achei o alvo deste passo nesta tela — avise o Bruno (passo '+p.id+').',true)}catch(e){}
   ULTIMO={passo:p.id,ok:false,como:'nada'};return ULTIMO}
+/* passo feito: onde ficou o que ele gravou — o primeiro valor digitado que aparece na tela do passo; senão o botão que abre (passo anterior) */
+async function ondeFicou(p){
+  if(!(await vai(p))){const r=await abrePor(p);if(r)return r}
+  for(const d of (p.digite||[])){const v=String(d.valor||'').trim();if(v.length<3||/^\d+([.,]\d+)?$/.test(v))continue;
+    const a={texto:v,frame:p.alvo&&p.alvo.frame||null,css:'td,a,b,strong,.card,li,h4,h5,h6,span,div',diz:'“'+v+'” está aqui'};const h=await espera(()=>{const x=achaTexto(a);return x},600);if(h&&await rola(h,null))return {h,alvo:{el:h.el,f:h.f,diz:a.diz}}}
+  const c=cap();for(let k=ST.passo-1;k>=Math.max(0,ST.passo-4);k--){const q=c.passos[k];if(!q||!q.alvo||(q.tela&&!sameScreen(q.tela)))continue;const h=acha(q.alvo);if(h&&await rola(h,q.alvo))return {h,alvo:Object.assign({diz:'foi feito a partir de “'+txt(h.el).slice(0,40)+'”'},q.alvo)}}
+  return null}
+/* tela de um registro que o guia não sabe qual é: aponta o link que a abre, na tela do passo anterior */
+async function abrePor(p){const t=p&&p.tela;if(!t||!/\/$/.test(t)||sameScreen(t))return null;const k=t.slice(2);
+  const sel='a[href^="'+t+'"],[onclick*="\''+t+'"],[onclick*="\\"'+t+'"],[onclick*="'+k+'"]';
+  const c=cap();const telas=[hashNow()];for(let i=ST.passo-1;i>=0&&telas.length<5;i--){const q=c.passos[i];const d=q&&q.tela&&!/\/$/.test(q.tela)?destino(q):null;if(d&&!telas.includes(d))telas.push(d)}
+  for(const d of telas){if(hashNow()!==d){location.hash=d;await dorme(700)}let h=null;try{const e=[...document.querySelectorAll(sel)].find(visivel);if(e)h={el:e,f:null}}catch(e){}
+    if(h&&await rola(h,null))return {h,alvo:{el:h.el,f:null,diz:'abra por “'+txt(h.el).slice(0,40)+'”'}}}
+  return null}
+/* o menor elemento visível cujo texto contém o valor */
+function achaTexto(a){for(const {d,f} of docs(a)){const tx=sa(a.texto);let best=null,bl=1e9;for(const e of d.querySelectorAll(a.css)){const t=e.innerText||'';if(t.length>bl||t.length>400)continue;if(!sa(t).includes(tx)||!visivel(e))continue;best=e;bl=t.length}if(best)return {el:best,f}}return null}
+/* a tela em que a pessoa está, no menu (sempre visível) */
+function marcaTela(){const e=[...document.querySelectorAll('#subnav a.on,#rail button.on')].find(visivel);return e?{h:{el:e,f:null},alvo:{el:e,f:null,diz:''}}:null}
 const txt=el=>String((el&&(el.innerText||el.value))||'').replace(/\s+/g,' ').trim().slice(0,80);
 /* andar e voltar */
 function avanca(){const p=passo();okDesde=0;if(p){ST.feitos[p.id]=1;LATCH[p.id]=1}REVER=null;FOCO=null;ST.passo++;mostrar=false;sv(ST);desenha()}
