@@ -157,4 +157,4 @@ Pedido do Bruno: no Pipeline do capítulo Comercial, ao clicar em “Me mostre o
 **Prova (modo treino, localhost só leitura, escritas ao Supabase abortadas = 0):**
 - capítulo Comercial inteiro, “Me mostre onde” antes de cada passo (43 passos + Voltar em 2 passos do Pipeline + filtro escondendo +
   outra tela + clique no “Feito!”): passos em que não apontou nada = 0; venda confirmada, R$ 100.000, 3 parcelas a receber;
-- todos os capítulos, no começo (nada feito) e no fim (tudo feito, como depois de Voltar): antes 183 de 454 sem alvo visível; agora ver abaixo.
+- todos os capítulos, no começo (nada feito) e no fim (tudo feito, como depois de Voltar): antes 183 de 454 sem alvo visível; agora 0 de 454 (cada passo, com o capítulo no começo e no fim).

@@ -262,7 +262,7 @@ async function chega(q){if(!q||!q.alvo)return null;
   if(!h)return null;await rola(h,q.alvo);return acha(q.alvo)||h}
 function aponta(id,alvo){FOCO=alvo?{id,alvo}:null;mostrar=true;setTimeout(anel,30);setTimeout(anel,400)}
 /* fim do capítulo: o próximo clique é o botão do próprio painel (“Próximo: …” / “Terminei a história”) */
-function fimCap(){desenha();const b=box&&box.querySelector('.ft button.pri');if(b&&ring){const r=b.getBoundingClientRect();ring.style.display='';ring.style.left=(r.left-6)+'px';ring.style.top=(r.top-6)+'px';ring.style.width=(r.width+12)+'px';ring.style.height=(r.height+12)+'px'}
+function fimCap(){mostrar=true;desenha();const b=box&&box.querySelector('.ft button.pri');if(b&&ring){const r=b.getBoundingClientRect();ring.style.display='';ring.style.left=(r.left-6)+'px';ring.style.top=(r.top-6)+'px';ring.style.width=(r.width+12)+'px';ring.style.height=(r.height+12)+'px'}
   ULTIMO={ok:!!b,como:'fim',texto:b?txt(b):''};return ULTIMO}
 /* passo que É abrir a tela (o alvo é o botão do menu, ou o passo confere o endereço da tela): o guia não abre por você — contorna o caminho */
 const navega=q=>!!q&&(/location\.hash\s*=/.test((q.alvo&&q.alvo.css)||'')||(!!q.pronto&&!!q.tela&&q.tela.length>3&&String(q.pronto).includes(q.tela)));
@@ -290,7 +290,7 @@ async function mostra236(){mostrar=true;let p=passo();if(!p)return fimCap();
   if(p.alt){const ha=await chega(Object.assign({tela:p.tela,ir:p.ir},p.alt));if(ha){aponta(p.id,p.alt.alvo);if(p.alt.diz)try{toast(p.alt.diz)}catch(e){}ULTIMO={passo:p.id,ok:naTela(ha),como:'alt',texto:txt(ha.el)};return ULTIMO}}
   {const r=await abrePor(p);if(r){aponta(p.id,r.alvo);try{toast('Abra a tela do passo por aqui: “'+txt(r.h.el).slice(0,40)+'”.')}catch(e){}ULTIMO={passo:p.id,ok:naTela(r.h),como:'abre',texto:txt(r.h.el)};return ULTIMO}}
   /* falta um passo anterior (ex.: a proposta ainda não existe): leva até ele */
-  for(let k=0;k<ST.passo;k++){const q=c.passos[k];if(!q||evalPronto(q)||LATCH[q.id])continue;const hq=await chega(q);if(hq){aponta(p.id,q.alvo);try{toast('Antes falta o passo '+(k+1)+': '+q.faca)}catch(e){}ULTIMO={passo:p.id,ok:naTela(hq),como:'falta',texto:txt(hq.el)};return ULTIMO}break}
+  for(let k=0;k<ST.passo;k++){const q=c.passos[k];if(!q||evalPronto(q)||LATCH[q.id])continue;const hq=await chega(q);if(hq){aponta(p.id,acha(q.alvo)?q.alvo:{el:hq.el,f:hq.f});try{toast('Antes falta o passo '+(k+1)+': '+q.faca)}catch(e){}ULTIMO={passo:p.id,ok:naTela(hq),como:'falta',texto:txt(hq.el)};return ULTIMO}break}
   /* outra tela que o guia não sabe abrir sozinho: o caminho no menu */
   if(p.tela&&!sameScreen(p.tela)){const m=caminho(p.tela);if(m){aponta(p.id,null);setTimeout(anel,50);try{toast('Vá para: '+(p.menu||p.tela)+' — o contorno azul mostra por onde.')}catch(e){}ULTIMO={passo:p.id,ok:naTela(m),como:'menu',texto:txt(m.el)};return ULTIMO}}
   {const r=marcaTela();if(r){aponta(p.id,r.alvo);try{toast('Este passo ainda não pode ser feito aqui: '+(p.menu||p.tela||'')+'. Siga os passos anteriores do guia.')}catch(e){}ULTIMO={passo:p.id,ok:naTela(r.h),como:'tela',texto:txt(r.h.el)};return ULTIMO}}
