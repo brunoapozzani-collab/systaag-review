@@ -13,6 +13,8 @@
      · proposta vendida abre e edita: troca de produto = substituição com preço mantido (A.rtSubst, regra de 12/11: o cliente
        paga o contratado, a diferença de custo vai para a margem, a linha original fica à vista como trocada); item a mais = Ret/Troc;
      · propostas salvas são lidas como estão — sem migração.
+     · v234c (26/11/2026): mão de obra igual ao Excel — cada linha de diária = diárias × valor + a miscelânea DAQUELA linha
+       (coluna M "Miscelâneas a distribuir"). A miscelânea é uma avulsa com fase; o motor de preço não mudou.
    Tela: #/editor/<id> (desde 26/11/2026 a tela nova É o editor de proposta, para todos — Bruno). #/np/<id> leva para lá.
    O editor antigo fica no código, sem caminho na interface, em window.__editorClassico (volta: SCREENS.editor=__editorClassico).
    ===================================================================================================== */
@@ -80,6 +82,29 @@ NP.kitValor=kitValor;
 
 /* ───── ações novas (mesmo formato do editor de hoje; nada além de blocos/linhas) ───── */
 const travaVendida=(p,o)=>{if(vendida(p))throw new RuleError('Proposta vendida: '+(o||'a composição muda por substituição (preço mantido) ou Ret/Troc.'))};
+/* ───── miscelânea POR LINHA DE DIÁRIA (Bruno, 26/11/2026 — caso Giovana Bartelle #13459) ─────
+   No Excel cada linha de diária = diárias × valor da diária + "Miscelâneas a distribuir" (coluna M) DAQUELA linha.
+   Aqui ela é uma linha de serviço avulsa marcada com a fase (fase:'projeto'|'estrutural'|'instalacao'|'programacao'):
+   o motor (M.serv / blocoEfetivo) já soma todas as avulsas em misc_serv, então totais, margem e documentos não mudam de regra.
+   Avulsas antigas sem fase continuam valendo e aparecem como "outras miscelâneas de serviço". */
+const nzF=t=>String(t||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
+const faseDe=x=>{if(!x||x.tipo!=='avulso')return null;if(x.fase&&DISC.includes(x.fase))return x.fase;
+ const m=/na linha (projeto|estrutural|instalacao|programacao)\b/.exec(nzF(x.nome));return m?m[1]:null};
+const miscFase=(b,k)=>(b.serv_linhas||[]).filter(x=>faseDe(x)===k).reduce((a,x)=>a+(+x.valor||0),0);
+const valDia=(p,k)=>{const fr=((p&&p.rates_frozen)||{})[k];return +(fr&&fr.venda!=null?fr.venda:RATE[k].venda)||0};
+const numBR=v=>{const t=String(v==null?'':v).trim().replace(/^R\$\s*/,'').replace(/\s/g,'');if(!t)return 0;
+ if(t.includes(','))return +t.replace(/\./g,'').replace(',','.');      /* 23.000,50 */
+ if(/^-?\d{1,3}(\.\d{3})+$/.test(t))return +t.replace(/\./g,'');     /* 23.000 = vinte e três mil */
+ return +t};
+NP.faseDe=faseDe;NP.miscFase=miscFase;
+A.npMiscFase=function(pr,bid,k,v){
+ const p=get('propostas',pr);if(!p)throw new RuleError('Proposta não encontrada.');travaVendida(p,'a mão de obra muda por Ret/Troc.');
+ const b=blocosDe(p).find(x=>x.id===bid);if(!b)throw new RuleError('Sistema não encontrado.');
+ if(!DISC.includes(k))throw new RuleError('Fase de diária inválida.');
+ const val=Math.round(numBR(v)*100)/100;if(!isFinite(val)||val<0)throw new RuleError('Valor inválido — digite um valor em R$ (ex.: 23.000 ou 510,10).');
+ b.serv_linhas=(b.serv_linhas||[]).filter(x=>faseDe(x)!==k);
+ if(val>0)b.serv_linhas.push({id:uid('sl'),tipo:'avulso',fase:k,nome:'Miscelânea da linha '+RATE[k].lb,valor:val,origem:'misc da linha de diária (coluna M do Excel)'});
+ T(()=>blocoEfetivo(b));put('propostas',p,'misc da linha '+RATE[k].lb+': R$ '+N2(val))};
 A.npUsarKit=function(pr,kid,nome){
  const p=get('propostas',pr);if(!p)throw new RuleError('Proposta não encontrada.');travaVendida(p,'kit novo entra por Ret/Troc.');
  const k=kits().find(x=>x.id===kid);if(!k)throw new RuleError('Kit não encontrado na Base.');
@@ -288,7 +313,7 @@ function sistemas(p,modo){const bl=T(()=>blocosDe(p),[]);const vd=vendida(p);con
  +(modo==='sis'||modo==='cab'?contagemCard(p):'')}
 function blocoCard(p,b,modo){const vd=vendida(p);const k='b:'+b.id;const aberto=UI.aberto[k]!==false;
  const eq=(b.itens||[]).filter(l=>!l.substituto||true).reduce((a,l)=>a+linhaTot(l),0);const ef=T(()=>blocoEfetivo(b),b.servicos||{});
- const dias=DISC.reduce((a,x)=>a+(+ef[x]||0),0);const mo=DISC.reduce((a,x)=>a+(+ef[x]||0)*RATE[x].venda,0)+(+b.misc_serv||0);
+ const dias=DISC.reduce((a,x)=>a+(+ef[x]||0),0);const mo=DISC.reduce((a,x)=>a+(+ef[x]||0)*valDia(p,x),0)+(b.serv_linhas||[]).filter(x=>x.tipo==='avulso').reduce((a,x)=>a+(+x.valor||0),0);
  const fam=b.kit?FAMILIAS.find(f=>f.re.test(b.kit)):null;
  return `<div class="sys"><div class="sys-h" onclick="NP.toggle('${k}')"><span style="font-size:22px">${fam?fam.ic:'🧩'}</span><div style="flex:1"><b>${E(b.nome)}</b><div class="sub2">${b.kit?E(b.kit)+' · ':''}${(b.itens||[]).length} linha(s) · ${N2(dias)} diárias${b.ocultar?' · oculto para o cliente':''}</div></div>
  <div style="text-align:right"><b class="mono">${RS(eq+mo)}</b><div class="sub2">equip. ${RS(eq)} · m.o. ${RS(mo)}</div></div><span>${aberto?'▾':'›'}</span></div>
@@ -320,13 +345,20 @@ function catalogo(q,c){const qs=palavras(q).split(' ').filter(Boolean);return (S
 NP.catalogo=catalogo;
 NP.busca=function(k,campo,v,soLista){const q=UI.busca[k]=UI.busca[k]||{q:'',c:''};q[campo]=v;
  if(soLista){const el=document.getElementById('np-res-'+k);const p=prop((location.hash.split('/')[2]||''));const b=p&&T(()=>blocosDe(p).find(x=>x.id===k),null);if(el&&p&&b){el.innerHTML=resultados(p,b,catalogo(q.q,q.c).slice(0,40),q.q||q.c);return}}rer()};
-function diasTab(p,b,ef){const adj=b.servicos_adj||{};const av=(b.serv_linhas||[]).filter(x=>x.tipo==='avulso');const vd=vendida(p);
- return `<div style="margin-top:12px"><div style="font-size:10.5px;letter-spacing:.1em;color:#64748b;font-weight:700;text-transform:uppercase;margin-bottom:4px">Diárias deste sistema — o digitado vale</div>
- <table class="t"><thead><tr>${DISC.map(k=>`<th class="r">${E(RATE[k].lb)}</th>`).join('')}<th class="r">Total</th></tr></thead><tbody><tr>${DISC.map(k=>`<td class="r">${vd?N2(ef[k]):`<input class="in" value="${adj[k]!=null&&adj[k]!==''?E(N2(adj[k])):''}" placeholder="0" onchange="run(()=>A.setDias(${J(p.id)},${J(b.id)},'${k}',this.value),'Diárias')">`}</td>`).join('')}<td class="r mono">${N2(DISC.reduce((a,k)=>a+(+ef[k]||0),0))}</td></tr>
- <tr style="color:#64748b">${DISC.map(k=>`<td class="r mono" style="font-size:11.5px">${RS((+ef[k]||0)*RATE[k].venda)}</td>`).join('')}<td class="r mono" style="font-size:11.5px">${RS(DISC.reduce((a,k)=>a+(+ef[k]||0)*RATE[k].venda,0))}</td></tr></tbody></table>
- ${av.length?`<table class="t" style="margin-top:6px"><tbody>${av.map(x=>`<tr><td>Miscelânea de serviço: ${E(x.nome)}</td><td class="r mono">${RS(x.valor)}</td><td class="r">${vd?'':`<button class="lnk" style="color:#dc2626" onclick="run(()=>A.rmServLinha(${J(p.id)},${J(b.id)},${J(x.id)}),'Removido')">remover</button>`}</td></tr>`).join('')}</tbody></table>`:''}
- ${vd?'':`<div style="margin-top:6px;display:flex;gap:6px;align-items:center;flex-wrap:wrap"><span style="font-size:12px;color:#64748b">Miscelânea de mão de obra deste sistema:</span><input class="in wide" style="max-width:220px" id="np-av-n-${E(b.id)}" placeholder="descrição"><input class="in" id="np-av-v-${E(b.id)}" placeholder="R$"><button class="btn2" onclick="run(()=>A.addAvulso(${J(p.id)},${J(b.id)},document.getElementById('np-av-n-${E(b.id)}').value,+String(document.getElementById('np-av-v-${E(b.id)}').value).replace(/\\./g,'').replace(',','.')),'Miscelânea lançada')">lançar</button>
- <button class="btn2" onclick="run(()=>A.completarMiscBloco(${J(p.id)},${J(b.id)}),'Mão de obra completada até o alvo')">completar até ${E(T(()=>S.db.params.serv_alvo_pct,20))}% dos equip.</button></div>`}</div>`}
+function diasTab(p,b,ef){const adj=b.servicos_adj||{};const vd=vendida(p);
+ const outras=(b.serv_linhas||[]).filter(x=>x.tipo==='avulso'&&!faseDe(x));
+ const base=k=>(+ef[k]||0)*valDia(p,k),mi=k=>miscFase(b,k),lin=k=>base(k)+mi(k);
+ const soma=g=>DISC.reduce((a,k)=>a+g(k),0);
+ const lbl=t=>`<td style="font-size:11.5px;color:#64748b;white-space:nowrap">${t}</td>`;
+ return `<div style="margin-top:12px"><div style="font-size:10.5px;letter-spacing:.1em;color:#64748b;font-weight:700;text-transform:uppercase;margin-bottom:4px">Mão de obra deste sistema — como no Excel: diárias × valor + miscelânea de cada linha</div>
+ <table class="t"><thead><tr><th></th>${DISC.map(k=>`<th class="r">${E(RATE[k].lb)}</th>`).join('')}<th class="r">Total</th></tr></thead><tbody>
+ <tr>${lbl('Diárias')}${DISC.map(k=>`<td class="r">${vd?N2(ef[k]):`<input class="in" value="${adj[k]!=null&&adj[k]!==''?E(N2(adj[k])):''}" placeholder="0" onchange="run(()=>A.setDias(${J(p.id)},${J(b.id)},'${k}',this.value),'Diárias')">`}</td>`).join('')}<td class="r mono">${N2(soma(k=>+ef[k]||0))}</td></tr>
+ <tr style="color:#64748b">${lbl('× valor da diária')}${DISC.map(k=>`<td class="r mono" style="font-size:11.5px" title="${E(N2(ef[k]||0))} × R$ ${E(N2(valDia(p,k)))}">${RS(base(k))}</td>`).join('')}<td class="r mono" style="font-size:11.5px">${RS(soma(base))}</td></tr>
+ <tr>${lbl('+ Miscelânea')}${DISC.map(k=>`<td class="r">${vd?`<span class="mono">${RS(mi(k))}</span>`:`<input class="in" style="width:96px" value="${mi(k)?E(N2(mi(k))):''}" placeholder="R$ 0" onchange="run(()=>A.npMiscFase(${J(p.id)},${J(b.id)},'${k}',this.value),'Miscelânea da linha ${E(RATE[k].lb)}')">`}</td>`).join('')}<td class="r mono">${RS(soma(mi))}</td></tr>
+ <tr style="font-weight:700">${lbl('<b style="color:#0f172a">= Linha</b>')}${DISC.map(k=>`<td class="r mono">${RS(lin(k))}</td>`).join('')}<td class="r mono">${RS(soma(lin))}</td></tr>
+ </tbody></table>
+ ${outras.length?`<table class="t" style="margin-top:6px"><tbody>${outras.map(x=>`<tr><td>Outra miscelânea de serviço (sem linha): ${E(x.nome)}</td><td class="r mono">${RS(x.valor)}</td><td class="r">${vd?'':`<button class="lnk" style="color:#dc2626" onclick="run(()=>A.rmServLinha(${J(p.id)},${J(b.id)},${J(x.id)}),'Removido')">remover</button>`}</td></tr>`).join('')}<tr style="font-weight:700"><td>Mão de obra do sistema</td><td class="r mono">${RS(soma(lin)+outras.reduce((a,x)=>a+(+x.valor||0),0))}</td><td></td></tr></tbody></table>`:''}
+ ${vd?'':`<div style="margin-top:6px;display:flex;gap:6px;align-items:center;flex-wrap:wrap"><button class="btn2" onclick="run(()=>A.completarMiscBloco(${J(p.id)},${J(b.id)}),'Mão de obra completada até o alvo')">completar até ${E(T(()=>S.db.params.serv_alvo_pct,20))}% dos equip.</button></div>`}</div>`}
 /* Contagem da obra: a calculadora SERVIÇOS do Excel (a mesma do editor de hoje) — só sugere */
 /* abrir não grava: se a proposta ainda não tinha a calculadora, a calculadora vazia criada só para desenhar sai de novo */
 const semCalc=c=>!c||(!Object.keys(c.cont||{}).length&&!Object.keys(c.forced||{}).length);
