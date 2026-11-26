@@ -54,7 +54,7 @@ CRM_SERVER.api=function(payload){var req=null;try{req=JSON.parse(payload||'{}')}
 
 /* ═════════════════════════ §2 código que roda DENTRO do iframe do CRM ═════════════════════════ */
 function FRAME(){
-  if(window.__v173f)return;window.__v173f=true;
+  if(window.__v173f)return;window.__v173f=true;return;/* v173b 26/11/2026: aba Arquitetos e campo Escritório a que pertence desligados — pessoa de escritório é CONTATO (regra 18/11); os 2 arquitetos que eram parceiros viraram contatos */
   var PEND;                                           /* o escritório escolhido no formulário, até a gravação */
   const ehEsc=p=>/ESCRIT/i.test(String((p&&p.tipo)||''));
   const escDe=p=>{const id=+(p&&p.escritorio_id)||0;if(!id||id===+p.id)return null;return P(id)||null};
