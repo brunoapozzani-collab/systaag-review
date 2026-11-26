@@ -184,7 +184,7 @@ function desenha(){
 }
 function anel(){
   if(!ST.on||ST.min||ST.lista||!ring){if(ring)ring.style.display='none';return}
-  let p=passo();if(!p){ring.style.display='none';return}
+  let p=passo();if(!p){const b=mostrar&&box&&box.querySelector('.ft button.pri');if(!b){ring.style.display='none';return}const r=b.getBoundingClientRect();ring.style.display='';ring.style.left=(r.left-6)+'px';ring.style.top=(r.top-6)+'px';ring.style.width=(r.width+12)+'px';ring.style.height=(r.height+12)+'px';return}
   if(CF&&CF.corr&&!evalPronto(p))p=CF.corr;
   /* e2e fix (29/10): on the wrong screen the learner must use the side menu, which is on the LEFT — the panel (bottom-left)
      covered the lower rail buttons (e.g. "Base de dados"). While the screen is wrong, the panel stays on the right. */
@@ -254,15 +254,21 @@ async function rola(h,alvo){let x=h;for(let i=0;i<5;i++){if(alvo){const n=acha(a
   return naTela(x)}
 /* leva até o alvo q.alvo: abre a tela, prepara (painel, filtro, aba), procura, rola */
 async function chega(q){if(!q||!q.alvo)return null;
-  if(!(await vai(q)))return null;
+  if(!navega(q)&&!(await vai(q)))return null;
+  if(navega(q)&&q.tela&&!sameScreen(q.tela)){const h0=acha(q.alvo);if(h0){await rola(h0,q.alvo);return acha(q.alvo)||h0}const m=caminho(q.tela);return m||null}
   if(q.prepara){roda(q.prepara);await dorme(150)}
   let h=await espera(()=>acha(q.alvo),q.prepara?2000:900);
   if(!h&&/^#\/pipeline/.test(hashNow())&&limpaFiltros())h=await espera(()=>acha(q.alvo),1500);
   if(!h)return null;await rola(h,q.alvo);return acha(q.alvo)||h}
 function aponta(id,alvo){FOCO=alvo?{id,alvo}:null;mostrar=true;setTimeout(anel,30);setTimeout(anel,400)}
-async function mostra236(){mostrar=true;let p=passo();if(!p){ULTIMO={ok:false,como:'fim'};return ULTIMO}
+/* fim do capítulo: o próximo clique é o botão do próprio painel (“Próximo: …” / “Terminei a história”) */
+function fimCap(){desenha();const b=box&&box.querySelector('.ft button.pri');if(b&&ring){const r=b.getBoundingClientRect();ring.style.display='';ring.style.left=(r.left-6)+'px';ring.style.top=(r.top-6)+'px';ring.style.width=(r.width+12)+'px';ring.style.height=(r.height+12)+'px'}
+  ULTIMO={ok:!!b,como:'fim',texto:b?txt(b):''};return ULTIMO}
+/* passo que É abrir a tela (o alvo é o botão do menu, ou o passo confere o endereço da tela): o guia não abre por você — contorna o caminho */
+const navega=q=>!!q&&(/location\.hash\s*=/.test((q.alvo&&q.alvo.css)||'')||(!!q.pronto&&!!q.tela&&q.tela.length>3&&String(q.pronto).includes(q.tela)));
+async function mostra236(){mostrar=true;let p=passo();if(!p)return fimCap();
   /* o passo acabou de ser feito (o guia ainda ia seguir): segue já e mostra o próximo */
-  if(REVER!==p.id&&(evalPronto(p)||LATCH[p.id])&&!(CF&&CF.corr)){avanca();p=passo();if(!p){ULTIMO={ok:false,como:'fim'};return ULTIMO}
+  if(REVER!==p.id&&(evalPronto(p)||LATCH[p.id])&&!(CF&&CF.corr)){avanca();p=passo();if(!p)return fimCap();
     if(evalPronto(p)||LATCH[p.id])return mostra236()}
   if(CF&&CF.corr&&!evalPronto(p)){const h=await chega(CF.corr);aponta(p.id,h?CF.corr.alvo:null);ULTIMO={passo:p.id,ok:!!h&&naTela(h),como:'correcao',texto:h?txt(h.el):''};return ULTIMO}
   /* passo já feito (voltou a ele): diz e mostra onde ficou */

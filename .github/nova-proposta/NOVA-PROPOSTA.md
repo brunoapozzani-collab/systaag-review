@@ -126,3 +126,35 @@ Nada foi gravado na Base compartilhada; a carga das categorias não foi feita.
 - Tela nova: a busca de produto acha por palavras ("300 icw6" acha "300-ICW6").
 - Prova: o capítulo inteiro percorrido no modo treino pela tela (preencher/clicar), 43 de 43 passos com o "pronto" verdadeiro e o
   alvo visível; fim igual ao de antes (proposta 1 vendida, R$ 100.000, 10 + 5 caixas, 3 títulos a receber); 0 escritas na rede.
+
+## 26/11/2026 — Aprender fazendo: “Me mostre onde” sempre cai em algo visível (v236)
+
+Pedido do Bruno: no Pipeline do capítulo Comercial, ao clicar em “Me mostre onde”, o cartão do cliente já tinha sumido.
+
+**Por que sumia (reproduzido no modo treino):**
+- “Montar proposta de Sistema →” leva o negócio CEX para a coluna “Proposta desenvolvida” e abre a proposta; o guia ainda ficava ~1 s no
+  passo anterior e, nesse intervalo ou depois de “← Voltar”, procurava um botão do painel do negócio, que já estava fechado;
+- em outra tela, o botão só dizia “Primeiro vá para a tela…” (não abria nada);
+- filtro do quadro (busca, frente, consultor) podia esconder o cartão;
+- passos que olham a tela (“clique em Valores e margem”, “Plantas”, “Pagamento e NF”) deixavam de contar se a pessoa seguisse antes do
+  guia — o guia empacava;
+- “← Voltar” não devolvia nada: o cartão continuava na coluna seguinte.
+
+**Regra de agora (motor do guia, todos os capítulos — v124-guia.js, bloco v236):**
+- “Me mostre onde” abre a tela do passo (telas de registro, ex. `#/cotacao/<id>`, pelo último registro aberto ou pelo link que as abre),
+  limpa o filtro do Pipeline, abre o painel do negócio quando o botão está nele, rola o quadro (inclusive para o lado) e o painel até o alvo,
+  confere de novo até o alvo ficar parado na tela e o contorna; alvo mais alto que a tela → contorno no título dele;
+- passo que é “abrir a tela” não é feito pelo guia: contorna o caminho no menu;
+- passo já feito: “Este passo já está feito ✓” + onde ficou (coluna do cartão, o nome gravado, ou o botão que abre);
+- passo que depende de outro ainda não feito: leva até o que falta;
+- um passo conta assim que foi feito, mesmo que a pessoa já tenha seguido (o guia não empaca);
+- “← Voltar” no MODO TREINO devolve o treino ao estado do começo daquele passo (fotos em memória, só no treino; a nuvem está desligada no
+  treino); fora do treino nada é desfeito — o passo aparece como “já feito” e “Seguir →” continua;
+- passos de olhar (miscelânea, diárias, contagem) só contam com “Vi ✓”.
+
+**Passos do Pipeline (v236-guia-mostra.js):** um clique por passo; o texto diz o cartão “Cliente Exemplo — Residência São Paulo” e o botão.
+
+**Prova (modo treino, localhost só leitura, escritas ao Supabase abortadas = 0):**
+- capítulo Comercial inteiro, “Me mostre onde” antes de cada passo (43 passos + Voltar em 2 passos do Pipeline + filtro escondendo +
+  outra tela + clique no “Feito!”): passos em que não apontou nada = 0; venda confirmada, R$ 100.000, 3 parcelas a receber;
+- todos os capítulos, no começo (nada feito) e no fim (tudo feito, como depois de Voltar): antes 183 de 454 sem alvo visível; agora ver abaixo.

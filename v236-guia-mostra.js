@@ -33,6 +33,7 @@ const P={
    feito:{tela:'#/pipeline',alvo:card,prepara:'GUIA.limpaFiltros()',diz:"'a proposta já foi montada e o cartão “"+CARTAO+"” passou para a coluna “'+("+coluna+"||'?')+'”'",voltou:'a proposta saiu e o cartão voltou para “Desenvolver proposta”'}},
  c1n13:{alt:{ir:IR,alvo:{css:'.np .opt',texto:'Opção B',frame:null},diz:'Abra a aba “Opção B”, no topo da proposta.'}},
  c1n14:{alt:{ir:IR,alvo:{css:'.np .opt',texto:'Opção B',frame:null},diz:'Abra a aba “Opção B”, no topo da proposta.'}},
+ c1p23:{alvo:{css:'main a.mono[href^="#/editor/"]',texto:'',frame:null}},
  c1n03:{ver:true},c1p30:{ver:true},c1n06:{ver:true},
  c1p33:{prepara:NA('pag')},c1p34:{prepara:NA('pag')},c1p36:{prepara:NA('pag')},c1p38:{prepara:NA('pag')},c1p39:{prepara:NA('pag')},
  c1p24:{prepara:NA('cad')},
