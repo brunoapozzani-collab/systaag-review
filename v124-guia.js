@@ -239,8 +239,11 @@ function abreNegocio(cod){try{const n=(S.db.negociacoes||[]).find(x=>x.codinome=
 /* em que coluna do Pipeline está o cartão agora (pelo título da coluna) */
 function colunaDe(texto){try{const c=[...document.querySelectorAll('main .card.rowlink')].find(x=>(x.textContent||'').includes(texto));if(!c)return '';const col=c.parentElement;const t=col&&col.firstElementChild&&col.firstElementChild!==c?(col.firstElementChild.textContent||''):'';
   const l=t.replace(/\s*\d+\s*$/,'').replace(/\s+/g,' ').trim();return l?l.charAt(0).toUpperCase()+l.slice(1).toLowerCase():''}catch(e){return ''}}
-async function rola(h){try{if(h.f){h.f.scrollIntoView({block:'center',inline:'nearest'})}h.el.scrollIntoView({block:'center',inline:'center'})}catch(e){}
-  await dorme(120);if(!naTela(h)){try{h.el.scrollIntoView({block:'nearest',inline:'nearest'})}catch(e){}await dorme(80)}return naTela(h)}
+/* a tela nova às vezes redesenha e volta ao topo logo depois (rolagem suave): confere de novo até o alvo ficar parado na tela */
+async function rola(h,alvo){let x=h;for(let i=0;i<5;i++){if(alvo){const n=acha(alvo);if(n)x=n}
+    if(!naTela(x)||i===0){try{if(x.f){x.f.scrollIntoView({block:'center',inline:'nearest'})}x.el.scrollIntoView({block:'center',inline:'center'})}catch(e){}}
+    await dorme(i===0?200:350);if(alvo){const n=acha(alvo);if(n)x=n}if(naTela(x)){await dorme(250);if(alvo){const n=acha(alvo);if(n)x=n}if(naTela(x))return true}}
+  return naTela(x)}
 /* leva até o alvo q.alvo: abre a tela, prepara (painel, filtro, aba), procura, rola */
 async function chega(q){if(!q||!q.alvo)return null;
   if(q.tela&&!sameScreen(q.tela)){const d=(q.ir&&valorDe(q.ir))||(/^#\/[a-z0-9_-]+$/i.test(q.tela)?q.tela:null);if(d&&!/undefined|null$/.test(d)){location.hash=d;await espera(()=>sameScreen(q.tela)&&document.getElementById('main'),3000);await dorme(250)}}
@@ -248,7 +251,7 @@ async function chega(q){if(!q||!q.alvo)return null;
   if(q.prepara){roda(q.prepara);await dorme(150)}
   let h=await espera(()=>acha(q.alvo),q.prepara?2000:900);
   if(!h&&/^#\/pipeline/.test(hashNow())&&limpaFiltros())h=await espera(()=>acha(q.alvo),1500);
-  if(!h)return null;await rola(h);return acha(q.alvo)||h}
+  if(!h)return null;await rola(h,q.alvo);return acha(q.alvo)||h}
 function aponta(id,alvo){FOCO=alvo?{id,alvo}:null;mostrar=true;setTimeout(anel,30);setTimeout(anel,400)}
 async function mostra236(){mostrar=true;let p=passo();if(!p){ULTIMO={ok:false,como:'fim'};return ULTIMO}
   /* o passo acabou de ser feito (o guia ainda ia seguir): segue já e mostra o próximo */
@@ -263,7 +266,7 @@ async function mostra236(){mostrar=true;let p=passo();if(!p){ULTIMO={ok:false,co
     const diz=f.diz?valorDe(f.diz):'';try{toast('Este passo já está feito ✓'+(diz?' — '+diz:'')+'.')}catch(e){}
     aponta(p.id,h?(f.alvo&&acha(f.alvo)?f.alvo:p.alvo):null);ULTIMO={passo:p.id,ok:!!h&&naTela(h),como:'feito',texto:h?txt(h.el):'',diz};return ULTIMO}
   let h=await chega(p);
-  if(h){aponta(p.id,p.alvo);if(p.tela&&location.hash!==NOPASSO){}ULTIMO={passo:p.id,ok:naTela(h),como:'alvo',texto:txt(h.el)};return ULTIMO}
+  if(h){aponta(p.id,p.alvo);if(p.tela&&location.hash!==NOPASSO){}h=acha(p.alvo)||h;ULTIMO={passo:p.id,ok:naTela(h),como:'alvo',texto:txt(h.el)};return ULTIMO}
   /* o alvo ainda não existe: o que o abre está num passo anterior (ex.: o botão que abre o formulário) */
   const c=cap();for(let k=ST.passo-1;k>=Math.max(0,ST.passo-4);k--){const q=c.passos[k];if(!q||!q.alvo||(q.tela&&!sameScreen(q.tela)))continue;const ho=acha(q.alvo);if(ho&&await rola(ho)){
     aponta(p.id,q.alvo);try{toast('Antes, clique em “'+(txt(ho.el).slice(0,40)||'o botão contornado')+'” — é ele que abre o que este passo pede.')}catch(e){}ULTIMO={passo:p.id,ok:naTela(ho),como:'abre',texto:txt(ho.el)};return ULTIMO}}
@@ -283,7 +286,7 @@ let _pj=null,_pjs=null;
 function captura(){const o={db:{},deal:null,np:null,hash:hashNow()};try{for(const k of Object.keys(S.db)){if(k==='produtos'){const a=S.db.produtos;if(_pj===a&&_pjs){o.db[k]=_pjs}else{_pjs=JSON.stringify(a);_pj=a;o.db[k]=_pjs}continue}o.db[k]=JSON.stringify(S.db[k])}
   o.deal=S.deal||null;o.np=S.np?JSON.stringify(S.np):null}catch(e){return null}return o}
 function restaura(o){if(!o||!treino())return false;try{Object.keys(S.db).forEach(k=>{if(!(k in o.db))delete S.db[k]});Object.keys(o.db).forEach(k=>{S.db[k]=JSON.parse(o.db[k])});_pj=null;_pjs=null;
-  S.deal=o.deal;if(o.np)S.np=JSON.parse(o.np);try{const ov=document.getElementById('np-ov');if(ov)ov.remove()}catch(e){}try{save()}catch(e){}try{render()}catch(e){}return true}catch(e){console.error('guia restaura',e);return false}}
+  S.deal=o.deal;if(o.np){/* a tela nova guarda S.np numa constante: devolve o estado no MESMO objeto */const n=JSON.parse(o.np);if(S.np&&typeof S.np==='object'){Object.keys(S.np).forEach(k=>delete S.np[k]);Object.assign(S.np,n)}else S.np=n}try{const ov=document.getElementById('np-ov');if(ov)ov.remove()}catch(e){}try{save()}catch(e){}try{render()}catch(e){}return true}catch(e){console.error('guia restaura',e);return false}}
 function entra(p){const k=ST.cap+'|'+ST.passo;if(NOPASSO===k)return;NOPASSO=k;FOCO=null;if(treino()&&!SNAP.has(p.id)&&!evalPronto(p)&&!LATCH[p.id]){const f=captura();if(f)SNAP.set(p.id,f)}}
 function fotoProxima(){const q=proximo();if(q&&treino()&&!SNAP.has(q.id)&&!evalPronto(q)){const f=captura();if(f)SNAP.set(q.id,f)}}
 function volta236(){if(ST.passo>0)ST.passo--;else if(ST.cap>0){ST.cap--;ST.passo=Math.max(0,(cap().passos||[]).length-1)}
