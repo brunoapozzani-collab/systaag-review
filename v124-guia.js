@@ -169,15 +169,15 @@ function desenha(){
     box.innerHTML=hd+`<div class="bd fim"><div class="n">Capítulo ${ST.cap+1} concluído</div><h4>${E(c.titulo)}</h4>${c.aprendeu?`<ul>${c.aprendeu.map(x=>`<li>${E(x)}</li>`).join('')}</ul>`:''}<div class="pq">${E(c.objetivo||'')}</div></div><div class="ft">${prox?`<button class="pri" onclick="GUIA.cap(${ST.cap+1})">Próximo: ${E(prox.titulo)} →</button>`:`<button class="pri" onclick="GUIA.fechar()">Terminei a história</button>`}<button onclick="GUIA.lista()">Capítulos</button></div>`;
     ring.style.display='none';return}
   if(ST.lista){box.innerHTML=hd+`<div class="bd"><div class="n">Escolha onde continuar</div><div class="caps">${CAPS().map((k,i)=>`<button class="${i===ST.cap?'on':''}" onclick="GUIA.cap(${i})">${i+1}. ${E(k.titulo)} <span style="opacity:.6">· ${(k.passos||[]).length} passos</span></button>`).join('')}</div><div class="pq">Os capítulos seguem a ordem da história: cada um começa de onde o anterior terminou.</div></div><div class="ft"><button onclick="GUIA.lista(false)">Voltar ao passo</button></div>`;return}
-  const pronto=evalPronto(p);const fx=!pronto&&CF&&CF.corr?CF.corr:null;const q=fx||p;const fora=q.tela&&!sameScreen(q.tela);
+  const pronto=evalPronto(p)||!!LATCH[p.id];const fx=!pronto&&CF&&CF.corr?CF.corr:null;const q=fx||p;const fora=q.tela&&!sameScreen(q.tela);
   const st=d=>{const r=CHK&&CHK.id===p.id?CHK.rows.find(x=>x.campo===d.campo):null;if(!r||r.ok==null)return {c:'',m:''};if(r.ok)return {c:'ok',m:'✓ '};if(r.vazio&&TENTOU!==p.id)return {c:'',m:''};return {c:'bad',m:'✗ ',a:r.vazio?'está vazio':'agora: “'+r.agora+'”'}};
   const dig=(p.digite||[]).length?`<div class="dig${p.digite.length>6?' muitos':''}">${p.digite.map(d=>{const x=st(d);return `<div class="${x.c}" title="Clique para copiar" onclick="GUIA.copia('${J(d.valor)}')"><span>${x.m}${E(d.campo)}${x.a?`<small>${E(x.a)}</small>`:''}</span><b>${E(d.valor)}</b></div>`}).join('')}</div>`:'';
   const rb=CHK&&CHK.id===p.id&&TENTOU===p.id?ruins(CHK):[];
   const seg=rb.length?`<div class="cf"><b>Ainda não salvei.</b> Acerte o que está em vermelho e clique de novo em “${E((p.alvo&&p.alvo.texto)||'Salvar')}”:<ul>${rb.map(r=>`<li>${E(r.campo)}: ${r.vazio?'está vazio':'está “'+E(r.agora)+'”'} → ${E(esperado((p.digite.find(d=>d.campo===r.campo)||{}).valor)||'')}</li>`).join('')}</ul></div>`:'';
   const cf=!pronto&&CF?`<div class="cf"><b>Já foi salvo, mas ficou diferente do pedido.</b> ${E(CF.msg)}${CF.bot?`<button class="pri" style="margin-top:8px" onclick="GUIA._corrige()">${E(CF.bot.lb)}</button>`:''}${CF.corr?'<div style="margin-top:6px;opacity:.75">“Me mostre onde” leva você até lá.</div>':''}</div>`:'';
   box.innerHTML=hd+`<div class="bd"><div class="n">Passo ${ST.passo+1} de ${c.passos.length}${p.secao?' · '+E(p.secao):''}</div><div class="faca">${E(fx?'Corrija: '+fx.faca:p.faca)}</div>${fora?`<div class="menu">Você está em outra tela. Vá por: <b>${E(q.menu||q.tela)}</b></div>`:(q.menu?`<div class="pq" style="margin-bottom:6px">Tela: ${E(q.menu)}</div>`:'')}${cf}${seg}${dig}<div class="pq"><b>Por quê:</b> ${E(p.porque||'')}</div></div>
-   <div class="st ${pronto?'ok':''}"><span class="dot"></span>${pronto?'Feito! Seguindo para o próximo passo…':(CF?'Esperando a correção':'Esperando você fazer este passo')}</div>
-   <div class="ft"><button class="pri" onclick="GUIA.mostra()">Me mostre onde</button>${ST.passo>0||ST.cap>0?'<button onclick="GUIA.volta()">← Voltar</button>':''}<button onclick="GUIA.lista()">Capítulos</button></div>`;
+   <div class="st ${pronto?'ok':''}"><span class="dot"></span>${REVER===p.id&&pronto?'Este passo já está feito ✓ — “Me mostre onde” mostra como ficou.':pronto?'Feito! Seguindo para o próximo passo…':(CF?'Esperando a correção':(p.ver?'Olhe e clique em “Vi”':'Esperando você fazer este passo'))}</div>
+   <div class="ft"><button class="pri" onclick="GUIA.mostra()">Me mostre onde</button>${REVER===p.id&&pronto?'<button class="pri" onclick="GUIA.segue()">Seguir →</button>':''}${p.ver&&!pronto?'<button class="pri" onclick="GUIA.vi()">Vi ✓</button>':''}${ST.passo>0||ST.cap>0?'<button onclick="GUIA.volta()">← Voltar</button>':''}<button onclick="GUIA.lista()">Capítulos</button></div>`;
 }
 function anel(){
   if(!ST.on||ST.min||ST.lista||!ring){if(ring)ring.style.display='none';return}
@@ -185,11 +185,12 @@ function anel(){
   if(CF&&CF.corr&&!evalPronto(p))p=CF.corr;
   /* e2e fix (29/10): on the wrong screen the learner must use the side menu, which is on the LEFT — the panel (bottom-left)
      covered the lower rail buttons (e.g. "Base de dados"). While the screen is wrong, the panel stays on the right. */
+  if(FOCO&&FOCO.id===p.id&&mostrar){const hf=acha(FOCO.alvo);if(hf){const r=rectDe(hf);desvia(r);ring.style.display='';ring.style.left=(r.left-6)+'px';ring.style.top=(r.top-6)+'px';ring.style.width=(r.width+12)+'px';ring.style.height=(r.height+12)+'px';return}}
   if(p.tela&&!sameScreen(p.tela)){if(box&&!box.classList.contains('dir'))box.classList.add('dir');
     const c=mostrar?caminho(p.tela):null;if(!c){ring.style.display='none';return}const r=rectDe(c);ring.style.display='';ring.style.left=(r.left-6)+'px';ring.style.top=(r.top-6)+'px';ring.style.width=(r.width+12)+'px';ring.style.height=(r.height+12)+'px';return}
   /* e2e fix (29/10): the panel kept off the target only after "Me mostre onde"; a learner who clicks without asking found the
      button under the panel. Now the panel moves away from the step's target on every tick; the ring still shows only on request. */
-  const h=acha(p.alvo);if(!h){ring.style.display='none';return}
+  const h=(FOCO&&FOCO.id===p.id&&acha(FOCO.alvo))||acha(p.alvo);if(!h){ring.style.display='none';return}
   const r=rectDe(h);desvia(r);if(!mostrar){ring.style.display='none';return}
   ring.style.display='';ring.style.left=(r.left-6)+'px';ring.style.top=(r.top-6)+'px';ring.style.width=(r.width+12)+'px';ring.style.height=(r.height+12)+'px'}
 /* the panel never covers what the learner must click: if the target sits under it, it moves to the other side */
@@ -201,23 +202,111 @@ function desvia(r){if(!box||!r||ST.pos)return;if(!cobre(r,box.getBoundingClientR
 let ultimo='';
 function tick(){if(!ST.on)return;try{const m=document.getElementById('mg-ask');if(m)desvia(m.getBoundingClientRect())}catch(e){}const p=passo();
   guardaFrames();
-  if(p){const pr=evalPronto(p);
+  if(p){entra(p);const pr=evalPronto(p)||!!LATCH[p.id];
     try{CF=pr?null:conferePasso(p);if(CF&&CF.corr&&evalPronto(CF.corr))CF.corr=null}catch(e){CF=null}
     try{const h=(p.digite||[]).length&&!pr&&!CF?acha(p.alvo):null;CHK=h?confereCampos(p,h):null}catch(e){CHK=null}
     if(TENTOU&&TENTOU!==p.id)TENTOU=null;contorna();
-    if(pr){if(!okDesde){okDesde=Date.now();desenha()}else if(Date.now()-okDesde>1100){okDesde=0;ST.feitos[p.id]=1;ST.passo++;mostrar=false;sv(ST);desenha()}}
-    else if(okDesde){okDesde=0;desenha()}
+    if(REVER===p.id){/* voltou a um passo já feito (fora do treino, ou sem foto): fica parado até “Seguir” */}
+    else if(pr||okDesde){if(!okDesde){okDesde=Date.now();LATCH[p.id]=1;fotoProxima();desenha()}else{olhaAdiante();if(Date.now()-okDesde>1100)avanca()}}
     const sig=ST.cap+'|'+ST.passo+'|'+hashNow()+'|'+pr+'|'+(CF?CF.msg+(CF.corr?1:0):'')+'|'+(TENTOU||'')+'|'+(CHK?CHK.rows.map(r=>r.ok+':'+(r.agora||'')).join(','):'');if(sig!==ultimo){ultimo=sig;desenha()}}
   anel()}
+/* ───────── v236 · “ME MOSTRE ONDE” SEMPRE CAI EM ALGO VISÍVEL (Bruno, 26/11/2026) ─────────
+   Bruno: no Pipeline do capítulo Comercial, ao clicar em “Me mostre onde” o cartão do cliente já tinha sumido — nada para apontar.
+   Causas (reproduzidas no treino): “Montar proposta de Sistema” leva o negócio para a coluna “Proposta desenvolvida” e abre a
+   proposta; o guia ainda ficava ~1 s no passo anterior e, nesse intervalo ou depois de “← Voltar”, apontava para um botão do painel
+   do negócio que já estava fechado; em outra tela o botão só dizia “Primeiro vá para a tela…”; passos que olham a tela (ex.: “clique em
+   Valores e margem”) deixavam de contar se a pessoa seguisse em frente antes do guia — e o guia empacava.
+   Regra de agora, para todos os capítulos:
+   · “Me mostre onde” abre a tela do passo (em vez de só avisar), limpa o filtro do Pipeline que esconda o cartão, abre o painel do
+     negócio quando o botão está nele, rola o quadro (inclusive para o lado) e o painel até o alvo e o contorna;
+   · se o alvo depende de algo aberto no passo anterior (ex.: o formulário de “Novo colaborador”), aponta para o que abre;
+   · passo já feito: diz “Este passo já está feito ✓” e mostra onde a coisa está agora (ex.: em que coluna está o cartão);
+   · um passo conta assim que foi feito, mesmo que a pessoa já tenha seguido para o próximo (o guia não empaca);
+   · “← Voltar” no MODO TREINO devolve o treino ao estado em que aquele passo começou (o cartão volta para a coluna em que o passo
+     o espera); fora do treino nada é desfeito: o passo aparece como “já feito” e “Seguir →” continua.
+   · passos de “olhar” (ver:true) só contam quando a pessoa clica em “Vi ✓”. */
+let LATCH={},FOCO=null,REVER=null,NOPASSO='',ULTIMO=null;const SNAP=new Map();const VI={};
+const valorDe=x=>{try{return new Function('return ('+x+')')()}catch(e){return null}};
+const roda=x=>{try{new Function(x)()}catch(e){console.warn('guia prepara',e)}};
+const dorme=ms=>new Promise(r=>setTimeout(r,ms));
+async function espera(f,ms){const t=Date.now()+(ms||2500);for(;;){let v=null;try{v=f()}catch(e){}if(v)return v;if(Date.now()>t)return null;await dorme(80)}}
+function naTela(h){if(!h||!h.el||!h.el.isConnected)return false;const r=rectDe(h);return r.width>1&&r.height>1&&r.top>=-2&&r.left>=-2&&r.top+Math.min(r.height,40)<=innerHeight+2&&r.left+Math.min(r.width,40)<=innerWidth+2}
+function zera236(){LATCH={};FOCO=null;REVER=null;NOPASSO='';SNAP.clear();Object.keys(VI).forEach(k=>delete VI[k])}
+/* Pipeline: o cartão nunca fica escondido por filtro (busca, frente, consultor, cliente) */
+function limpaFiltros(){let mudou=false;try{const f=S.comF||{};if(Object.keys(f).some(k=>f[k]!==''&&f[k]!=null)){S.comF={};mudou=true}if(S.pipeView&&S.pipeView!=='jogo'){S.pipeView='jogo';mudou=true}}catch(e){}
+  if(mudou){try{renderMain()}catch(e){}}return mudou}
+function abreNegocio(cod){try{const n=(S.db.negociacoes||[]).find(x=>x.codinome===cod);if(!n)return false;limpaFiltros();if(S.deal!==n.id){S.deal=n.id;renderMain()}return true}catch(e){return false}}
+/* em que coluna do Pipeline está o cartão agora (pelo título da coluna) */
+function colunaDe(texto){try{const c=[...document.querySelectorAll('main .card.rowlink')].find(x=>(x.textContent||'').includes(texto));if(!c)return '';const col=c.parentElement;const t=col&&col.firstElementChild&&col.firstElementChild!==c?(col.firstElementChild.textContent||''):'';
+  const l=t.replace(/\s*\d+\s*$/,'').replace(/\s+/g,' ').trim();return l?l.charAt(0).toUpperCase()+l.slice(1).toLowerCase():''}catch(e){return ''}}
+async function rola(h){try{if(h.f){h.f.scrollIntoView({block:'center',inline:'nearest'})}h.el.scrollIntoView({block:'center',inline:'center'})}catch(e){}
+  await dorme(120);if(!naTela(h)){try{h.el.scrollIntoView({block:'nearest',inline:'nearest'})}catch(e){}await dorme(80)}return naTela(h)}
+/* leva até o alvo q.alvo: abre a tela, prepara (painel, filtro, aba), procura, rola */
+async function chega(q){if(!q||!q.alvo)return null;
+  if(q.tela&&!sameScreen(q.tela)){const d=(q.ir&&valorDe(q.ir))||(/^#\/[a-z0-9_-]+$/i.test(q.tela)?q.tela:null);if(d&&!/undefined|null$/.test(d)){location.hash=d;await espera(()=>sameScreen(q.tela)&&document.getElementById('main'),3000);await dorme(250)}}
+  if(q.tela&&!sameScreen(q.tela))return null;
+  if(q.prepara){roda(q.prepara);await dorme(150)}
+  let h=await espera(()=>acha(q.alvo),q.prepara?2000:900);
+  if(!h&&/^#\/pipeline/.test(hashNow())&&limpaFiltros())h=await espera(()=>acha(q.alvo),1500);
+  if(!h)return null;await rola(h);return acha(q.alvo)||h}
+function aponta(id,alvo){FOCO=alvo?{id,alvo}:null;mostrar=true;setTimeout(anel,30);setTimeout(anel,400)}
+async function mostra236(){mostrar=true;let p=passo();if(!p){ULTIMO={ok:false,como:'fim'};return ULTIMO}
+  /* o passo acabou de ser feito (o guia ainda ia seguir): segue já e mostra o próximo */
+  if(REVER!==p.id&&(evalPronto(p)||LATCH[p.id])&&!(CF&&CF.corr)){avanca();p=passo();if(!p){ULTIMO={ok:false,como:'fim'};return ULTIMO}
+    if(evalPronto(p)||LATCH[p.id])return mostra236()}
+  if(CF&&CF.corr&&!evalPronto(p)){const h=await chega(CF.corr);aponta(p.id,h?CF.corr.alvo:null);ULTIMO={passo:p.id,ok:!!h&&naTela(h),como:'correcao',texto:h?txt(h.el):''};return ULTIMO}
+  /* passo já feito (voltou a ele): diz e mostra onde ficou */
+  if(evalPronto(p)||LATCH[p.id]){const f=p.feito||{};let h=null;
+    if(f.alvo)h=await chega({tela:f.tela||p.tela,ir:f.ir||p.ir,alvo:f.alvo,prepara:f.prepara});
+    if(!h){h=acha(p.alvo);if(h)await rola(h)}
+    if(!h&&p.tela){h=await chega(p);}
+    const diz=f.diz?valorDe(f.diz):'';try{toast('Este passo já está feito ✓'+(diz?' — '+diz:'')+'.')}catch(e){}
+    aponta(p.id,h?(f.alvo&&acha(f.alvo)?f.alvo:p.alvo):null);ULTIMO={passo:p.id,ok:!!h&&naTela(h),como:'feito',texto:h?txt(h.el):'',diz};return ULTIMO}
+  let h=await chega(p);
+  if(h){aponta(p.id,p.alvo);if(p.tela&&location.hash!==NOPASSO){}ULTIMO={passo:p.id,ok:naTela(h),como:'alvo',texto:txt(h.el)};return ULTIMO}
+  /* o alvo ainda não existe: o que o abre está num passo anterior (ex.: o botão que abre o formulário) */
+  const c=cap();for(let k=ST.passo-1;k>=Math.max(0,ST.passo-4);k--){const q=c.passos[k];if(!q||!q.alvo||(q.tela&&!sameScreen(q.tela)))continue;const ho=acha(q.alvo);if(ho&&await rola(ho)){
+    aponta(p.id,q.alvo);try{toast('Antes, clique em “'+(txt(ho.el).slice(0,40)||'o botão contornado')+'” — é ele que abre o que este passo pede.')}catch(e){}ULTIMO={passo:p.id,ok:naTela(ho),como:'abre',texto:txt(ho.el)};return ULTIMO}}
+  /* outra tela que o guia não sabe abrir sozinho: o caminho no menu */
+  if(p.tela&&!sameScreen(p.tela)){const m=caminho(p.tela);if(m){aponta(p.id,null);setTimeout(anel,50);try{toast('Vá para: '+(p.menu||p.tela)+' — o contorno azul mostra por onde.')}catch(e){}ULTIMO={passo:p.id,ok:naTela(m),como:'menu',texto:txt(m.el)};return ULTIMO}}
+  try{toast('Não achei o alvo deste passo nesta tela — avise o Bruno (passo '+p.id+').',true)}catch(e){}
+  ULTIMO={passo:p.id,ok:false,como:'nada'};return ULTIMO}
+const txt=el=>String((el&&(el.innerText||el.value))||'').replace(/\s+/g,' ').trim().slice(0,80);
+/* andar e voltar */
+function avanca(){const p=passo();okDesde=0;if(p){ST.feitos[p.id]=1;LATCH[p.id]=1}REVER=null;FOCO=null;ST.passo++;mostrar=false;sv(ST);desenha()}
+function proximo(){const c=cap();return c&&c.passos?c.passos[ST.passo+1]||null:null}
+/* o passo seguinte, se já foi feito enquanto o guia confirmava este, fica valendo (passos que olham a tela: aba aberta, janela aberta) */
+function olhaAdiante(){const c=cap();if(!c)return;for(let k=ST.passo+1;k<=ST.passo+2;k++){const q=c.passos[k];if(!q)break;if(!LATCH[q.id]&&evalPronto(q)){LATCH[q.id]=1}else if(!LATCH[q.id])break}}
+/* fotos do treino: o estado em que cada passo começa (só no MODO TREINO; nunca a base real) */
+const treino=()=>!!window.__TREINO;
+let _pj=null,_pjs=null;
+function captura(){const o={db:{},deal:null,np:null,hash:hashNow()};try{for(const k of Object.keys(S.db)){if(k==='produtos'){const a=S.db.produtos;if(_pj===a&&_pjs){o.db[k]=_pjs}else{_pjs=JSON.stringify(a);_pj=a;o.db[k]=_pjs}continue}o.db[k]=JSON.stringify(S.db[k])}
+  o.deal=S.deal||null;o.np=S.np?JSON.stringify(S.np):null}catch(e){return null}return o}
+function restaura(o){if(!o||!treino())return false;try{Object.keys(S.db).forEach(k=>{if(!(k in o.db))delete S.db[k]});Object.keys(o.db).forEach(k=>{S.db[k]=JSON.parse(o.db[k])});_pj=null;_pjs=null;
+  S.deal=o.deal;if(o.np)S.np=JSON.parse(o.np);try{const ov=document.getElementById('np-ov');if(ov)ov.remove()}catch(e){}try{save()}catch(e){}try{render()}catch(e){}return true}catch(e){console.error('guia restaura',e);return false}}
+function entra(p){const k=ST.cap+'|'+ST.passo;if(NOPASSO===k)return;NOPASSO=k;FOCO=null;if(treino()&&!SNAP.has(p.id)&&!evalPronto(p)&&!LATCH[p.id]){const f=captura();if(f)SNAP.set(p.id,f)}}
+function fotoProxima(){const q=proximo();if(q&&treino()&&!SNAP.has(q.id)&&!evalPronto(q)){const f=captura();if(f)SNAP.set(q.id,f)}}
+function volta236(){if(ST.passo>0)ST.passo--;else if(ST.cap>0){ST.cap--;ST.passo=Math.max(0,(cap().passos||[]).length-1)}
+  mostrar=false;okDesde=0;FOCO=null;const c=cap();const p=passo();
+  /* este passo e os seguintes deixam de contar */
+  if(c){c.passos.slice(ST.passo).forEach(q=>{delete LATCH[q.id];delete VI[q.id];delete ST.feitos[q.id]})}
+  let desfez=false;if(p&&treino()&&SNAP.has(p.id)&&evalPronto(p)){desfez=restaura(SNAP.get(p.id));if(desfez&&c)c.passos.slice(ST.passo+1).forEach(q=>SNAP.delete(q.id))}
+  REVER=p&&evalPronto(p)?p.id:null;NOPASSO=ST.cap+'|'+ST.passo;sv(ST);ultimo='';desenha();
+  if(p){setTimeout(()=>{mostra236().then(r=>{if(desfez)try{toast('Voltei o treino para o começo deste passo'+(p.feito&&p.feito.voltou?' — '+p.feito.voltou:'')+'.')}catch(e){}})},desfez?350:50)}}
 window.GUIA={
-  iniciar(i){ST={on:true,cap:i||0,passo:0,min:false,feitos:{},lista:false};sv(ST);mostrar=false;okDesde=0;ultimo='';desenha()},
+  iniciar(i){ST={on:true,cap:i||0,passo:0,min:false,feitos:{},lista:false};sv(ST);mostrar=false;okDesde=0;zera236();ultimo='';desenha()},
   continuar(){ST.on=true;ST.lista=false;sv(ST);desenha()},
   fechar(){ST.on=false;sv(ST);desenha()},
   min(){ST.min=!ST.min;sv(ST);desenha()},
-  cap(i){ST.cap=i;ST.passo=0;ST.lista=false;sv(ST);mostrar=false;okDesde=0;/* pula os passos que já estão feitos no sistema */const c=cap();while(c&&c.passos[ST.passo]&&evalPronto(c.passos[ST.passo])&&c.passos[ST.passo].pula!==false)ST.passo++;sv(ST);desenha()},
-  volta(){if(ST.passo>0)ST.passo--;else if(ST.cap>0){ST.cap--;ST.passo=Math.max(0,(cap().passos||[]).length-1)}mostrar=false;okDesde=0;sv(ST);desenha()},
+  cap(i){ST.cap=i;ST.passo=0;ST.lista=false;sv(ST);mostrar=false;okDesde=0;zera236();/* pula os passos que já estão feitos no sistema */const c=cap();while(c&&c.passos[ST.passo]&&evalPronto(c.passos[ST.passo])&&c.passos[ST.passo].pula!==false)ST.passo++;sv(ST);desenha()},
+  volta(){volta236()},
   lista(v){ST.lista=v!==false;sv(ST);desenha()},
-  mostra(){mostrar=true;let p=passo();if(!p)return;if(CF&&CF.corr&&!evalPronto(p))p=CF.corr;if(p.tela&&!sameScreen(p.tela)){const c=caminho(p.tela);if(c){setTimeout(anel,50);try{toast('Primeiro vá para a tela: '+(p.menu||p.tela)+' — o contorno azul mostra por onde.')}catch(e){}}else{try{toast('Primeiro abra a tela: '+(p.menu||p.tela))}catch(e){}}return}const h=acha(p.alvo);if(h){try{h.el.scrollIntoView({block:'center',behavior:'smooth'})}catch(e){}setTimeout(anel,350)}else{try{toast(CF?'Este passo já foi salvo — veja no painel o que ficou diferente e como corrigir.':'Não achei o botão nesta tela — confira se você está na tela certa ou role a página.',true)}catch(e){}}},
+  mostra(){return mostra236()},
+  segue(){const p=passo();REVER=null;if(p&&(evalPronto(p)||LATCH[p.id]))avanca();else desenha()},
+  vi(id){if(id)return !!VI[id];const p=passo();if(p){VI[p.id]=1;tick()}return true},
+  colunaDe:colunaDe,limpaFiltros:limpaFiltros,abreNegocio:abreNegocio,_fotos:()=>[...SNAP.keys()],
+  _rever(id){GUIA._ir(id);const p=passo();NOPASSO=ST.cap+'|'+ST.passo;FOCO=null;okDesde=0;REVER=p&&evalPronto(p)?p.id:null;ultimo='';desenha();return !!REVER},
+  _ultimo:()=>ULTIMO,
   _corrige(){try{if(CF&&CF.bot)CF.bot.fn()}catch(e){}},
   _ir(id){CAPS().forEach((c,ci)=>(c.passos||[]).forEach((x,pi)=>{if(x.id===id){ST.on=true;ST.cap=ci;ST.passo=pi;ST.lista=false}}));sv(ST);ultimo='';desenha()},
   _camposDe(id){let p=null;for(const c of CAPS())for(const x of c.passos||[])if(x.id===id)p=x;const h=p&&acha(p.alvo);ESCOPO=null;const c=confereCampos(p,h);return c&&c.rows.map(r=>({campo:r.campo,ok:r.ok,agora:r.agora,tag:r.el&&(r.el.tagName+'#'+r.el.id+'.'+r.el.className)}))},
