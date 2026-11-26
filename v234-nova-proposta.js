@@ -504,5 +504,5 @@ NP.tipoNova=function(k){document.querySelectorAll('.np .tipo').forEach(b=>b.clas
  const set=(el,v)=>{if(el&&[...el.options].some(o=>o.value===v)){el.value=v;el.dispatchEvent(new Event('change',{bubbles:true}))}};
  if(k==='posvenda'){if(av)av.innerHTML='Proposta de pós-venda nasce do atendimento: <a href="#/posobras">Pós-venda › Obras finalizadas › Orçamento</a>.';return}
  if(av)av.textContent='';
- if(k==='focal'){set(l,'focal');set(t,'sistema')}else{set(t,k);if(k==='acustica')set(l,'acustica');else if(l&&(l.value==='acustica'||l.value==='focal'))set(l,'taag')}};
+ if(k==='focal'){set(l,'focal');set(t,'sistema')}else{set(t,k);if(k==='acustica')set(l,'acustica');else if(l&&(l.value==='acustica'||l.value==='focal'))set(l,'taag')}};/* v234b 26/11/2026: Nova proposta pertence ao Comercial nas permissões (antes ninguém fora Diretoria/TI abria: a tela não estava em nenhum departamento) */(function(){var f=function(){try{if(typeof SEC_OF==='object'){['nova','np','editor'].forEach(function(k){if(!SEC_OF[k])SEC_OF[k]='com'})}}catch(e){}};f();var r0=window.renderMain;if(typeof r0==='function'){window.renderMain=function(){f();return r0.apply(this,arguments)}}})();
 })();
