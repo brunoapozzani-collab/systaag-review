@@ -36,8 +36,8 @@ const Err=m=>{try{return new RuleError(m)}catch(e){return new Error(m)}};
 const TIPOS=[
   ['exclusivo','Só trabalha com a TAAG','Vende, indica e só oferece a TAAG'],
   ['indica','Indica a TAAG e outros','Indica a TAAG, mas também indica outros e não trabalha ativamente para fechar com a TAAG'],
-  ['cotacao','Só pediu proposta (3 orçamentos)','Pediu a proposta só para apresentar 3 orçamentos — o cliente costuma fechar com outra empresa']];
-const DEF_PCT={exclusivo:15,indica:10,cotacao:5};
+  ['cotacao','Só pediu proposta (3 orçamentos)','Pediu a proposta só para apresentar 3 orçamentos — o cliente costuma fechar com outra empresa'],['especial','Acordo especial','RT combinada com o parceiro fora das três faixas (ex.: Studio Arthur Casas, 12%)']];
+const DEF_PCT={exclusivo:15,indica:10,cotacao:5,especial:12};
 const DEF_FX={platinum:75,ouro:50,prata:25};
 function regras(){const r=S.db.regras=S.db.regras&&typeof S.db.regras==='object'?S.db.regras:{};
   if(!r.rt_tipos||typeof r.rt_tipos!=='object')r.rt_tipos=Object.assign({},DEF_PCT);
@@ -208,7 +208,7 @@ setInterval(injetaQuadro,700);
 let PEND=null;
 
 /* API que o CRM (dentro do quadro) chama */
-const TAGCOR={exclusivo:'background:#e6f6ec;color:#116633',indica:'background:#e8f1ff;color:#0b4fa3',cotacao:'background:#fff4e5;color:#8a4b00'};
+const TAGCOR={exclusivo:'background:#e6f6ec;color:#116633',indica:'background:#e8f1ff;color:#0b4fa3',cotacao:'background:#fff4e5;color:#8a4b00',especial:'background:#f3e8ff;color:#6b21a8'};
 window.V187={
   tipos:()=>TIPOS.map(([k,l,d])=>({k,l,d,pct:pctDe(k)})),pct:pctDe,tipoDe:pid=>tipoDe(parcById(pid)||parcByCrm(pid)),
   rtVal(crmId){const p=parcByCrm(crmId);const t=tipoDe(p);return t?pctDe(t):''},
@@ -264,7 +264,7 @@ function cartaoRegras(naTela){const r=regras();const P=(S.db.parceiros||[]).filt
   const por=TIPOS.map(([k,l])=>({k,l,n:P.filter(p=>tipoDe(p)===k).length}));
   const inp=(onch,v,w)=>`<input type="number" step="0.5" min="0" max="100" class="form-control form-control-sm text-end" style="width:${w||70}px;display:inline-block" value="${v}" onchange="${onch}">`;
   return `<div class="card p-3 mb-3" data-v187="regras" style="border-left:4px solid #0b6bcb;display:block"><div class="d-flex justify-content-between flex-wrap gap-2"><div><b>Tipo de parceria → RT</b><div class="sub" style="font-size:12px">O tipo, escolhido no cadastro do parceiro, define a RT. A proposta busca o % daqui — ninguém digita o % na proposta.</div></div>${naTela?'':'<a href="#/rtclassif" class="btn-soft" style="text-decoration:none;align-self:flex-start">Classificação dos parceiros ›</a>'}</div>
-   <div class="row g-2 mt-1">${TIPOS.map(([k,l,d])=>`<div class="col-md-4"><div class="p-2" style="border-radius:10px;background:rgba(127,127,127,.06)"><div class="d-flex justify-content-between align-items-center gap-2"><b style="font-size:13px">${E(l)}</b><span>${inp(`run(()=>V187._setPct('${k}',this.value),'RT do tipo salva — vale para todos os parceiros deste tipo e para as propostas em rascunho')`,pctDe(k))} %</span></div><div class="sub" style="font-size:11.5px">${E(d)}</div></div></div>`).join('')}</div>
+   <div class="row g-2 mt-1">${TIPOS.map(([k,l,d])=>`<div class="col-md-3"><div class="p-2" style="border-radius:10px;background:rgba(127,127,127,.06)"><div class="d-flex justify-content-between align-items-center gap-2"><b style="font-size:13px">${E(l)}</b><span>${inp(`run(()=>V187._setPct('${k}',this.value),'RT do tipo salva — vale para todos os parceiros deste tipo e para as propostas em rascunho')`,pctDe(k))} %</span></div><div class="sub" style="font-size:11.5px">${E(d)}</div></div></div>`).join('')}</div>
    <div class="mt-2" style="font-size:13px"><b>${nBR(P.length)}</b> parceiros = ${por.map(x=>`<a href="#/rtclassif/${x.k}">${nBR(x.n)} ${E(x.l)}</a>`).join(' + ')} + <a href="#/rtclassif/semtipo" style="color:#b42318"><b>${nBR(sem)}</b> sem tipo</a> <span class="sub">(proposta com parceiro sem tipo não pode ser enviada)</span></div>
    <div class="mt-2 sub" style="font-size:12px">Classificação automática — faixas da nota (0–100): Platinum ≥ ${inp(`run(()=>V187._setFx('platinum',this.value),'Faixa salva')`,r.classif_faixas.platinum,64)} · Ouro ≥ ${inp(`run(()=>V187._setFx('ouro',this.value),'Faixa salva')`,r.classif_faixas.ouro,64)} · Prata ≥ ${inp(`run(()=>V187._setFx('prata',this.value),'Faixa salva')`,r.classif_faixas.prata,64)} · Bronze abaixo</div></div>`}
 window.V187._setPct=(k,v)=>{if(!TIPOS.some(x=>x[0]===k))throw Err('Tipo inválido.');const n=+String(v).replace(',','.');if(!(n>=0&&n<=100))throw Err('Informe um % de 0 a 100.');
