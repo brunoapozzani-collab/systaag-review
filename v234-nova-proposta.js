@@ -314,7 +314,9 @@ function resultados(p,b,rs,ativo){if(!ativo)return '';if(!rs.length)return '<div
 /* catálogo: produtos da Base que se vendem (sem os 16 de demonstração p1–p16, sem diárias/visitas, sem inativos) */
 const DEMO=/^p([1-9]|1[0-6])$/;
 function vendavel(x){return x&&!x.inativo&&!x._apagado&&!x.merged_into&&!DEMO.test(x.id)&&!/_TF$/i.test(x.marca||'')&&catCom(x)!=='Serviços (não é produto)'&&!/^di[aá]ria|^visita/i.test(String(x.nome||''))}
-function catalogo(q,c){const qq=nz(q);return (S.db.produtos||[]).filter(x=>vendavel(x)&&(!c||catCom(x)===c)&&(!qq||nz(x.nome+' '+(x.marca||'')+' '+(x.apelido||'')+' '+x.id).includes(qq))).sort((a,b)=>String(a.marca+a.nome).localeCompare(String(b.marca+b.nome),'pt-BR'))}
+/* busca por palavras: "300 icw6" acha "300-ICW6" (pontuação vira espaço; toda palavra digitada tem de aparecer) */
+const palavras=t=>nz(t).replace(/[^a-z0-9]+/g,' ').trim();
+function catalogo(q,c){const qs=palavras(q).split(' ').filter(Boolean);return (S.db.produtos||[]).filter(x=>{if(!vendavel(x)||(c&&catCom(x)!==c))return false;if(!qs.length)return true;const h=' '+palavras(x.nome+' '+(x.marca||'')+' '+(x.apelido||'')+' '+x.id)+' ';const hj=h.replace(/ /g,'');return qs.every(w=>h.includes(w)||hj.includes(w))}).sort((a,b)=>String(a.marca+a.nome).localeCompare(String(b.marca+b.nome),'pt-BR'))}
 NP.catalogo=catalogo;
 NP.busca=function(k,campo,v,soLista){const q=UI.busca[k]=UI.busca[k]||{q:'',c:''};q[campo]=v;
  if(soLista){const el=document.getElementById('np-res-'+k);const p=prop((location.hash.split('/')[2]||''));const b=p&&T(()=>blocosDe(p).find(x=>x.id===k),null);if(el&&p&&b){el.innerHTML=resultados(p,b,catalogo(q.q,q.c).slice(0,40),q.q||q.c);return}}rer()};

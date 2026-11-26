@@ -113,3 +113,16 @@ Nada foi gravado na Base compartilhada; a carga das categorias não foi feita.
   impostos, RT, bonificação), Pagamento e NF fica com a Gestão e o Financeiro, Raio-X e Fechamento não aparecem.
 - Nativo novo: endereço da obra e consultores no Cadastro; "Novo ambiente … Criar" em Sistemas; diárias também no pós-venda.
 - "Aprender fazendo": 21 passos do capítulo Comercial e 3 do Pós-venda reescritos para a tela nova (alvos e "pronto" conferidos).
+
+## 26/11/2026 (tarde) — "Aprender fazendo", capítulo Comercial, só na tela nova
+- Capítulo "Comercial — da proposta à venda confirmada": 26 → 43 passos. Passos novos (c1n01–c1n17): duas categorias (Base ›
+  Produtos › Categorias e o filtro por Categoria comercial), miscelânea por linha, Contagem da obra (só sugere; o digitado vale —
+  o total continua R$ 100.000), Valores e margem, Plantas, Modo cliente (só nome genérico, sem marca/modelo), apresentação .pptx,
+  Opção B com kit da Base e comparação A×B, proposta vendida (linhas travadas, trocar com preço mantido, Ret/Troc).
+- Capítulo "Contas", passo c1p02: o parceiro ganha "Tipo de parceria" (Indica a TAAG e outros = 10%) no lugar do "RT (%)"
+  digitado — sem isso (regra v187) a proposta não podia ser enviada e o capítulo Comercial não fechava.
+- treino-snaps/cap3.json (início do capítulo Comercial pelo atalho "Capítulos"): catálogo de hoje (2.128 produtos com as duas
+  categorias, nome genérico e tipo; categorias Acústica e Serviços) e PRADO ARQUITETURA com o tipo de parceria.
+- Tela nova: a busca de produto acha por palavras ("300 icw6" acha "300-ICW6").
+- Prova: o capítulo inteiro percorrido no modo treino pela tela (preencher/clicar), 43 de 43 passos com o "pronto" verdadeiro e o
+  alvo visível; fim igual ao de antes (proposta 1 vendida, R$ 100.000, 10 + 5 caixas, 3 títulos a receber); 0 escritas na rede.
