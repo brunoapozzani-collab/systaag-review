@@ -175,6 +175,7 @@ const CSS=`
 .np .np-steps{overflow-x:auto;-webkit-overflow-scrolling:touch}
 .np .ccard{overflow-x:auto}
 .np .sys-h{flex-wrap:wrap}.np .sys-h>div{min-width:0}
+.np input.form-control-sm[type=number]{width:118px!important;max-width:100%}
 .np h2{font-size:22px;font-weight:700;margin:0 0 4px}.np .intro p{color:var(--mut);margin:0 0 14px;font-size:13.5px}
 .np .ccard{background:var(--card);border:1px solid var(--bd);border-radius:16px;padding:16px;margin-bottom:14px}
 .np .fams{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:16px}
