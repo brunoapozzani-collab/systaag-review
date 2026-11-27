@@ -16,38 +16,39 @@ const ALIAS=[['BLACKFPBN','FOCAL','NAIM','FOCALNAIM'],['ABSOLUTECONTROL','TGCUST
 const grp=b=>{const k=K(b);const g=ALIAS.find(a=>a.includes(k));return g?g[0]:k};
 const brandOK=(a,b)=>{const x=K(a),y=K(b);return !x||!y||x===y||grp(x)===grp(y)||x.includes(y)||y.includes(x)};
 const T=()=>today();
-function sync(){try{const db=S.db,TB=window.V141_TABELA;if(!db||!TB)return false; /* o catálogo fica mesmo no modo zero, então a tabela também entra no modo zero */if(db._v141&&db._v141.fonte===TB.fonte&&db.produtos.some(p=>p._v141===TB.fonte))return false;
-  const byKey={},byModel={};db.produtos.forEach(p=>{const k1=grp(p.marca)+'|'+M(head(p.nome)),k2=grp(p.marca)+'|'+M(p.nome);byKey[k1]=byKey[k1]||p;byKey[k2]=byKey[k2]||p;const m=M(head(p.nome));(byModel[m]=byModel[m]||[]).push(p)});
-  const seen=new Set();let upd=0,precoMud=0,novos=0,statusMud=0,fundidos=0;const mudados=[];const diff=[];
-  const inv=db.produtos.filter(p=>p._v140origem);
-  const ORD={'OK':0,'Sem preço na planilha':1};const itens=TB.itens.slice().sort((a,b)=>(ORD[a.status]??2)-(ORD[b.status]??2)); /* a linha OK ganha o produto; a duplicata não liberada não cria outro */
-  itens.forEach(it=>{const key=grp(it.fab)+'|'+M(it.mod);let p=byKey[key];if(p&&seen.has(p.id))p=null;
-    if(!p){const mk=M(it.mod);let c=(byModel[mk]||[]).filter(q=>!seen.has(q.id)&&brandOK(q.marca,it.fab));if(!c.length&&mk.length>=6&&/\d/.test(mk))c=(byModel[mk]||[]).filter(q=>!seen.has(q.id)); /* modelo específico (longo, com dígito): a marca da planilha pode ter mudado de rótulo */
-      p=c.find(q=>!q._v140origem)||c[0]||null}
-    if(!p&&byKey[key])return; /* segunda linha da planilha para o mesmo produto: não cria outro */
-    if(p){seen.add(p.id);const antes={preco:+p.preco||0,custo:+p.custo||0,status:p.status||'OK'};
-      if(it.tabela!=null)p.preco=it.tabela;if(it.compra!=null)p.custo=it.compra;if(it.desc_pct!=null)p.desconto=it.desc_pct;if(it.margem!=null)p.margem=it.margem;if(it.forn)p.fornecedor=it.forn;
-      if(!p.marca)p.marca=it.fab;p.status=it.status;p.atualizado_em=it.data||T();p._v141=TB.fonte;if(it.cod&&!p.cod_fornecedor)p.cod_fornecedor=it.cod;
-      const mp=Math.abs(antes.preco-(+p.preco||0))>0.005||Math.abs(antes.custo-(+p.custo||0))>0.005;if(mp){precoMud++;mudados.push(p.id);diff.push({id:p.id,nome:p.nome,de:antes,para:{preco:+p.preco||0,custo:+p.custo||0}})}
-      if(antes.status!==p.status)statusMud++;upd++;
-      /* an inventory-created twin of this product → merge into it */
-      inv.forEach(q=>{if(q!==p&&!q.__fundido&&M(head(q.nome))===M(it.mod)&&brandOK(q.marca,it.fab)){db.unidades.forEach(u=>{if(u.produto_id===q.id)u.produto_id=p.id});q.__fundido=p.id;fundidos++}});
-      return}
-    if(it.status!=='OK'&&it.status!=='Sem preço na planilha')return; /* a non-OK row we never had: nothing to create */
-    const id=uid('p');const nome=it.mod+(it.desc?' — '+it.desc.slice(0,90):'');
-    db.produtos.push({id,nome,marca:it.fab,categoria:it.cat||'Outros',rastreio:it.rastreio||'serial',custo:+it.compra||0,preco:+it.tabela||0,tipo:'pç',fase:it.cat==='Cabos'?'cabeamento':'instalacao',ncm:'',origem:'Nacional',unidade:it.med||'un',garantia_meses:12,cst:'',cod_fornecedor:it.cod||'',apelido:'',nome_comercial:nome,fornecedor:it.forn||'',unidade_venda:it.med==='par'?'Par':it.med==='kit'?'Kit':'Unidade',desconto:it.desc_pct,margem:it.margem,desconto_max:0,descricao:it.desc||'',fotos:[],portas:[],aprovado:it.status==='OK',status:it.status,atualizado_em:it.data||T(),_v141:TB.fonte,_v141novo:true});novos++});
-  /* merged twins leave the catalogue */
-  const antesN=db.produtos.length;db.produtos=db.produtos.filter(p=>!p.__fundido);
-  /* products the sheet no longer lists */
-  let fora=0;db.produtos.forEach(p=>{if(seen.has(p.id)||p._v141===TB.fonte||p._v140origem||/^Demais itens/.test(p.nome||''))return;if(p.status==='OK'||!p.status){p.status='Fora da tabela (30/10/2026)';fora++}});
-  /* prices → open proposals only (sold stay frozen) */
-  let linhas=0,props=new Set();if(typeof window.__aplicarCatalogo==='function')mudados.forEach(id=>{try{const r=window.__aplicarCatalogo(id,'Tabela Taag 30/10/2026');linhas+=r.n;(r.props||[]).forEach(x=>props.add(x))}catch(e){}});
-  db._v141={fonte:TB.fonte,quando:T(),atualizados:upd,precos_mudados:precoMud,status_mudados:statusMud,novos,fora_da_tabela:fora,fundidos,linhas_propostas:linhas,propostas:[...props],diff:diff.slice(0,400)};
-  try{log('produtos','v141','Catálogo = '+TB.fonte+': '+upd+' produtos conferidos, '+precoMud+' com preço/custo novo ('+linhas+' linha(s) de '+props.size+' proposta(s) abertas atualizadas), '+novos+' novos, '+statusMud+' mudaram de status, '+fora+' fora da tabela, '+fundidos+' do inventário fundidos')}catch(e){}
+/* 27-Nov-2026 (Bruno: "os produtos daqui para frente precisam ser atualizados") — REGRA ESTRITA, substitui a de 03/11:
+   • a Tabela (só linhas OK) atualiza preço (Tabela Fornecedor) e custo (Compra) do produto quando MARCA + MODELO batem exatamente
+     e a Tabela tem UMA linha OK para eles; marca+modelo repetidos com preços diferentes ficam fora (lista em _v141.repetidos);
+   • sem apelidos de marca (FOCAL ≠ BLACK_FPBN, LUTRON ≠ LUTRON_TF) e sem "só o modelo" — foi assim que a regra antiga trocava custo errado;
+   • linha OK cujo modelo não existe no catálogo vira produto novo (id fixo tb_…, então dois computadores não criam dois);
+   • propostas NÃO são mexidas (as já feitas guardam o preço/custo da época); o que entra daqui para frente usa o catálogo atualizado. */
+function hk(s){let h=5381;for(let i=0;i<s.length;i++)h=((h<<5)+h+s.charCodeAt(i))>>>0;return h.toString(36)}
+function sync(){try{const db=S.db,TB=window.V141_TABELA;if(!db||!TB||!Array.isArray(db.produtos))return false;
+  if(db._v141&&db._v141.fonte===TB.fonte&&db._v141.regra==='estrita')return false;
+  const KM=s=>K(s);const ok=new Map();
+  TB.itens.forEach(it=>{if(String(it.status||'').trim().toUpperCase()!=='OK')return;const k=K(it.fab)+'|'+KM(it.mod);if(!ok.has(k))ok.set(k,[]);ok.get(k).push(it)});
+  const repetidos=[];ok.forEach((a,k)=>{if(new Set(a.map(x=>x.tabela+'/'+x.compra)).size>1)repetidos.push(k)});const rep=new Set(repetidos);
+  const vivos=db.produtos.filter(p=>!p._apagado&&!p.merged_into&&!p.__fundido);
+  const porChave=new Map();vivos.forEach(p=>{const k=K(p.marca)+'|'+KM(head(p.nome));if(!porChave.has(k))porChave.set(k,[]);porChave.get(k).push(p)});
+  const modelos=new Set(vivos.map(p=>M(head(p.nome))));
+  const diff=[];let conferidos=0,novos=0;const novosL=[];
+  ok.forEach((a,k)=>{if(rep.has(k))return;const it=a[0];const ps=porChave.get(k);
+    if(ps){ps.forEach(p=>{conferidos++;const antes={preco:+p.preco||0,custo:+p.custo||0};let mud=false;
+      if(it.tabela!=null&&Math.abs(antes.preco-it.tabela)>0.005){p.preco=it.tabela;mud=true}
+      if(it.compra!=null&&Math.abs(antes.custo-it.compra)>0.005){p.custo=it.compra;mud=true}
+      if(it.forn&&p.fornecedor!==it.forn)p.fornecedor=it.forn;
+      if(p.status!=='OK'&&!/^Sem preço/.test(p.status||''))p.status='OK';
+      if(mud){p.atualizado_em=it.data||T();p.fonte_preco=TB.fonte;diff.push({id:p.id,nome:head(p.nome),marca:p.marca,de:antes,para:{preco:+p.preco||0,custo:+p.custo||0}});try{put('produtos',p,'preço/custo = '+TB.fonte)}catch(e){}}});return}
+    if(modelos.has(M(it.mod)))return; /* o modelo já existe com outra marca: não cria duplicata (fica para conferência) */
+    const id='tb_'+hk(k);if(db.produtos.some(p=>p.id===id))return;
+    const p={id,nome:it.mod+(it.desc?' — '+String(it.desc).slice(0,90):''),marca:it.fab,categoria:it.cat&&!/defin/i.test(it.cat)?it.cat:'Outros',rastreio:'serial',custo:+it.compra||0,preco:+it.tabela||0,tipo:'pç',fase:'instalacao',ncm:'',origem:'Nacional',status:'OK',fornecedor:it.forn||'',atualizado_em:it.data||T(),fonte_preco:TB.fonte,_v141:TB.fonte};
+    db.produtos.push(p);novos++;novosL.push(p.id+' '+it.fab+' '+it.mod);try{put('produtos',p,'novo da '+TB.fonte)}catch(e){}});
+  db._v141={fonte:TB.fonte,regra:'estrita',quando:T(),conferidos,precos_mudados:diff.length,novos,novos_lista:novosL.slice(0,200),repetidos,diff:diff.slice(0,400)};
+  try{log('produtos','v141','Catálogo = '+TB.fonte+' (regra estrita): '+conferidos+' conferidos, '+diff.length+' com preço/custo novo, '+novos+' novos, '+repetidos.length+' marca+modelo repetidos na Tabela (não aplicados). Propostas não mudam.')}catch(e){}
   save();return true}catch(e){console.error('v141',e);return false}}
 window.V141_sync=sync;
 /* Base › Produtos: one line saying where the catalogue comes from and what the last reading changed */
-try{const f=SCREENS.dbprodutos;if(f&&!f.__v141){SCREENS.dbprodutos=function(arg){const h=f.apply(this,arguments);if(typeof h!=='string'||arg)return h;const v=S.db._v141;if(!v)return h;const i=h.indexOf('</h1>');if(i<0)return h;const j=h.indexOf('</div>',i);const nota=`<div id="v141-nota" class="card p-2 px-3 mb-3" style="font-size:12px;border-left:4px solid #0d6efd"><b>Catálogo = ${v.fonte}</b> · lido em ${v.quando.split('-').reverse().join('/')}: ${v.atualizados} conferidos · <b>${v.precos_mudados}</b> com preço/custo novo (${v.linhas_propostas} linha(s) de propostas abertas atualizadas; vendidas travadas) · <b>${v.novos}</b> novos · ${v.status_mudados} mudaram de status · ${v.fora_da_tabela} fora da tabela · ${v.fundidos} do inventário fundidos. A planilha segue sendo editada no Drive; a próxima leitura entra pelo mesmo caminho.</div>`;return h.slice(0,j+6)+nota+h.slice(j+6)};SCREENS.dbprodutos.__v141=1}}catch(e){}
+try{const f=SCREENS.dbprodutos;if(f&&!f.__v141){SCREENS.dbprodutos=function(arg){const h=f.apply(this,arguments);if(typeof h!=='string'||arg)return h;const v=S.db._v141;if(!v)return h;const i=h.indexOf('</h1>');if(i<0)return h;const j=h.indexOf('</div>',i);const nota=`<div id="v141-nota" class="card p-2 px-3 mb-3" style="font-size:12px;border-left:4px solid #0d6efd"><b>Catálogo = ${v.fonte}</b> · aplicado em ${String(v.quando||'').split('-').reverse().join('/')}: ${v.regra==='estrita'?v.conferidos:v.atualizados} conferidos · <b>${v.precos_mudados}</b> com preço/custo novo · <b>${v.novos}</b> novos${v.regra==='estrita'?` · ${(v.repetidos||[]).length} marca+modelo aparecem 2× na Tabela com preços diferentes (não aplicados — corrigir na Tabela)`:''}. Atualiza sozinho todo dia a partir da Tabela de preços do Drive; propostas já feitas não mudam.</div>`;return h.slice(0,j+6)+nota+h.slice(j+6)};SCREENS.dbprodutos.__v141=1}}catch(e){}
 /* §7 get(tabela,id) era uma busca linear; a Diretoria a chama 1,5 milhão de vezes numa leitura (716 mil só em produtos, agora 2.100 itens).
    Índice por tabela, validado por identidade (arr[i]===registro) — se a lista mudou, cai na busca linear e reindexa. */
 try{const g0=window.get;if(typeof g0==='function'&&!g0.__v141){const IDX=new Map();const build=(t,arr)=>{const m=new Map();for(let i=0;i<arr.length;i++){const r=arr[i];if(r&&r.id!=null&&!m.has(r.id))m.set(r.id,i)}IDX.set(t,{arr,m});return m};
