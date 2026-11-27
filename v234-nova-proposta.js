@@ -196,6 +196,7 @@ const CSS=`
 .np table.np-prod tr.np-tot td{border-top:2px solid var(--bd);border-bottom:0;background:#f8fafc}
 .np table.np-dias td:first-child{white-space:nowrap;padding-right:8px}
 .np table.np-dias td.mono{white-space:nowrap}
+.np textarea.np-end{width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:5px 8px;font:inherit;font-size:13px;resize:vertical}
 .np .chipc{display:inline-block;border-radius:999px;padding:1px 8px;font-size:10.5px;background:#eef2ff;color:#3730a3;font-weight:600}
 .np .chipc.warn{background:#fef3c7;color:#92400e}.np .chipc.bad{background:#fee2e2;color:#991b1b}.np .chipc.ok{background:#dcfce7;color:#166534}
 .np .lnk{border:0;background:none;color:var(--acc);font-weight:600;font-size:12px;cursor:pointer;padding:0}
@@ -309,7 +310,7 @@ function cadastro(p){const o=p.obra_id?T(()=>get('obras',p.obra_id),null):null;c
  <div><label>Obra</label><select ${vd?'disabled':''} onchange="run(()=>A.npSetCad(${J(p.id)},'obra_id',this.value),'Obra')"><option value=""></option>${opcoesObras(cid,p.obra_id)}</select></div>
  <div><label>Distância da obra (diárias ÷ (1 − %), como no Excel)</label><select onchange="run(()=>A.npSetCad(${J(p.id)},'distancia',this.value),'Distância')">${dist}</select></div>
  <div><label>Consultor(es) — até 2</label><div class="cats">${consultoresLista().map(c=>`<button class="${(p.consultores||[]).includes(c)?'on':''}" onclick="run(()=>A.toggleConsultor(${J(p.id)},${J(c)}),'Consultores')">${E(c)}</button>`).join('')}</div></div>
- ${o?`<div><label>Endereço da obra</label><input value="${E(o.endereco||'')}" placeholder="endereço da instalação" onchange="run(()=>A.setObra(${J(o.id)},'endereco',this.value),'Endereço da obra')"></div>`:''}
+ ${o?`<div><label>Endereço da obra</label><textarea rows="2" class="np-end" placeholder="endereço da instalação" onchange="run(()=>A.setObra(${J(o.id)},'endereco',this.value),'Endereço da obra')">${E(o.endereco||'')}</textarea></div>`:''}
  <div><label>Parceiro e RT (do cadastro do parceiro)</label><input value="${E(rtTexto(p))}" disabled></div>
  </div></div>`}
 
@@ -349,13 +350,14 @@ function addProduto(p,b,modo){const k=b.id;const q=UI.busca[k]||{q:'',c:''};cons
  <input class="in wide" placeholder="+ acrescentar produto: buscar por nome, marca ou modelo…" value="${E(q.q)}" oninput="NP.busca(${J(k)},'q',this.value,true)">
  <div id="np-res-${E(k)}">${resultados(p,b,rs,q.q||cc)}</div></div>`}
 function resultados(p,b,rs,ativo){if(!ativo)return '';if(!rs.length)return '<div class="res"><div>nenhum produto</div></div>';
- return `<div class="res">${rs.map(x=>`<div onclick="run(()=>A.addLinha(${J(p.id)},${J(b.id)},${J(x.id)},1),'Produto acrescentado')"><span><b>${E(x.nome)}</b> <span style="color:#64748b">${E(x.marca||'')}</span> ${catCom(x)?`<span class="chipc">${E(catCom(x))}</span>`:''}</span><span class="mono">${RS(x.preco)}</span></div>`).join('')}</div>`}
-/* catálogo: produtos da Base que se vendem (sem os 16 de demonstração p1–p16, sem diárias/visitas, sem inativos) */
+ return `<div class="res">${rs.map(x=>`<div onclick="run(()=>A.addLinha(${J(p.id)},${J(b.id)},${J(x.id)},1),'Produto acrescentado')"><span><b>${E(x.nome)}</b> <span style="color:#64748b">${E(x.marca||'')}</span> ${catCom(x)?`<span class="chipc">${E(catCom(x))}</span>`:''}${x.status&&String(x.status).toUpperCase()!=='OK'?` <span class="chipc warn" title="status na Tabela de preços">${E(x.status)}</span>`:''}</span><span class="mono">${RS(x.preco)}</span></div>`).join('')}</div>`}
+/* catálogo: produtos da Base que se vendem (sem os 16 de demonstração p1–p16, sem diárias/visitas, sem inativos).
+   26/11: os produtos _TF (LUTRON_TF, SAVANT_TF…) são linhas reais da Tabela de preços e voltam à busca; status ≠ OK aparece marcado. */
 const DEMO=/^p([1-9]|1[0-6])$/;
-function vendavel(x){return x&&!x.inativo&&!x._apagado&&!x.merged_into&&!DEMO.test(x.id)&&!/_TF$/i.test(x.marca||'')&&catCom(x)!=='Serviços (não é produto)'&&!/^di[aá]ria|^visita/i.test(String(x.nome||''))}
+function vendavel(x){return x&&!x.inativo&&!x._apagado&&!x.merged_into&&!DEMO.test(x.id)&&catCom(x)!=='Serviços (não é produto)'&&!/^di[aá]ria|^visita/i.test(String(x.nome||''))}
 /* busca por palavras: "300 icw6" acha "300-ICW6" (pontuação vira espaço; toda palavra digitada tem de aparecer) */
 const palavras=t=>nz(t).replace(/[^a-z0-9]+/g,' ').trim();
-function catalogo(q,c){const qs=palavras(q).split(' ').filter(Boolean);return (S.db.produtos||[]).filter(x=>{if(!vendavel(x)||(c&&catCom(x)!==c))return false;if(!qs.length)return true;const h=' '+palavras(x.nome+' '+(x.marca||'')+' '+(x.apelido||'')+' '+x.id)+' ';const hj=h.replace(/ /g,'');return qs.every(w=>h.includes(w)||hj.includes(w))}).sort((a,b)=>String(a.marca+a.nome).localeCompare(String(b.marca+b.nome),'pt-BR'))}
+function catalogo(q,c){const qs=palavras(q).split(' ').filter(Boolean);return (S.db.produtos||[]).filter(x=>{if(!vendavel(x)||(c&&catCom(x)!==c))return false;if(!qs.length)return true;const h=' '+palavras(x.nome+' '+(x.marca||'')+' '+(x.apelido||'')+' '+x.id)+' ';const hj=h.replace(/ /g,'');return qs.every(w=>h.includes(w)||hj.includes(w))}).sort((a,b)=>((String(a.status||'OK').toUpperCase()==='OK'?0:1)-(String(b.status||'OK').toUpperCase()==='OK'?0:1))||String(a.marca+a.nome).localeCompare(String(b.marca+b.nome),'pt-BR'))}
 NP.catalogo=catalogo;
 NP.busca=function(k,campo,v,soLista){const q=UI.busca[k]=UI.busca[k]||{q:'',c:''};q[campo]=v;
  if(soLista){const el=document.getElementById('np-res-'+k);const p=prop((location.hash.split('/')[2]||''));const b=p&&T(()=>blocosDe(p).find(x=>x.id===k),null);if(el&&p&&b){el.innerHTML=resultados(p,b,catalogo(q.q,q.c).slice(0,40),q.q||q.c);return}}rer()};
