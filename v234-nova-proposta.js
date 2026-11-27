@@ -186,11 +186,14 @@ const CSS=`
 .np .np-tw{width:100%;max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
 .np table.t td,.np table.t th{padding:6px 5px}
 .np table.t td input.in{width:100%;min-width:46px;max-width:104px;box-sizing:border-box}
-.np table.np-prod td:first-child{min-width:150px;word-break:break-word}
+.np table.np-prod,.np table.np-dias{table-layout:fixed;width:100%;min-width:540px}
+.np table.np-prod td:first-child{word-break:break-word}
+.np table.np-prod th:nth-child(2){width:9%}.np table.np-prod th:nth-child(3){width:17%}.np table.np-prod th:nth-child(4){width:15%}.np table.np-prod th:nth-child(5){width:15%}.np table.np-prod th:nth-child(6){width:9%}
+.np table.np-dias th:first-child{width:17%}.np table.np-dias th:last-child{width:15%}
+.np table.t td input.in{max-width:none}
 .np table.np-prod td.r.mono,.np table.np-prod th.r{white-space:nowrap}
 .np table.np-prod tr.np-tot td{border-top:2px solid var(--bd);border-bottom:0;background:#f8fafc}
 .np table.np-dias td:first-child{white-space:nowrap;padding-right:8px}
-.np table.np-dias td.r{min-width:64px}
 .np table.np-dias td.mono{white-space:nowrap}
 .np .chipc{display:inline-block;border-radius:999px;padding:1px 8px;font-size:10.5px;background:#eef2ff;color:#3730a3;font-weight:600}
 .np .chipc.warn{background:#fef3c7;color:#92400e}.np .chipc.bad{background:#fee2e2;color:#991b1b}.np .chipc.ok{background:#dcfce7;color:#166534}
