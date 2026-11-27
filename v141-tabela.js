@@ -58,5 +58,7 @@ try{const g0=window.get;if(typeof g0==='function'&&!g0.__v141){const IDX=new Map
 try{const dp0=window.DIR_PESSOAS;if(typeof dp0==='function'&&!dp0.__v141){let cache=null;const wrap=function(){const now=Date.now();if(cache&&now-cache.t<5000)return cache.v;let v;const M0=window.M,r0=M0&&M0.resumo;if(typeof r0==='function'){const memo=new Map();M0.resumo=function(p){const k=p&&p.id;if(k&&memo.has(k))return memo.get(k);const out=r0.apply(this,arguments);if(k)memo.set(k,out);return out}} /* dentro de uma leitura, a mesma proposta vendida é resumida uma vez, não uma por pessoa × mês */
   try{v=dp0.apply(this,arguments)}finally{if(typeof r0==='function')M0.resumo=r0}cache={t:now,v};return v};wrap.__v141=1;wrap.invalidar=()=>{cache=null};window.DIR_PESSOAS=wrap;
   const s0=window.save;if(typeof s0==='function'){const sv=function(){cache=null;return s0.apply(this,arguments)};Object.keys(s0).forEach(k=>{sv[k]=s0[k]});window.save=sv}}}catch(e){}
-if(window.S&&S.db)sync();else document.addEventListener('DOMContentLoaded',sync);
+/* 27-Nov: roda depois que a Base compartilhada carregou (antes rodava na base provisória e era sobrescrito); de novo a cada 6 h com a aba aberta */
+(function quando(fn){if(window.__TREINO||!window.NUVEM_CONFIG||!window.NUVEM_CONFIG.url){setTimeout(fn,1500);return}
+  if(window.__v172pronto){setTimeout(fn,500);return}window.addEventListener('v172-pronta',()=>setTimeout(fn,800),{once:true})})(()=>{sync();setInterval(sync,6*3600*1000)});
 })();
