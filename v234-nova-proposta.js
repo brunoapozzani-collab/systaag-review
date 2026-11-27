@@ -98,6 +98,9 @@ const numBR=v=>{const t=String(v==null?'':v).trim().replace(/^R\$\s*/,'').replac
  return +t};
 const NBR2=v=>{const x=Math.round((+v||0)*100)/100;return x.toLocaleString('pt-BR',{minimumFractionDigits:x%1?2:0,maximumFractionDigits:2})};
 NP.faseDe=faseDe;NP.miscFase=miscFase;
+/* preços do Excel guardados sem arredondar (13263.15789…) aparecem com 2 casas nos campos numéricos do editor clássico (etapa Mais); o valor salvo não muda */
+(function(){let q=0;const fix=()=>{q=0;document.querySelectorAll('.np input[type=number]').forEach(i=>{if(i===document.activeElement)return;const v=i.value;if(/\.\d{3,}$/.test(v)){i.value=String(Math.round(+v*100)/100)}})};
+ try{new MutationObserver(()=>{if(!q)q=requestAnimationFrame(fix)}).observe(document.body,{childList:true,subtree:true})}catch(e){}})();
 A.npMiscFase=function(pr,bid,k,v){
  const p=get('propostas',pr);if(!p)throw new RuleError('Proposta não encontrada.');travaVendida(p,'a mão de obra muda por Ret/Troc.');
  const b=blocosDe(p).find(x=>x.id===bid);if(!b)throw new RuleError('Sistema não encontrado.');
@@ -227,6 +230,7 @@ const CSS=`
 .np .legacy{border:1px dashed #cbd5e1;border-radius:14px;padding:6px}
 .np-ov{position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:90;display:flex;align-items:center;justify-content:center}
 .np-ov .box{background:#fff;border-radius:18px;padding:18px;width:min(920px,94vw);max-height:86vh;overflow:auto;font-family:'Plus Jakarta Sans',system-ui,sans-serif}
+@media (max-width:640px){.np .np-steps{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
 @media (max-width:1100px){.np .np-grid{grid-template-columns:minmax(0,1fr)}.np .fams{grid-template-columns:repeat(2,1fr)}.np .tipos{grid-template-columns:1fr 1fr}}
 `;
 function css(){if(document.getElementById('np-css'))return;const s=document.createElement('style');s.id='np-css';s.textContent=CSS;document.head.appendChild(s)}
@@ -261,7 +265,7 @@ function hero(p){const t=TIPOS[tipoDe(p)];const g=grupoDe(p);const o=p.obra_id?T
  <div class="np-opts">${tabs}${vendida(p)?'':`<button class="opt add" onclick="const id=run(()=>A.npOpcao(${J(p.id)}),'Nova opção criada (mesmo cadastro)');if(id)NP.abrir(id)">+ Nova opção</button>`}<span class="sp"></span>
  <button class="hbtn" onclick="NP.cliente(${J(p.id)})">👁 Modo cliente</button>${g.length>1?`<button class="hbtn purple" style="margin-left:8px" onclick="NP.comparar(${J(p.id)})">⇄ Comparar opções</button>`:''}</div></section>`}
 function rtTexto(p){const rec=(p.rt_rec||[]).map(r=>T(()=>(S.db.parceiros||[]).find(x=>x.id===r.pid).nome,'')).filter(Boolean);return (rec.length?rec.join(', '):'sem parceiro')+' · RT '+N2(+p.rt||0)+'%'}
-function steps(p){const ps=passos(p),cur=passoAtual(p);return `<div class="np-steps" style="grid-template-columns:repeat(${ps.length},1fr)">${ps.map((s,i)=>{const ok=s!==cur&&passoOk(p,s);return `<button class="step ${s===cur?'on':''} ${ok?'ok':''}" onclick="NP.go(${J(p.id)},'${s}')"><span class="n">${ok?'✓':i+1}</span><span><b>${PASSOS[s].t}</b><span>${PASSOS[s].s}</span></span></button>`}).join('')}</div>`}
+function steps(p){const ps=passos(p),cur=passoAtual(p);return `<div class="np-steps" style="grid-template-columns:repeat(${ps.length<=7?ps.length:'auto-fill'},${ps.length<=7?'minmax(0,1fr)':'minmax(118px,1fr)'})">${ps.map((s,i)=>{const ok=s!==cur&&passoOk(p,s);return `<button class="step ${s===cur?'on':''} ${ok?'ok':''}" onclick="NP.go(${J(p.id)},'${s}')"><span class="n">${ok?'✓':i+1}</span><span><b>${PASSOS[s].t}</b><span>${PASSOS[s].s}</span></span></button>`}).join('')}</div>`}
 function navbar(p){const ps=passos(p),i=ps.indexOf(passoAtual(p));return `<div class="navbar2">${i>0?`<button class="btn2" onclick="NP.go(${J(p.id)},'${ps[i-1]}')">← ${PASSOS[ps[i-1]].t}</button>`:'<span></span>'}${i<ps.length-1?`<button class="btn2 pri" onclick="NP.go(${J(p.id)},'${ps[i+1]}')">Próximo: ${PASSOS[ps[i+1]].t} →</button>`:''}</div>`}
 const intro=(t,s)=>`<div class="intro"><h2>${t}</h2><p>${s}</p></div>`;
 

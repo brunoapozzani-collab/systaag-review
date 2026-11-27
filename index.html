@@ -26055,7 +26055,7 @@ if (typeof _ed === 'function') SCREENS.editor = function (id) {
   /* 2. the obra's name and address are edited here and saved on the obra */
   if (o) {
     h = h.replace(/(NOME DA OBRA<\/label>)<input class="form-control form-control-sm" value="[^"]*" disabled>/, `$1<input class="form-control form-control-sm" value="${esc(o.nome || '')}" onchange="run(()=>A.setObra('${o.id}','nome',this.value),'Obra atualizada')">`);
-    h = h.replace(/(ENDEREÇO DA OBRA<\/label>)<input class="form-control form-control-sm" value="[^"]*" disabled>/, `$1<input class="form-control form-control-sm" value="${esc(o.endereco || '')}" placeholder="endereço da obra — fica na obra" onchange="run(()=>A.setObra('${o.id}','endereco',this.value),'Endereço da obra salvo')">`);
+    h = h.replace(/(ENDEREÇO DA OBRA<\/label>)<input class="form-control form-control-sm" value="[^"]*" disabled>/, `$1<textarea class="form-control form-control-sm" rows="2" placeholder="endereço da obra — fica na obra" onchange="run(()=>A.setObra('${o.id}','endereco',this.value),'Endereço da obra salvo')">${esc(o.endereco || '')}</textarea>`);
   }
   /* 4. RT % comes from the recipient list while there is one */
   if (vendida(p)) h = h.replace(new RegExp(`<input([^>]*)onchange="run\\(\\(\\)=>A\\.setP\\('${id}','rt',\\+this\\.value\\),'RT / COMISSÃO salvo'\\)"([^>]*)>`), `<input type="number" class="form-control form-control-sm" style="width:72px;font-weight:700" value="${+p.rt || 0}" disabled title="Venda feita — RT muda por pedido ao Financeiro (Fechamento › RT)">`);
