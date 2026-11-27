@@ -96,6 +96,7 @@ const numBR=v=>{const t=String(v==null?'':v).trim().replace(/^R\$\s*/,'').replac
  if(t.includes(','))return +t.replace(/\./g,'').replace(',','.');      /* 23.000,50 */
  if(/^-?\d{1,3}(\.\d{3})+$/.test(t))return +t.replace(/\./g,'');     /* 23.000 = vinte e três mil */
  return +t};
+const NBR2=v=>{const x=Math.round((+v||0)*100)/100;return x.toLocaleString('pt-BR',{minimumFractionDigits:x%1?2:0,maximumFractionDigits:2})};
 NP.faseDe=faseDe;NP.miscFase=miscFase;
 A.npMiscFase=function(pr,bid,k,v){
  const p=get('propostas',pr);if(!p)throw new RuleError('Proposta não encontrada.');travaVendida(p,'a mão de obra muda por Ret/Troc.');
@@ -367,7 +368,7 @@ function diasTab(p,b,ef){const adj=b.servicos_adj||{};const vd=vendida(p);
  <div class="np-tw"><table class="t np-dias"><thead><tr><th></th>${DISC.map(k=>`<th class="r">${E(RATE[k].lb)}</th>`).join('')}<th class="r">Total</th></tr></thead><tbody>
  <tr>${lbl('Diárias')}${DISC.map(k=>`<td class="r">${vd?N2(ef[k]):`<input class="in" value="${adj[k]!=null&&adj[k]!==''?E(N2(adj[k])):''}" placeholder="0" onchange="run(()=>A.setDias(${J(p.id)},${J(b.id)},'${k}',this.value),'Diárias')">`}</td>`).join('')}<td class="r mono">${N2(soma(k=>+ef[k]||0))}</td></tr>
  <tr style="color:#64748b">${lbl('× valor da diária')}${DISC.map(k=>`<td class="r mono" style="font-size:11.5px" title="${E(N2(ef[k]||0))} × R$ ${E(N2(valDia(p,k)))}">${RS(base(k))}</td>`).join('')}<td class="r mono" style="font-size:11.5px">${RS(soma(base))}</td></tr>
- <tr>${lbl('+ Miscelânea')}${DISC.map(k=>`<td class="r">${vd?`<span class="mono">${RS(mi(k))}</span>`:`<input class="in" value="${mi(k)?E(N2(mi(k))):''}" placeholder="R$ 0" onchange="run(()=>A.npMiscFase(${J(p.id)},${J(b.id)},'${k}',this.value),'Miscelânea da linha ${E(RATE[k].lb)}')">`}</td>`).join('')}<td class="r mono">${RS(soma(mi))}</td></tr>
+ <tr>${lbl('+ Miscelânea')}${DISC.map(k=>`<td class="r">${vd?`<span class="mono">${RS(mi(k))}</span>`:`<input class="in" value="${mi(k)?E(NBR2(mi(k))):''}" placeholder="R$ 0" onchange="run(()=>A.npMiscFase(${J(p.id)},${J(b.id)},'${k}',this.value),'Miscelânea da linha ${E(RATE[k].lb)}')">`}</td>`).join('')}<td class="r mono">${RS(soma(mi))}</td></tr>
  <tr style="font-weight:700">${lbl('<b style="color:#0f172a">= Linha</b>')}${DISC.map(k=>`<td class="r mono">${RS(lin(k))}</td>`).join('')}<td class="r mono">${RS(soma(lin))}</td></tr>
  </tbody></table></div>
  ${outras.length?`<table class="t" style="margin-top:6px"><tbody>${outras.map(x=>`<tr><td>Outra miscelânea de serviço (sem linha): ${E(x.nome)}</td><td class="r mono">${RS(x.valor)}</td><td class="r">${vd?'':`<button class="lnk" style="color:#dc2626" onclick="run(()=>A.rmServLinha(${J(p.id)},${J(b.id)},${J(x.id)}),'Removido')">remover</button>`}</td></tr>`).join('')}<tr style="font-weight:700"><td>Mão de obra do sistema</td><td class="r mono">${RS(soma(lin)+outras.reduce((a,x)=>a+(+x.valor||0),0))}</td><td></td></tr></tbody></table>`:''}
