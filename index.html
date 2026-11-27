@@ -980,7 +980,7 @@ window.LZ=window.LZ||{apagar:function(id){if(confirm('Apagar este local?'))try{r
 /* v114 · in "Começar do zero" the CRM pane must open empty too. CRM_SEED is assigned by a <script>
    that runs before the end-of-body layer, so the wipe is armed here with a property setter and keyed
    off a plain localStorage flag (the store itself is LZString-compressed and not readable this early). */
-(function(){try{if(localStorage.getItem('systaag_zero')!=='1')return;var _v,K=['parceiros','contatos','interacoes','tarefas','justificativas','log','snapshots','negociacoes'];
+(function(){try{/* v238 (27/11/2026): o modo zero só existe no Modo treino */if(!window.__TREINO){try{if(localStorage.getItem('systaag_zero')!=null)localStorage.removeItem('systaag_zero')}catch(e){}return}if(localStorage.getItem('systaag_zero')!=='1')return;var _v,K=['parceiros','contatos','interacoes','tarefas','justificativas','log','snapshots','negociacoes'];
  var wipe=function(o){if(o&&typeof o==='object')K.forEach(function(k){if(Array.isArray(o[k]))o[k]=[]});return o};
  ['CRM_SEED','CRM_RAW'].forEach(function(name){var box={v:undefined};
   Object.defineProperty(window,name,{configurable:true,get:function(){return box.v},set:function(x){box.v=wipe(x)}})})}catch(e){}})();
@@ -28612,8 +28612,10 @@ function aplicarZero(db){
 window.aplicarZero=aplicarZero;
 /* in zero mode the wipe is re-applied at every load, AFTER every migration of the page has run —
    otherwise the assembly layers quietly put their demo rows back and the system is no longer "do zero". */
-try{if(S.db.af113_zero){window.aplicarZero(S.db);try{save()}catch(e){}}}catch(e){}
+/* v238 (27/11/2026): fora do Modo treino a base real nunca fica em modo zero */try{if(S.db.af113_zero&&!window.__TREINO){delete S.db.af113_zero;window.__v238curou=1;try{save()}catch(e){}}}catch(e){}
+try{if(S.db.af113_zero&&window.__TREINO){window.aplicarZero(S.db);try{save()}catch(e){}}}catch(e){}
 MG.zerar=function(confirmado){
+  /* v238 (27/11/2026): só no Modo treino */if(!window.__TREINO){try{toast('“Começar do zero” só existe no Modo treino (Aprender fazendo). A base real não pode ser zerada.',true)}catch(e){}return}
   if(!confirmado){
     var d=document.createElement('div');d.id='mg-ask';d.className='card p-3 mg-ask';
     d.innerHTML='<b>Começar do zero?</b><div class="sub" style="font-size:12px">Apaga clientes, obras, propostas, unidades, pedidos, lançamentos, parceiros, fornecedores e pessoas. <b>Mantém</b> o catálogo (produtos, categorias, marcas), as listas fixas, o inventário SP/RJ com suas áreas, o seu usuário e a meta anual.<br>Os dados de demonstração voltam com <b>Resetar dados</b>.</div>'+
@@ -30879,6 +30881,8 @@ try{if(/^#\/(dbfiliais|finlanc)/.test(location.hash))render()}catch(e){}
 <script src="v193-fechamento-semanal.js"></script>
 <script src="v194-pessoas-editor.js"></script><script src="v230-focal-planilha-data.js"></script><script src="v230-focal-planilha.js"></script><script src="v232-focal-fora-da-planilha.js"></script><!-- v194: editar pessoas (nome, cor, acesso, desligar, excluir) em Base › Usuários e permissões + ✎ no Quem é você -->
 <script src="v233-categorias.js"></script><script src="v234-nova-proposta.js"></script><script src="v235-nome-cliente.js"></script><script src="v236-guia-mostra.js"></script><!-- v233/v234: tela nova de proposta + Categoria de estoque + Categoria comercial por produto (Base › Produtos › Categorias) -->
+<!-- v238 (27/11/2026): Começar do zero só existe no Modo treino (Aprender fazendo) — a base real não pode ser zerada -->
+<script src="v238-zero-so-no-treino.js"></script>
 <script src="v171-nuvem.js"></script>
 <script src="v172-nuvem-base.js"></script>
 </body></html>

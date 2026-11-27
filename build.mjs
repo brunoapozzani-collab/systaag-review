@@ -83,6 +83,9 @@ async function fotoDaNuvem(){
       if(antes===depois&&mapa.size===depois&&mapa.size>0){
         const regs=[...mapa.values()];const corpo=JSON.stringify({gerada:new Date().toISOString(),n:regs.length,regs});
         const href=publica('foto-'+dig(corpo)+'.json',corpo);console.log('foto: '+regs.length+' registros = nuvem ·',Math.round(corpo.length/1048576*10)/10,'MB ·',href);
+        /* v238 (27/11/2026): conferência no registro da publicação — a marca de "sistema do zero" não pode existir na base compartilhada */
+        try{const z=regs.find(r=>r.tabela==='base:_k'&&String(r.id)==='af113_zero');const vivos=(tb)=>regs.filter(r=>r.tabela===tb&&!r.apagado).length;
+          console.log('v238 · marca de zero na nuvem:',z?(z.apagado?'apagada em '+z.atualizado_em:'PRESENTE · por '+(z.por||'?')+' em '+z.atualizado_em):'ausente','· vivos na nuvem: clientes',vivos('base:clientes'),'· obras',vivos('base:obras'),'· propostas',vivos('base:propostas'),'· unidades',vivos('base:unidades'),'· parceiros',vivos('base:parceiros'))}catch(e){}
         FOTO_REGS=regs;return {url:href,n:regs.length};
       }
       console.warn('foto: contagem não bateu (tentativa '+tent+'): antes',antes,'lidos',mapa.size,'depois',depois);
