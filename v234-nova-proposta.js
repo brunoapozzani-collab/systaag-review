@@ -96,6 +96,7 @@ const numBR=v=>{const t=String(v==null?'':v).trim().replace(/^R\$\s*/,'').replac
  if(t.includes(','))return +t.replace(/\./g,'').replace(',','.');      /* 23.000,50 */
  if(/^-?\d{1,3}(\.\d{3})+$/.test(t))return +t.replace(/\./g,'');     /* 23.000 = vinte e três mil */
  return +t};
+const NBR2=v=>{const x=Math.round((+v||0)*100)/100;return x.toLocaleString('pt-BR',{minimumFractionDigits:x%1?2:0,maximumFractionDigits:2})};
 NP.faseDe=faseDe;NP.miscFase=miscFase;
 A.npMiscFase=function(pr,bid,k,v){
  const p=get('propostas',pr);if(!p)throw new RuleError('Proposta não encontrada.');travaVendida(p,'a mão de obra muda por Ret/Troc.');
@@ -182,6 +183,20 @@ const CSS=`
 .np table.t td{padding:6px;border-bottom:1px solid #f1f5f9;vertical-align:middle}.np table.t .r{text-align:right}.np .mono{font-family:'JetBrains Mono',ui-monospace,monospace}
 .np input.in{width:76px;border:1px solid #cbd5e1;border-radius:8px;padding:3px 6px;font-size:12.5px;text-align:right}.np input.in.wide{width:100%;text-align:left}
 .np select.in{border:1px solid #cbd5e1;border-radius:8px;padding:3px 6px;font-size:12.5px}
+.np .sys,.np .sys-b,.np .ccard{min-width:0;max-width:100%}
+.np .np-tw{width:100%;max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.np table.t td,.np table.t th{padding:6px 5px}
+.np table.t td input.in{width:100%;min-width:46px;max-width:104px;box-sizing:border-box}
+.np table.np-prod,.np table.np-dias{table-layout:fixed;width:100%;min-width:540px}
+.np table.np-prod td:first-child{word-break:break-word}
+.np table.np-prod th:nth-child(2){width:11%}.np table.np-prod th:nth-child(3){width:17%}.np table.np-prod th:nth-child(4){width:14%}.np table.np-prod th:nth-child(5){width:15%}.np table.np-prod th:nth-child(6){width:9%}
+.np table.np-dias th:first-child{width:17%}.np table.np-dias th:last-child{width:15%}
+.np table.t td input.in{max-width:none}
+.np table.np-prod td.r.mono,.np table.np-prod th.r{white-space:nowrap}
+.np table.np-prod tr.np-tot td{border-top:2px solid var(--bd);border-bottom:0;background:#f8fafc}
+.np table.np-dias td:first-child{white-space:nowrap;padding-right:8px}
+.np table.np-dias td.mono{white-space:nowrap}
+.np textarea.np-end{width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:5px 8px;font:inherit;font-size:13px;resize:vertical}
 .np .chipc{display:inline-block;border-radius:999px;padding:1px 8px;font-size:10.5px;background:#eef2ff;color:#3730a3;font-weight:600}
 .np .chipc.warn{background:#fef3c7;color:#92400e}.np .chipc.bad{background:#fee2e2;color:#991b1b}.np .chipc.ok{background:#dcfce7;color:#166534}
 .np .lnk{border:0;background:none;color:var(--acc);font-weight:600;font-size:12px;cursor:pointer;padding:0}
@@ -295,7 +310,7 @@ function cadastro(p){const o=p.obra_id?T(()=>get('obras',p.obra_id),null):null;c
  <div><label>Obra</label><select ${vd?'disabled':''} onchange="run(()=>A.npSetCad(${J(p.id)},'obra_id',this.value),'Obra')"><option value=""></option>${opcoesObras(cid,p.obra_id)}</select></div>
  <div><label>Distância da obra (diárias ÷ (1 − %), como no Excel)</label><select onchange="run(()=>A.npSetCad(${J(p.id)},'distancia',this.value),'Distância')">${dist}</select></div>
  <div><label>Consultor(es) — até 2</label><div class="cats">${consultoresLista().map(c=>`<button class="${(p.consultores||[]).includes(c)?'on':''}" onclick="run(()=>A.toggleConsultor(${J(p.id)},${J(c)}),'Consultores')">${E(c)}</button>`).join('')}</div></div>
- ${o?`<div><label>Endereço da obra</label><input value="${E(o.endereco||'')}" placeholder="endereço da instalação" onchange="run(()=>A.setObra(${J(o.id)},'endereco',this.value),'Endereço da obra')"></div>`:''}
+ ${o?`<div><label>Endereço da obra</label><textarea rows="2" class="np-end" placeholder="endereço da instalação" onchange="run(()=>A.setObra(${J(o.id)},'endereco',this.value),'Endereço da obra')">${E(o.endereco||'')}</textarea></div>`:''}
  <div><label>Parceiro e RT (do cadastro do parceiro)</label><input value="${E(rtTexto(p))}" disabled></div>
  </div></div>`}
 
@@ -320,14 +335,14 @@ function blocoCard(p,b,modo){const vd=vendida(p);const k='b:'+b.id;const aberto=
  ${aberto?`<div class="sys-b">${linhasTab(p,b,vd)}${vd?'':addProduto(p,b,modo)}${modo==='foc'?'':diasTab(p,b,ef)}
  ${vd?'':`<div style="text-align:right;margin-top:8px"><button class="lnk" style="color:#dc2626" onclick="if(confirm('Remover ${E(b.nome).replace(/'/g,'')} da proposta?'))run(()=>A.rmBloco(${J(p.id)},${J(b.id)}),'Removido')">remover este ${modo==='foc'?'grupo':'sistema'}</button></div>`}</div>`:''}</div>`}
 function linhasTab(p,b,vd){const L=b.itens||[];if(!L.length)return '<div class="sub2" style="color:#64748b;font-size:12.5px;margin-bottom:8px">Nenhum produto ainda.</div>';
- return `<table class="t"><thead><tr><th>Produto</th><th>Categoria comercial</th><th class="r">Qtd</th><th class="r">Unitário</th><th class="r">Misc. da linha</th><th class="r">Total</th><th></th></tr></thead><tbody>${L.map(l=>{const pr=prod(l.produto_id)||{};const sub=l.substituto?prod(l.substituto):null;
-  return `<tr class="${sub?'sold-line':''}"><td><b class="${sub?'swapped':''}">${E(pr.nome||l.produto_id)}</b><div style="font-size:11px;color:#64748b">${E(pr.marca||'')}${pr.apelido?' · '+E(pr.apelido):''}</div>${sub?`<div style="font-size:11.5px;color:#9a3412">↳ atendido com <b>${E(sub.nome)}</b> — preço do cliente mantido</div>`:''}</td>
-  <td>${catCom(pr)?`<span class="chipc">${E(catCom(pr))}</span>`:'<span class="chipc warn">sem categoria</span>'}</td>
+ return `<div class="np-tw"><table class="t np-prod"><thead><tr><th>Produto</th><th class="r">Qtd</th><th class="r">Unitário</th><th class="r">Misc. da linha</th><th class="r">Total</th><th></th></tr></thead><tbody>${L.map(l=>{const pr=prod(l.produto_id)||{};const sub=l.substituto?prod(l.substituto):null;
+  return `<tr class="${sub?'sold-line':''}"><td><b class="${sub?'swapped':''}">${E(pr.nome||l.produto_id)}</b><div style="font-size:11px;color:#64748b">${E(pr.marca||'')}${pr.apelido?' · '+E(pr.apelido):''}</div><div style="margin-top:3px">${catCom(pr)?`<span class="chipc">${E(catCom(pr))}</span>`:'<span class="chipc warn">sem categoria</span>'}</div>${sub?`<div style="font-size:11.5px;color:#9a3412">↳ atendido com <b>${E(sub.nome)}</b> — preço do cliente mantido</div>`:''}</td>
   <td class="r">${vd?N2(l.qtd):`<input class="in" type="number" min="0" step="1" value="${E(l.qtd)}" onchange="run(()=>A.setLinha(${J(p.id)},${J(l.id)},'qtd',+this.value),'Quantidade')">`}</td>
   <td class="r mono">${vd?RS(l.preco_unit):`<input class="in" style="width:96px" value="${E(N2(l.preco_unit))}" onchange="run(()=>A.setLinha(${J(p.id)},${J(l.id)},'preco',this.value.replace(/\\./g,'')),'Preço unitário')">`}</td>
   <td class="r">${vd?RS(l.misc||0):`<input class="in" style="width:86px" value="${E(N2(l.misc||0))}" onchange="run(()=>A.setLinha(${J(p.id)},${J(l.id)},'misc',+String(this.value).replace(/\\./g,'').replace(',','.')||0),'Miscelânea da linha')">`}</td>
   <td class="r mono">${RS(linhaTot(l))}</td>
-  <td class="r" style="white-space:nowrap">${vd?(sub?'':`<button class="lnk" onclick="rtSubstDialog(${J(p.id)},${J(l.id)})">trocar (preço mantido)</button>`):`<button class="lnk" onclick="NP.trocar(${J(p.id)},${J(l.id)})">trocar</button>`}</td></tr>`}).join('')}</tbody></table>`}
+  <td class="r" style="white-space:nowrap">${vd?(sub?'':`<button class="lnk" onclick="rtSubstDialog(${J(p.id)},${J(l.id)})">trocar (preço mantido)</button>`):`<button class="lnk" onclick="NP.trocar(${J(p.id)},${J(l.id)})">trocar</button>`}</td></tr>`}).join('')}</tbody>${(()=>{const sem=L.reduce((a,l)=>a+(+l.qtd||0)*(+l.preco_unit||0),0),mi=L.reduce((a,l)=>a+(+l.misc||0),0);
+  return `<tfoot><tr class="np-tot"><td><b>Total equipamentos</b><div style="font-size:11px;color:#64748b">como no Excel: preço × qtd + miscelânea</div></td><td class="r mono" colspan="2">${RS(sem)}<div style="font-size:10.5px;color:#64748b;font-family:inherit">preço × qtd</div></td><td class="r mono">${RS(mi)}</td><td class="r mono"><b>${RS(sem+mi)}</b></td><td></td></tr></tfoot>`})()}</table></div>`}
 function addProduto(p,b,modo){const k=b.id;const q=UI.busca[k]||{q:'',c:''};const cats=T(()=>V233CAT.comerciais(),[]);
  const pre=modo==='cab'?'Cabos e infraestrutura':'';const cc=q.c||(q.q?'':pre);
  const rs=q.q||cc?catalogo(q.q,cc).slice(0,40):[];
@@ -335,13 +350,14 @@ function addProduto(p,b,modo){const k=b.id;const q=UI.busca[k]||{q:'',c:''};cons
  <input class="in wide" placeholder="+ acrescentar produto: buscar por nome, marca ou modelo…" value="${E(q.q)}" oninput="NP.busca(${J(k)},'q',this.value,true)">
  <div id="np-res-${E(k)}">${resultados(p,b,rs,q.q||cc)}</div></div>`}
 function resultados(p,b,rs,ativo){if(!ativo)return '';if(!rs.length)return '<div class="res"><div>nenhum produto</div></div>';
- return `<div class="res">${rs.map(x=>`<div onclick="run(()=>A.addLinha(${J(p.id)},${J(b.id)},${J(x.id)},1),'Produto acrescentado')"><span><b>${E(x.nome)}</b> <span style="color:#64748b">${E(x.marca||'')}</span> ${catCom(x)?`<span class="chipc">${E(catCom(x))}</span>`:''}</span><span class="mono">${RS(x.preco)}</span></div>`).join('')}</div>`}
-/* catálogo: produtos da Base que se vendem (sem os 16 de demonstração p1–p16, sem diárias/visitas, sem inativos) */
+ return `<div class="res">${rs.map(x=>`<div onclick="run(()=>A.addLinha(${J(p.id)},${J(b.id)},${J(x.id)},1),'Produto acrescentado')"><span><b>${E(x.nome)}</b> <span style="color:#64748b">${E(x.marca||'')}</span> ${catCom(x)?`<span class="chipc">${E(catCom(x))}</span>`:''}${x.status&&String(x.status).toUpperCase()!=='OK'?` <span class="chipc warn" title="status na Tabela de preços">${E(x.status)}</span>`:''}</span><span class="mono">${RS(x.preco)}</span></div>`).join('')}</div>`}
+/* catálogo: produtos da Base que se vendem (sem os 16 de demonstração p1–p16, sem diárias/visitas, sem inativos).
+   26/11: os produtos _TF (LUTRON_TF, SAVANT_TF…) são linhas reais da Tabela de preços e voltam à busca; status ≠ OK aparece marcado. */
 const DEMO=/^p([1-9]|1[0-6])$/;
-function vendavel(x){return x&&!x.inativo&&!x._apagado&&!x.merged_into&&!DEMO.test(x.id)&&!/_TF$/i.test(x.marca||'')&&catCom(x)!=='Serviços (não é produto)'&&!/^di[aá]ria|^visita/i.test(String(x.nome||''))}
+function vendavel(x){return x&&!x.inativo&&!x._apagado&&!x.merged_into&&!DEMO.test(x.id)&&catCom(x)!=='Serviços (não é produto)'&&!/^di[aá]ria|^visita/i.test(String(x.nome||''))}
 /* busca por palavras: "300 icw6" acha "300-ICW6" (pontuação vira espaço; toda palavra digitada tem de aparecer) */
 const palavras=t=>nz(t).replace(/[^a-z0-9]+/g,' ').trim();
-function catalogo(q,c){const qs=palavras(q).split(' ').filter(Boolean);return (S.db.produtos||[]).filter(x=>{if(!vendavel(x)||(c&&catCom(x)!==c))return false;if(!qs.length)return true;const h=' '+palavras(x.nome+' '+(x.marca||'')+' '+(x.apelido||'')+' '+x.id)+' ';const hj=h.replace(/ /g,'');return qs.every(w=>h.includes(w)||hj.includes(w))}).sort((a,b)=>String(a.marca+a.nome).localeCompare(String(b.marca+b.nome),'pt-BR'))}
+function catalogo(q,c){const qs=palavras(q).split(' ').filter(Boolean);return (S.db.produtos||[]).filter(x=>{if(!vendavel(x)||(c&&catCom(x)!==c))return false;if(!qs.length)return true;const h=' '+palavras(x.nome+' '+(x.marca||'')+' '+(x.apelido||'')+' '+x.id)+' ';const hj=h.replace(/ /g,'');return qs.every(w=>h.includes(w)||hj.includes(w))}).sort((a,b)=>((String(a.status||'OK').toUpperCase()==='OK'?0:1)-(String(b.status||'OK').toUpperCase()==='OK'?0:1))||String(a.marca+a.nome).localeCompare(String(b.marca+b.nome),'pt-BR'))}
 NP.catalogo=catalogo;
 NP.busca=function(k,campo,v,soLista){const q=UI.busca[k]=UI.busca[k]||{q:'',c:''};q[campo]=v;
  if(soLista){const el=document.getElementById('np-res-'+k);const p=prop((location.hash.split('/')[2]||''));const b=p&&T(()=>blocosDe(p).find(x=>x.id===k),null);if(el&&p&&b){el.innerHTML=resultados(p,b,catalogo(q.q,q.c).slice(0,40),q.q||q.c);return}}rer()};
@@ -350,13 +366,13 @@ function diasTab(p,b,ef){const adj=b.servicos_adj||{};const vd=vendida(p);
  const base=k=>(+ef[k]||0)*valDia(p,k),mi=k=>miscFase(b,k),lin=k=>base(k)+mi(k);
  const soma=g=>DISC.reduce((a,k)=>a+g(k),0);
  const lbl=t=>`<td style="font-size:11.5px;color:#64748b;white-space:nowrap">${t}</td>`;
- return `<div style="margin-top:12px"><div style="font-size:10.5px;letter-spacing:.1em;color:#64748b;font-weight:700;text-transform:uppercase;margin-bottom:4px">Mão de obra deste sistema — como no Excel: diárias × valor + miscelânea de cada linha</div>
- <table class="t"><thead><tr><th></th>${DISC.map(k=>`<th class="r">${E(RATE[k].lb)}</th>`).join('')}<th class="r">Total</th></tr></thead><tbody>
+ return `<div style="margin-top:12px"><div style="font-size:10.5px;letter-spacing:.1em;color:#64748b;font-weight:700;text-transform:uppercase;margin-bottom:4px">Mão de obra — diárias × valor + miscelânea de cada linha (como no Excel)</div>
+ <div class="np-tw"><table class="t np-dias"><thead><tr><th></th>${DISC.map(k=>`<th class="r">${E(RATE[k].lb)}</th>`).join('')}<th class="r">Total</th></tr></thead><tbody>
  <tr>${lbl('Diárias')}${DISC.map(k=>`<td class="r">${vd?N2(ef[k]):`<input class="in" value="${adj[k]!=null&&adj[k]!==''?E(N2(adj[k])):''}" placeholder="0" onchange="run(()=>A.setDias(${J(p.id)},${J(b.id)},'${k}',this.value),'Diárias')">`}</td>`).join('')}<td class="r mono">${N2(soma(k=>+ef[k]||0))}</td></tr>
  <tr style="color:#64748b">${lbl('× valor da diária')}${DISC.map(k=>`<td class="r mono" style="font-size:11.5px" title="${E(N2(ef[k]||0))} × R$ ${E(N2(valDia(p,k)))}">${RS(base(k))}</td>`).join('')}<td class="r mono" style="font-size:11.5px">${RS(soma(base))}</td></tr>
- <tr>${lbl('+ Miscelânea')}${DISC.map(k=>`<td class="r">${vd?`<span class="mono">${RS(mi(k))}</span>`:`<input class="in" style="width:96px" value="${mi(k)?E(N2(mi(k))):''}" placeholder="R$ 0" onchange="run(()=>A.npMiscFase(${J(p.id)},${J(b.id)},'${k}',this.value),'Miscelânea da linha ${E(RATE[k].lb)}')">`}</td>`).join('')}<td class="r mono">${RS(soma(mi))}</td></tr>
+ <tr>${lbl('+ Miscelânea')}${DISC.map(k=>`<td class="r">${vd?`<span class="mono">${RS(mi(k))}</span>`:`<input class="in" value="${mi(k)?E(NBR2(mi(k))):''}" placeholder="R$ 0" onchange="run(()=>A.npMiscFase(${J(p.id)},${J(b.id)},'${k}',this.value),'Miscelânea da linha ${E(RATE[k].lb)}')">`}</td>`).join('')}<td class="r mono">${RS(soma(mi))}</td></tr>
  <tr style="font-weight:700">${lbl('<b style="color:#0f172a">= Linha</b>')}${DISC.map(k=>`<td class="r mono">${RS(lin(k))}</td>`).join('')}<td class="r mono">${RS(soma(lin))}</td></tr>
- </tbody></table>
+ </tbody></table></div>
  ${outras.length?`<table class="t" style="margin-top:6px"><tbody>${outras.map(x=>`<tr><td>Outra miscelânea de serviço (sem linha): ${E(x.nome)}</td><td class="r mono">${RS(x.valor)}</td><td class="r">${vd?'':`<button class="lnk" style="color:#dc2626" onclick="run(()=>A.rmServLinha(${J(p.id)},${J(b.id)},${J(x.id)}),'Removido')">remover</button>`}</td></tr>`).join('')}<tr style="font-weight:700"><td>Mão de obra do sistema</td><td class="r mono">${RS(soma(lin)+outras.reduce((a,x)=>a+(+x.valor||0),0))}</td><td></td></tr></tbody></table>`:''}
  ${vd?'':`<div style="margin-top:6px;display:flex;gap:6px;align-items:center;flex-wrap:wrap"><button class="btn2" onclick="run(()=>A.completarMiscBloco(${J(p.id)},${J(b.id)}),'Mão de obra completada até o alvo')">completar até ${E(T(()=>S.db.params.serv_alvo_pct,20))}% dos equip.</button></div>`}</div>`}
 /* Contagem da obra: a calculadora SERVIÇOS do Excel (a mesma do editor de hoje) — só sugere */
