@@ -21,7 +21,7 @@ const cap=()=>CAPS()[ST.cap]||null;
 const passo=()=>{const c=cap();return c&&c.passos?c.passos[ST.passo]||null:null};
 const hashNow=()=>location.hash||'#/home';
 const sameScreen=t=>{if(!t)return true;const a=hashNow().split('/').slice(0,2).join('/'),b=String(t).split('/').slice(0,2).join('/');return a===b};
-function evalPronto(p){if(!p||!p.pronto)return false;try{return !!(new Function('return ('+p.pronto+')'))()}catch(e){return false}}
+function evalPronto(p){if(!p||!p.pronto)return false;try{if((new Function('return ('+p.pronto+')'))())return true}catch(e){}try{return entradaOk(p)}catch(e){return false}}
 
 /* ───────── encontrar o alvo (na página ou dentro do CRM) ───────── */
 function docs(alvo){const out=[];if(alvo&&alvo.frame){const f=document.getElementById(alvo.frame);try{if(f&&f.contentDocument)out.push({d:f.contentDocument,f})}catch(e){}}else out.push({d:document,f:null});return out}
@@ -79,7 +79,7 @@ function confereCampos(p,h){if(!p||!(p.digite||[]).length||!h||!h.el)return null
   else{let el=h.el.parentElement,bn=0;for(let n=0;el&&n<9;n++,el=el.parentElement){const k=ds.filter(d=>campoEl(el,d.campo)).length;if(k>bn){bn=k;best=el}if(k===ds.length)break;if(el.id==='main'||el.tagName==='BODY')break}
     ESCOPO={id:p.id,alvo:h.el,root:best}}
   if(!best)return {id:p.id,rows:ds.map(d=>({campo:d.campo,ok:null}))};
-  return {id:p.id,rows:ds.map(d=>{let c=campoEl(best,d.campo);if(!c)return {campo:d.campo,ok:null};
+  return {id:p.id,rows:ds.map(d=>{let c=campoEl(best,d.campo);if(!c){const lc=locCtl(best,d.campo);if(!lc)return {campo:d.campo,ok:null};if(!lc.sel)return {campo:d.campo,ok:false,vazio:true,agora:'',bloq:true,el:lc.ult||lc.box};const rl=compara(lc.sel,d.valor);return rl?Object.assign({campo:d.campo,el:lc.sel,vazio:!nz(lc.sel.value)},rl):{campo:d.campo,ok:null}}
     /* e2e (30/10): "Obra" = a filter box ("nº ou cliente") followed by the real list: the list is what counts */
     if(c.tagName==='INPUT'&&c.parentElement){const sl=[...c.parentElement.querySelectorAll('select')].find(x=>visivel(x)&&(c.compareDocumentPosition(x)&4));if(sl&&compara(sl,d.valor))c=sl}
     const r=compara(c,d.valor);return r?Object.assign({campo:d.campo,el:c,vazio:!nz(c.value)},r):{campo:d.campo,ok:null}})}}
@@ -107,7 +107,33 @@ function confereFicha(p){const d=k=>{const x=(p.digite||[]).find(x=>x.campo===k)
     corr={tela:'#/colaboradores/'+encodeURIComponent(f.nome),menu:'Base de dados › Pessoas › clique em '+f.nome+' (abre a ficha)',faca:'Na ficha de '+f.nome+', no quadro Cadastro, '+fz.join(' e depois ')+'.',alvo:{css:'select[data-g126="'+alvo+'"]',texto:'',frame:null}}}
   const np=(S.db.pessoas||[]).filter(x=>x.nome===f.nome).length;if(np>1)dif.push(f.nome+' aparece '+np+' vezes na Base');if(!f.pessoa_id)dif.push('a ficha não ficou ligada a uma pessoa da Base');
   return dif.length?{msg:'A ficha de '+f.nome+' já foi salva, mas '+dif.join('; ')+'.',corr,bot}:null}
-function conferePasso(p){if(!p)return null;try{if(/A\.novoColaborador/.test((p.alvo&&p.alvo.css)||''))return confereFicha(p)}catch(e){}return null}
+/* ───────── v238 · ENTRADA MANUAL: O LUGAR TAMBÉM É CONFERIDO (Bruno, 28/11/2026) ─────────
+   Bruno registrou as 6 caixas em “Inventário RJ › … › A DEFINIR” em vez de “Inventário SP › … › CA.E1.P1”: o sistema aceitou,
+   o guia ficou esperando para sempre e não dizia por quê. O seletor de lugar são 4 listas debaixo de UM rótulo (“Onde vai ficar”),
+   então o guia não achava “Inventário / Lugar / Área / Prateleira” para conferir. Agora:
+   · as 4 listas ganham ✓/✗ como os outros campos, e “Registrar” com o lugar errado (ou incompleto) NÃO registra;
+   · se a entrada já foi feita no lugar errado, o painel diz onde ela entrou e o que o passo pedia, com um botão que leva as
+     unidades para a prateleira certa (pelo “Mover” do próprio sistema) — só no treino;
+   · o passo conta como feito quando as unidades da entrada manual ESTÃO na prateleira pedida. */
+const LOCN={inventario:1,lugar:2,area:3,prateleira:4};
+function locCtl(root,campo){const n=LOCN[sa(campo)];if(!n||!root)return null;const bx=[...root.querySelectorAll('div[data-val]')].filter(b=>b.querySelector('select.lp')&&visivel(b));if(bx.length!==1)return null;
+  const ss=[...bx[0].querySelectorAll('select.lp')].filter(visivel);const s=ss.find(x=>+x.dataset.n===n)||null;return {box:bx[0],sel:s,ult:ss[ss.length-1]||null}}
+const ENTP={};
+function entDados(p){if(!p||!/A\.entradaManual/.test((p.alvo&&p.alvo.css)||''))return null;const d=k=>{const x=(p.digite||[]).find(x=>x.campo===k);return x?x.valor:null};
+  const pn=d('Produto'),pr=d('Prateleira'),q=num(d('Qtd'));if(!pn||!pr||!q)return null;
+  let pid=ENTP[p.id];if(!pid||!get('produtos',pid)){const x=(S.db.produtos||[]).find(x=>sa((x.marca||'')+' - '+(x.nome||''))===sa(pn));if(!x)return null;pid=ENTP[p.id]=x.id}
+  const ant=[d('Inventário'),d('Lugar'),d('Área')];
+  const dest=(S.db.locais||[]).find(l=>{if(l.inativo||sa(l.nome)!==sa(pr))return false;try{const pa=L.path(l.id).map(x=>sa(x.nome));return ant.every((v,i)=>!v||pa[i]===sa(esperado(v)||v))}catch(e){return true}});
+  if(!dest)return null;const us=[];(S.db.entradas||[]).forEach(e=>{if(e.manual)(e.unidade_ids||[]).forEach(id=>{const u=get('unidades',id);if(u&&u.produto_id===pid)us.push(u)})});
+  return {pid,dest,q,us}}
+function entradaOk(p){const x=entDados(p);return !!x&&x.us.filter(u=>u.loc_id===x.dest.id).length>=x.q}
+const caminhoLoc=id=>{try{return L.path(id).map(x=>x.nome).join(' › ')}catch(e){return ''}};
+function confereEntrada(p){const x=entDados(p);if(!x)return null;const fora=x.us.filter(u=>u.loc_id!==x.dest.id);if(!fora.length)return null;
+  const onde=[...new Set(fora.map(u=>caminhoLoc(u.loc_id)||u.local||'outro lugar'))].join(' e ');const certo=caminhoLoc(x.dest.id)||x.dest.nome;
+  const msg=(fora.length===1?'1 unidade entrou':fora.length+' unidades entraram')+' em “'+onde+'”, mas o passo pede “'+certo+'”. Por isso o guia não andou.';
+  const bot=treino()?{lb:'Levar '+(fora.length===1?'a unidade':'as '+fora.length)+' para '+x.dest.nome,fn(){const ids=fora.map(u=>u.id);run(()=>A.moverUnidade(ids,x.dest.id,'Correção — Aprender fazendo'),'Movida(s) para '+x.dest.nome);ultimo='';try{tick()}catch(e){}}}:null;
+  return {msg:bot?msg:msg+' Abra cada unidade (Estoque › clique no produto › na unidade) e use “Mover para”.',corr:null,bot}}
+function conferePasso(p){if(!p)return null;try{if(/A\.novoColaborador/.test((p.alvo&&p.alvo.css)||''))return confereFicha(p)}catch(e){}try{if(/A\.entradaManual/.test((p.alvo&&p.alvo.css)||''))return confereEntrada(p)}catch(e){}return null}
 let CF=null;
 function rectDe(h){const r=h.el.getBoundingClientRect();if(!h.f)return r;const fr=h.f.getBoundingClientRect();return {left:r.left+fr.left,top:r.top+fr.top,width:r.width,height:r.height}}
 
@@ -271,6 +297,9 @@ async function mostra236(){mostrar=true;let p=passo();if(!p)return fimCap();
   if(REVER!==p.id&&(evalPronto(p)||LATCH[p.id])&&!(CF&&CF.corr)){avanca();p=passo();if(!p)return fimCap();
     if(evalPronto(p)||LATCH[p.id])return mostra236()}
   if(CF&&CF.corr&&!evalPronto(p)){const h=await chega(CF.corr);aponta(p.id,h?CF.corr.alvo:null);ULTIMO={passo:p.id,ok:!!h&&naTela(h),como:'correcao',texto:h?txt(h.el):''};return ULTIMO}
+  /* v238: já salvo diferente e a correção é um botão do próprio painel — o contorno vai nele */
+  if(CF&&CF.bot&&!CF.corr&&!evalPronto(p)){desenha();const b=box&&box.querySelector('.cf button');if(b&&ring){const r=b.getBoundingClientRect();ring.style.display='';ring.style.left=(r.left-6)+'px';ring.style.top=(r.top-6)+'px';ring.style.width=(r.width+12)+'px';ring.style.height=(r.height+12)+'px'}
+    try{toast(CF.msg+' Clique em “'+CF.bot.lb+'”, no painel do guia.',true)}catch(e){}ULTIMO={passo:p.id,ok:!!b,como:'correcao-botao',texto:b?txt(b):''};return ULTIMO}
   /* passo já feito (voltou a ele): diz e mostra onde ficou */
   if(evalPronto(p)||LATCH[p.id]){const f=p.feito||{};let h=null;
     if(f.alvo)h=await chega({tela:f.tela||p.tela,ir:f.ir||p.ir,alvo:f.alvo,prepara:f.prepara});
