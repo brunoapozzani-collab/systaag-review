@@ -21,7 +21,12 @@ const cap=()=>CAPS()[ST.cap]||null;
 const passo=()=>{const c=cap();return c&&c.passos?c.passos[ST.passo]||null:null};
 const hashNow=()=>location.hash||'#/home';
 const sameScreen=t=>{if(!t)return true;const a=hashNow().split('/').slice(0,2).join('/'),b=String(t).split('/').slice(0,2).join('/');return a===b};
-function evalPronto(p){if(!p||!p.pronto)return false;try{if((new Function('return ('+p.pronto+')'))())return true}catch(e){}try{return entradaOk(p)}catch(e){return false}}
+/* v238: “a entrada foi para a prateleira X” vale pelo que a entrada registrou OU por onde as unidades dela estão agora
+   (uma entrada corrigida com “Mover” conta — neste passo e em todos os seguintes que olham para ela) */
+const PRSRC=new Map();
+function prontoSrc(t){let x=PRSRC.get(t);if(x==null){x=String(t).replace(/\/((?:[^\/\\\n]|\\.)+)\/\.test\(e\.obs\|\|''\)/g,'GUIA._entLugar(e,/$1/)');PRSRC.set(t,x)}return x}
+function entLugar(e,re){try{if(re.test(e.obs||''))return true;const ids=e.unidade_ids||[];return ids.length>0&&ids.every(id=>{const u=get('unidades',id);return !!u&&re.test(u.local||'')})}catch(x){return false}}
+function evalPronto(p){if(!p||!p.pronto)return false;try{return !!(new Function('return ('+prontoSrc(p.pronto)+')'))()}catch(e){return false}}
 
 /* ───────── encontrar o alvo (na página ou dentro do CRM) ───────── */
 function docs(alvo){const out=[];if(alvo&&alvo.frame){const f=document.getElementById(alvo.frame);try{if(f&&f.contentDocument)out.push({d:f.contentDocument,f})}catch(e){}}else out.push({d:document,f:null});return out}
@@ -114,7 +119,7 @@ function confereFicha(p){const d=k=>{const x=(p.digite||[]).find(x=>x.campo===k)
    · as 4 listas ganham ✓/✗ como os outros campos, e “Registrar” com o lugar errado (ou incompleto) NÃO registra;
    · se a entrada já foi feita no lugar errado, o painel diz onde ela entrou e o que o passo pedia, com um botão que leva as
      unidades para a prateleira certa (pelo “Mover” do próprio sistema) — só no treino;
-   · o passo conta como feito quando as unidades da entrada manual ESTÃO na prateleira pedida. */
+   · o passo (e os seguintes) conta como feito quando as unidades da entrada manual ESTÃO na prateleira pedida (ver evalPronto). */
 const LOCN={inventario:1,lugar:2,area:3,prateleira:4};
 function locCtl(root,campo){const n=LOCN[sa(campo)];if(!n||!root)return null;const bx=[...root.querySelectorAll('div[data-val]')].filter(b=>b.querySelector('select.lp')&&visivel(b));if(bx.length!==1)return null;
   const ss=[...bx[0].querySelectorAll('select.lp')].filter(visivel);const s=ss.find(x=>+x.dataset.n===n)||null;return {box:bx[0],sel:s,ult:ss[ss.length-1]||null}}
@@ -126,7 +131,6 @@ function entDados(p){if(!p||!/A\.entradaManual/.test((p.alvo&&p.alvo.css)||''))r
   const dest=(S.db.locais||[]).find(l=>{if(l.inativo||sa(l.nome)!==sa(pr))return false;try{const pa=L.path(l.id).map(x=>sa(x.nome));return ant.every((v,i)=>!v||pa[i]===sa(esperado(v)||v))}catch(e){return true}});
   if(!dest)return null;const us=[];(S.db.entradas||[]).forEach(e=>{if(e.manual)(e.unidade_ids||[]).forEach(id=>{const u=get('unidades',id);if(u&&u.produto_id===pid)us.push(u)})});
   return {pid,dest,q,us}}
-function entradaOk(p){const x=entDados(p);return !!x&&x.us.filter(u=>u.loc_id===x.dest.id).length>=x.q}
 const caminhoLoc=id=>{try{return L.path(id).map(x=>x.nome).join(' › ')}catch(e){return ''}};
 function confereEntrada(p){const x=entDados(p);if(!x)return null;const fora=x.us.filter(u=>u.loc_id!==x.dest.id);if(!fora.length)return null;
   const onde=[...new Set(fora.map(u=>caminhoLoc(u.loc_id)||u.local||'outro lugar'))].join(' e ');const certo=caminhoLoc(x.dest.id)||x.dest.nome;
@@ -385,7 +389,7 @@ window.GUIA={
   _campos(){const p=passo();const h=p&&acha(p.alvo);const c=confereCampos(p,h);return c&&c.rows.map(r=>({campo:r.campo,ok:r.ok,agora:r.agora,bloq:r.bloq}))},
   copia(v){try{navigator.clipboard.writeText(v);toast('Copiado: '+v)}catch(e){}},
   estado:()=>JSON.parse(JSON.stringify(ST)),
-  _tick:tick,_acha:acha,_pronto:evalPronto
+  _tick:tick,_acha:acha,_pronto:evalPronto,_entLugar:entLugar
 };
 /* Início: "Aprender fazendo" no lugar de "Carregar história demo" */
 const BOT='<button class="inicio-more-btn" type="button" style="margin-left:8px" id="guia124-btn" onclick="GUIA.iniciar(0)" title="Monte você mesmo, passo a passo, uma venda inteira — do CRM ao Ret/Troc — com o guia ao lado"><i class="bi bi-mortarboard me-1"></i>Aprender fazendo</button>';
